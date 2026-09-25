@@ -39,8 +39,6 @@ $RECYCLE.BIN/
 #-------------------------
 # Environment Files
 #-------------------------
-# These should never be under version control,
-# as it poses a security risk.
 .env
 .vagrant
 Vagrantfile
@@ -77,30 +75,21 @@ php_errors.log
 # Test Files
 #-------------------------
 /tests/coverage*
-
-# Don't save phpunit under version control.
 /phpunit
 
 #-------------------------
 # Composer
 #-------------------------
-vendor/
+# CBT-HERO sengaja menyimpan vendor/ di repository agar paket deployment
+# dapat dijalankan tanpa Composer di hosting.
 
 #-------------------------
 # IDE / Development Files
 #-------------------------
-
-# Modules Testing
 _modules/*
-
-# phpenv local config
 .php-version
-
-# Jetbrains editors (PHPStorm, etc)
 .idea/
 *.iml
-
-# NetBeans
 /nbproject/
 /build/
 /nbbuild/
@@ -109,18 +98,13 @@ _modules/*
 /nbactions.xml
 /nb-configuration.xml
 /.nb-gradle/
-
-# Sublime Text
 *.tmlanguage.cache
 *.tmPreferences.cache
-*.stTheme.cache
+*.stTheme
 *.sublime-workspace
 *.sublime-project
 .phpintel
 /api/
-
-# Visual Studio Code
 .vscode/
-
 /results/
-/phpunit.xml
+phpunit.xml
