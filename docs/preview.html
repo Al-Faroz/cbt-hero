@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CBT-HERO UI/UX Acuan Visual</title>
+<style>
+:root{--bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary2:#eef2ff;--ok:#15803d;--warn:#b45309;--radius:14px}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);background:var(--bg)}
+button,input{font:inherit}.top{position:sticky;top:0;z-index:20;background:#101828;color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.brand{font-weight:800}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tabs a{color:#fff;text-decoration:none;padding:7px 9px;border:1px solid #344054;border-radius:999px}
+.wrap{max-width:1500px;margin:auto;padding:24px}.section{margin:0 0 30px}.section h2{margin:0 0 8px}.note{color:var(--muted);margin-bottom:14px}
+.frame{background:#dfe4ec;border-radius:22px;padding:10px}.screen{background:var(--bg);border-radius:14px;overflow:hidden;min-height:620px}
+.admin-shell{display:grid;grid-template-columns:230px 1fr;min-height:620px}.sidebar{background:#111827;color:#d1d5db;padding:18px 14px}.sidebar .logo{color:#fff;font-size:18px;font-weight:800;margin-bottom:20px}
+.nav-group{font-size:11px;color:#6b7280;margin:18px 10px 7px;text-transform:uppercase;letter-spacing:.08em}.nav-item{padding:10px 12px;border-radius:9px;margin:3px 0}.nav-item.active{background:#312e81;color:#fff}.admin-main{min-width:0}
+.adminbar{height:58px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 18px}.context{background:var(--primary2);padding:8px 11px;border-radius:9px;color:#3730a3;font-weight:700}
+.content{padding:20px}.headrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.headrow h3{margin:0;font-size:22px}.btn{border-radius:9px;padding:10px 13px;background:#fff;border:1px solid var(--line);font-weight:700}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}.metric{font-size:25px;font-weight:800;margin-top:4px}.muted{color:var(--muted)}
+.toolbar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:9px;margin-bottom:12px}.search{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.tablebox{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:790px}th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line)}th{font-size:12px;color:#475467;background:#fafafa;position:sticky;top:0}.tag{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:800;background:#ecfdf3;color:var(--ok)}.tag.warn{background:#fffaeb;color:var(--warn)}
+.two{display:grid;grid-template-columns:1.45fr .75fr;gap:22px}.phone{max-width:390px;margin:auto;background:#111827;border-radius:34px;padding:10px}.phone-screen{background:#fff;border-radius:25px;overflow:hidden;min-height:720px;display:flex;flex-direction:column}.phead{padding:13px 15px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;position:sticky;top:0;background:#fff;z-index:4}.timer{font-size:18px;font-weight:850}.sync{font-size:12px;color:var(--ok);font-weight:700}.qbody{padding:18px 16px 90px;flex:1}.qnum{font-weight:800;color:#4338ca;margin-bottom:15px}.stimulus{background:#f8fafc;border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:16px}.question{font-size:17px;line-height:1.6;font-weight:650;margin:12px 0 14px}.option{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:13px;margin:9px 0}.option.selected{border-color:#818cf8;background:#eef2ff}.radio{width:20px;height:20px;border:2px solid #9ca3af;border-radius:50%;flex:0 0 auto;margin-top:1px}.selected .radio{border:6px solid var(--primary)}
+.bottom{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;padding:8px}.bottom button{border:0;background:#fff;padding:10px 4px;border-radius:9px}.bottom .next{background:var(--primary);color:#fff;font-weight:800}
+.exam-desktop{background:#fff;border-radius:14px;overflow:hidden;min-height:620px}.exam-top{height:62px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px}.exam-grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;min-height:500px}.exam-q{padding:24px 28px}.palette{border-left:1px solid var(--line);padding:18px;background:#fafafa}.nums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.n{aspect-ratio:1;border-radius:8px;border:1px solid var(--line);display:grid;place-items:center;background:#fff;font-weight:750}.n.done{background:#ecfdf3;color:#166534}.n.flag{background:#fff7ed;color:#9a3412}.n.now{outline:2px solid var(--primary)}
+.live{background:#08111f;color:#fff;padding:24px;min-height:500px;border-radius:14px;overflow:hidden}.live h2{text-align:center;margin:4px 0}.live p{text-align:center;color:#9fb0c9;margin:0 0 18px}.live table{min-width:0;background:#0f1b2d;border-radius:12px;overflow:hidden}.live th{background:#14233a;color:#d5deeb}.live td,.live th{border-color:#20314a}.rank{font-weight:850}
+.credential{font-family:"JetBrains Mono","Roboto Mono",ui-monospace,SFMono-Regular,Consolas,monospace;font-weight:800;letter-spacing:.06em;font-size:18px}.ticket{max-width:520px;margin:auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}.ticket-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ticket .value{margin-top:4px}.ticket .label{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.05em}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.admin-shell{grid-template-columns:78px 1fr}.sidebar .logo{font-size:0}.sidebar .logo:after{content:"CH";font-size:16px}.nav-group{display:none}.nav-item{font-size:0;text-align:center}.nav-item:before{content:"•";font-size:24px}.exam-grid{grid-template-columns:1fr}.palette{border-left:0;border-top:1px solid var(--line)}}
+@media(max-width:700px){.wrap{padding:14px}.admin-shell{grid-template-columns:1fr}.sidebar{display:none}.cards{grid-template-columns:1fr 1fr}.toolbar{flex-wrap:wrap}.toolbar .search{flex-basis:100%}.content{padding:14px}.headrow{align-items:flex-start}.headrow h3{font-size:19px}.adminbar{overflow:auto}.frame{padding:6px;border-radius:16px}.screen{min-height:560px}.exam-grid{display:block}.palette{display:none}.exam-q{padding:18px}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand">CBT-HERO • UI/UX ACUAN VISUAL</div><div class="tabs"><a href="#admin">Admin Desktop</a><a href="#peserta">Peserta Mobile</a><a href="#desktop">Peserta Desktop</a><a href="#live">Live Score</a><a href="#kartu">Kartu Peserta</a></div></div>
+<div class="wrap">
+
+<section class="section" id="admin">
+<h2>1. Admin / Operator — Desktop First</h2>
+<div class="note">Contoh Monitoring Ujian: sidebar tetap, context kegiatan, summary, filter, table.</div>
+<div class="frame"><div class="screen"><div class="admin-shell">
+<aside class="sidebar">
+<div class="logo">CBT-HERO</div>
+<div class="nav-item">Dashboard</div>
+<div class="nav-group">Master Data</div><div class="nav-item">Periode</div><div class="nav-item">Rombel</div><div class="nav-item">Peserta</div><div class="nav-item">Mata Pelajaran</div>
+<div class="nav-group">Master Ujian</div><div class="nav-item">Kegiatan Ujian</div><div class="nav-item">Peserta Ujian</div><div class="nav-item">Bank Soal</div><div class="nav-item">Jadwal Ujian</div>
+<div class="nav-group">Pelaksanaan</div><div class="nav-item active">Monitoring Ujian</div><div class="nav-item">Live Scoring</div>
+<div class="nav-group">Lainnya</div><div class="nav-item">Penilaian</div><div class="nav-item">Hasil & Laporan</div><div class="nav-item">Sistem</div>
+</aside>
+<main class="admin-main">
+<div class="adminbar"><span class="context">Kegiatan: PAS Ganjil 2026/2027 ▾</span><span class="muted">23 September 2026</span></div>
+<div class="content">
+<div class="headrow"><div><h3>Monitoring Ujian</h3><div class="muted">Status peserta secara operasional</div></div><button class="btn primary">Refresh</button></div>
+<div class="cards"><div class="card"><div class="muted">Peserta</div><div class="metric">517</div></div><div class="card"><div class="muted">Sedang Ujian</div><div class="metric">472</div></div><div class="card"><div class="muted">Selesai</div><div class="metric">31</div></div><div class="card"><div class="muted">Tidak Terdeteksi</div><div class="metric">14</div></div></div>
+<div class="toolbar"><input class="search" placeholder="Cari nama / no peserta"><button class="btn">Filter</button><button class="btn">Bulk Action</button></div>
+<div class="tablebox"><table><thead><tr><th>No Peserta</th><th>Nama</th><th>Rombel</th><th>Ujian</th><th>Status</th><th>Sisa</th><th>Last Sync</th><th>Aksi</th></tr></thead><tbody>
+<tr><td>26080123</td><td>Ahmad Fauzan</td><td>8-A</td><td>Matematika VIII</td><td><span class="tag">AKTIF</span></td><td>42:18</td><td>8 dtk</td><td><button class="btn">Detail</button></td></tr>
+<tr><td>26080187</td><td>Budi Santoso</td><td>8-A</td><td>Matematika VIII</td><td><span class="tag">AKTIF</span></td><td>38:02</td><td>12 dtk</td><td><button class="btn">Detail</button></td></tr>
+<tr><td>26080211</td><td>Citra Ayu</td><td>8-B</td><td>Matematika VIII</td><td><span class="tag warn">TIDAK TERDETEKSI</span></td><td>51:14</td><td>2 mnt</td><td><button class="btn">Detail</button></td></tr>
+<tr><td>26080242</td><td>Dimas Pratama</td><td>8-B</td><td>Matematika VIII</td><td><span class="tag">SELESAI</span></td><td>00:00</td><td>Final</td><td><button class="btn">Detail</button></td></tr>
+</tbody></table></div>
+</div></main></div></div></div>
+</section>
+
+<section class="section" id="peserta">
+<h2>2. Peserta — Mobile First</h2>
+<div class="note">Pertanyaan dominan, timer dan status sync terlihat, kontrol navigasi tetap di bawah.</div>
+<div class="two">
+<div class="phone"><div class="phone-screen">
+<div class="phead"><div><strong>Matematika VIII</strong><div class="sync">✓ Tersimpan</div></div><div class="timer">01:12:35</div></div>
+<div class="qbody"><div class="qnum">Soal 17 dari 40</div><div class="stimulus"><strong>Perhatikan stimulus berikut.</strong><br><br>Gambar, tabel, rumus, atau bacaan tampil responsif pada area ini.</div><div class="question">Jika nilai x = 4, berapakah hasil dari 3x + 5?</div><div class="option"><span class="radio"></span><span>A. 12</span></div><div class="option"><span class="radio"></span><span>B. 15</span></div><div class="option selected"><span class="radio"></span><span>C. 17</span></div><div class="option"><span class="radio"></span><span>D. 20</span></div></div>
+<div class="bottom"><button>←<br><small>Sebelumnya</small></button><button>⚑<br><small>Ragu</small></button><button>▦<br><small>17/40</small></button><button class="next">→<br><small>Berikutnya</small></button></div>
+</div></div>
+<div>
+<div class="card" style="margin-bottom:12px"><strong>Prioritas Mobile</strong><p class="muted">Question → Answer → Navigation. Tidak ada sidebar dan tidak ada elemen administratif.</p></div>
+<div class="card" style="margin-bottom:12px"><strong>Touch</strong><p class="muted">Seluruh row opsi menjadi target sentuh. Target minimal 44–48 px.</p></div>
+<div class="card" style="margin-bottom:12px"><strong>Sync</strong><p class="muted">✓ Tersimpan, ↻ Menyimpan, ⚠ Belum tersinkron.</p></div>
+<div class="card"><strong>Daftar soal</strong><p class="muted">Mobile sebagai bottom sheet; desktop sebagai panel permanen.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="desktop">
+<h2>3. Peserta — Desktop Adaptation</h2>
+<div class="note">Flow sama, ruang ekstra dipakai untuk question palette permanen.</div>
+<div class="frame"><div class="exam-desktop"><div class="exam-top"><div><strong>Matematika VIII</strong> <span class="sync">• ✓ Tersimpan</span></div><div class="timer">01:12:35</div></div><div class="exam-grid">
+<div class="exam-q"><div class="qnum">Soal 17 dari 40</div><div class="stimulus">Stimulus / gambar / bacaan soal berada di sini.</div><div class="question">Jika nilai x = 4, berapakah hasil dari 3x + 5?</div><div class="option"><span class="radio"></span><span>A. 12</span></div><div class="option"><span class="radio"></span><span>B. 15</span></div><div class="option selected"><span class="radio"></span><span>C. 17</span></div><div class="option"><span class="radio"></span><span>D. 20</span></div></div>
+<aside class="palette"><strong>Daftar Soal</strong><p class="muted">28 dijawab • 11 belum • 1 ragu</p><div class="nums"><div class="n done">1✓</div><div class="n done">2✓</div><div class="n">3○</div><div class="n flag">4⚑</div><div class="n done">5✓</div><div class="n done">6✓</div><div class="n done">7✓</div><div class="n done">8✓</div><div class="n">9○</div><div class="n done">10✓</div><div class="n done">11✓</div><div class="n done">12✓</div><div class="n done">13✓</div><div class="n">14○</div><div class="n done">15✓</div><div class="n done">16✓</div><div class="n now">17</div><div class="n">18○</div><div class="n">19○</div><div class="n">20○</div></div></aside>
+</div></div></div>
+</section>
+
+<section class="section" id="live">
+<h2>4. Public Live Scoring</h2>
+<div class="note">Fullscreen tanpa manager chrome. Snapshot ranking berubah hanya setelah satu siklus scroll selesai.</div>
+<div class="live"><h2>LIVE SCORING</h2><p>OLIMPIADE SAINS TINGKAT KABUPATEN</p><table><thead><tr><th>No</th><th>No Peserta</th><th>Nama</th><th>Skor</th><th>Status</th></tr></thead><tbody>
+<tr><td class="rank">1</td><td>26080123</td><td>Ahmad Fauzan</td><td>87.50</td><td>SELESAI</td></tr>
+<tr><td class="rank">2</td><td>26080211</td><td>Citra Ayu</td><td>85.00</td><td>MENGERJAKAN</td></tr>
+<tr><td class="rank">3</td><td>26080187</td><td>Budi Santoso</td><td>82.50</td><td>MENGERJAKAN</td></tr>
+<tr><td class="rank">4</td><td>26080310</td><td>Dinda Maharani</td><td>80.00</td><td>SELESAI</td></tr>
+<tr><td class="rank">5</td><td>26080401</td><td>Eka Putra</td><td>77.50</td><td>MENGERJAKAN</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="section" id="kartu">
+<h2>5. Kartu Peserta — Credential Typography</h2>
+<div class="note">Nomor Peserta, Username, dan Password memakai JetBrains Mono SemiBold/Bold agar 0/O dan karakter lain lebih mudah dibedakan.</div>
+<div class="frame"><div class="screen" style="min-height:360px;padding:34px"><div class="ticket">
+<div style="font-weight:850;font-size:18px;margin-bottom:4px">CBT-HERO • KARTU UJIAN</div><div class="muted" style="margin-bottom:18px">PAS Ganjil 2026/2027</div>
+<div class="ticket-grid"><div><div class="label">NAMA</div><div class="value"><strong>Ahmad Fauzan</strong></div></div><div><div class="label">ROMBEL / RUANG</div><div class="value">8-A / R-03</div></div></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<div class="ticket-grid"><div><div class="label">NOMOR PESERTA</div><div class="value credential">PAS26-00127</div></div><div><div class="label">USERNAME</div><div class="value credential">K7M4P</div></div><div><div class="label">PASSWORD</div><div class="value credential">R8X6N7</div></div><div><div class="label">URL</div><div class="value">cbt.example.sch.id</div></div></div>
+</div></div></div>
+</section>
+
+</div>
+</body>
+</html>
