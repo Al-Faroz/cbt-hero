@@ -20,6 +20,21 @@ $branding = config('Branding');
         href="<?= base_url($branding->logo) ?>"
     >
 
+    <script>
+    (() => {
+        try {
+            if (
+                window.matchMedia('(min-width: 992px)').matches
+                && localStorage.getItem('cbthero.manager.sidebar.collapsed') === '1'
+            ) {
+                document.documentElement.classList.add('manager-sidebar-collapsed-preset');
+            }
+        } catch (_) {
+            //
+        }
+    })();
+    </script>
+
     <link
         rel="stylesheet"
         href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>"
@@ -44,6 +59,23 @@ $branding = config('Branding');
         rel="stylesheet"
         href="<?= base_url('assets/css/manager-sidebar-patch.css') ?>"
     >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/manager-ui-standard.css') ?>"
+    >
+
+    <style>
+        @media (min-width: 992px) {
+            html.manager-sidebar-collapsed-preset .manager-sidebar {
+                width: var(--manager-sidebar-collapsed-width);
+                --bs-offcanvas-width: var(--manager-sidebar-collapsed-width);
+            }
+
+            html.manager-sidebar-collapsed-preset .manager-main {
+                margin-left: var(--manager-sidebar-collapsed-width);
+            }
+        }
+    </style>
 
     <?= $this->renderSection('pageStyles') ?>
 </head>

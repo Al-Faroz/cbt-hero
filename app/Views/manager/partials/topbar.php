@@ -15,6 +15,17 @@ $initial = mb_strtoupper(mb_substr(trim($nama) !== '' ? trim($nama) : 'M', 0, 1)
         <span class="manager-menu-icon"></span>
     </button>
 
+    <button
+        type="button"
+        class="manager-sidebar-toggle-button"
+        data-manager-sidebar-toggle
+        aria-label="Minimalkan sidebar"
+        aria-expanded="true"
+        title="Minimalkan sidebar"
+    >
+        <i class="bi bi-layout-sidebar-inset"></i>
+    </button>
+
     <div class="manager-topbar-title">
         <strong><?= esc($pageTitle) ?></strong>
         <span><?= esc($pageSubtitle) ?></span>

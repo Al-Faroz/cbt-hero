@@ -6,11 +6,45 @@ use CodeIgniter\Router\RouteCollection;
 
 /*
 |--------------------------------------------------------------------------
-| PARTICIPANT ROOT (sementara)
+| PARTICIPANT REALM
 |--------------------------------------------------------------------------
-| Landing peserta belum dikerjakan pada Phase 1.
+|
+| GET / bersifat optional-auth:
+| - belum login  -> Landing/Login Peserta
+| - sudah login  -> /ujian
+|
 */
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Participant\\ParticipantAuthController::index');
+
+$routes->get(
+    'ujian',
+    'Participant\\ParticipantExamController::index',
+    ['filter' => 'participant-auth']
+);
+
+/*
+|--------------------------------------------------------------------------
+| PARTICIPANT AUTH API
+|--------------------------------------------------------------------------
+*/
+$routes->group('api/auth', static function (RouteCollection $routes): void {
+    $routes->post(
+        'login',
+        'Participant\\ParticipantAuthController::login'
+    );
+
+    $routes->post(
+        'logout',
+        'Participant\\ParticipantAuthController::logout',
+        ['filter' => 'participant-auth:api']
+    );
+
+    $routes->get(
+        'session',
+        'Participant\\ParticipantAuthController::sessionInfo',
+        ['filter' => 'participant-auth:api']
+    );
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -51,10 +85,6 @@ $routes->group(
     static function (RouteCollection $routes): void {
         $routes->get('dashboard', 'Manager\\DashboardController::index');
 
-        /*
-         * Final UI route sudah ditetapkan di Dokumen Routes/API.
-         * User Manager adalah Admin-only.
-         */
         $routes->get(
             'system/users',
             'Manager\\System\\ManagerUserController::index',
@@ -72,11 +102,6 @@ $routes->group(
     'manager/api',
     ['filter' => 'manager-auth:api'],
     static function (RouteCollection $routes): void {
-        /*
-         * GET/POST /manager/api/users adalah bagian kontrak final Routes/API.
-         * Endpoint lain (status/reset-password/update) dikerjakan pada modul
-         * System tanpa mengubah permission boundary ini.
-         */
         $routes->get(
             'users',
             'Manager\\System\\ManagerUserController::list',

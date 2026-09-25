@@ -4,6 +4,7 @@ namespace Config;
 
 use App\Filters\ManagerAuthFilter;
 use App\Filters\ManagerRoleFilter;
+use App\Filters\ParticipantAuthFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -19,17 +20,18 @@ class Filters extends BaseFilters
 {
     /** @var array<string, class-string|list<class-string>> */
     public array $aliases = [
-        'csrf'          => CSRF::class,
-        'toolbar'       => DebugToolbar::class,
-        'honeypot'      => Honeypot::class,
-        'invalidchars'  => InvalidChars::class,
-        'secureheaders' => SecureHeaders::class,
-        'cors'          => Cors::class,
-        'forcehttps'    => ForceHTTPS::class,
-        'pagecache'     => PageCache::class,
-        'performance'   => PerformanceMetrics::class,
-        'manager-auth'  => ManagerAuthFilter::class,
-        'manager-role'  => ManagerRoleFilter::class,
+        'csrf'             => CSRF::class,
+        'toolbar'          => DebugToolbar::class,
+        'honeypot'         => Honeypot::class,
+        'invalidchars'     => InvalidChars::class,
+        'secureheaders'    => SecureHeaders::class,
+        'cors'             => Cors::class,
+        'forcehttps'       => ForceHTTPS::class,
+        'pagecache'        => PageCache::class,
+        'performance'      => PerformanceMetrics::class,
+        'participant-auth' => ParticipantAuthFilter::class,
+        'manager-auth'     => ManagerAuthFilter::class,
+        'manager-role'     => ManagerRoleFilter::class,
     ];
 
     /** @var array{before: list<string>, after: list<string>} */
@@ -47,7 +49,7 @@ class Filters extends BaseFilters
 
     /**
      * Semua mutation berbasis cookie/session dilindungi CSRF.
-     * GET/HEAD tidak dipengaruhi filter CSRF CI4.
+     * Token session stabil karena Security::$regenerate = false.
      *
      * @var array{
      *     before: array<string, array{except: list<string>|string}>|list<string>,

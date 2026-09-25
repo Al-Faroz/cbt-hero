@@ -11,7 +11,11 @@
         untuk mengakses ujian.
     </p>
 
-    <form data-participant-ui-form autocomplete="on">
+    <form
+        data-participant-login-form
+        data-login-url="<?= base_url('api/auth/login') ?>"
+        autocomplete="on"
+    >
         <div class="mb-3">
             <label class="cbt-form-label" for="participantUsername">Username</label>
             <input
@@ -46,7 +50,7 @@
         <div
             class="cbt-inline-feedback"
             data-participant-feedback
-            role="status"
+            role="alert"
         ></div>
     </form>
 

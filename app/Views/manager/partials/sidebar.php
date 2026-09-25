@@ -16,7 +16,11 @@ $systemOpen = $activeMenu === 'system-users';
     aria-labelledby="managerSidebarLabel"
 >
     <div class="offcanvas-header">
-        <a class="cbt-brand" href="<?= base_url('manager/dashboard') ?>">
+        <a
+            class="cbt-brand manager-sidebar-brand"
+            href="<?= base_url('manager/dashboard') ?>"
+            title="CBT-HERO"
+        >
             <span class="cbt-sidebar-brand-symbol">
                 <img
                     class="cbt-brand-image-symbol"
@@ -25,7 +29,7 @@ $systemOpen = $activeMenu === 'system-users';
                 >
             </span>
 
-            <span class="cbt-brand-copy">
+            <span class="cbt-brand-copy manager-sidebar-brand-copy">
                 <span class="cbt-brand-title" id="managerSidebarLabel">CBT-HERO</span>
                 <span class="cbt-brand-subtitle">Manager Console</span>
             </span>
@@ -46,9 +50,10 @@ $systemOpen = $activeMenu === 'system-users';
             <a
                 class="manager-nav-link<?= $active('dashboard') ?>"
                 href="<?= base_url('manager/dashboard') ?>"
+                title="Dashboard"
             >
                 <span class="manager-nav-icon icon-dashboard"></span>
-                <span>Dashboard</span>
+                <span class="manager-nav-label">Dashboard</span>
             </a>
 
             <div class="manager-nav-section">Master Data</div>
@@ -60,9 +65,10 @@ $systemOpen = $activeMenu === 'system-users';
                 data-bs-target="#navMasterData"
                 aria-expanded="false"
                 aria-controls="navMasterData"
+                title="Master Data"
             >
                 <span class="manager-nav-icon icon-master-data"></span>
-                <span>Master Data</span>
+                <span class="manager-nav-label">Master Data</span>
                 <span class="manager-nav-chevron"></span>
             </button>
 
@@ -82,9 +88,10 @@ $systemOpen = $activeMenu === 'system-users';
                 data-bs-target="#navMasterUjian"
                 aria-expanded="false"
                 aria-controls="navMasterUjian"
+                title="Master Ujian"
             >
                 <span class="manager-nav-icon icon-master-ujian"></span>
-                <span>Master Ujian</span>
+                <span class="manager-nav-label">Master Ujian</span>
                 <span class="manager-nav-chevron"></span>
             </button>
 
@@ -106,9 +113,10 @@ $systemOpen = $activeMenu === 'system-users';
                 data-bs-target="#navPelaksanaan"
                 aria-expanded="false"
                 aria-controls="navPelaksanaan"
+                title="Pelaksanaan Ujian"
             >
                 <span class="manager-nav-icon icon-pelaksanaan"></span>
-                <span>Pelaksanaan Ujian</span>
+                <span class="manager-nav-label">Pelaksanaan Ujian</span>
                 <span class="manager-nav-chevron"></span>
             </button>
 
@@ -127,9 +135,10 @@ $systemOpen = $activeMenu === 'system-users';
                 data-bs-target="#navHasil"
                 aria-expanded="false"
                 aria-controls="navHasil"
+                title="Hasil & Laporan"
             >
                 <span class="manager-nav-icon icon-hasil"></span>
-                <span>Hasil & Laporan</span>
+                <span class="manager-nav-label">Hasil & Laporan</span>
                 <span class="manager-nav-chevron"></span>
             </button>
 
@@ -149,9 +158,10 @@ $systemOpen = $activeMenu === 'system-users';
                 data-bs-target="#navSystem"
                 aria-expanded="<?= $systemOpen ? 'true' : 'false' ?>"
                 aria-controls="navSystem"
+                title="Sistem"
             >
                 <span class="manager-nav-icon icon-system"></span>
-                <span>Sistem</span>
+                <span class="manager-nav-label">Sistem</span>
                 <span class="manager-nav-chevron"></span>
             </button>
 
