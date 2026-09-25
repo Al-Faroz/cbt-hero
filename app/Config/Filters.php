@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\ManagerAuthFilter;
+use App\Filters\ManagerRoleFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -28,6 +29,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'manager-auth'  => ManagerAuthFilter::class,
+        'manager-role'  => ManagerRoleFilter::class,
     ];
 
     /** @var array{before: list<string>, after: list<string>} */

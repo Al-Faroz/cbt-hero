@@ -77,8 +77,15 @@
             background: #12b76a;
         }
 
-        button {
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-top: 24px;
+        }
+
+        button, .action-link {
+            display: inline-block;
             padding: 10px 15px;
             border: 1px solid #d0d5dd;
             border-radius: 9px;
@@ -86,7 +93,14 @@
             background: #fff;
             font: inherit;
             font-weight: 700;
+            text-decoration: none;
             cursor: pointer;
+        }
+
+        .action-link.primary {
+            color: #fff;
+            border-color: var(--primary);
+            background: var(--primary);
         }
     </style>
 </head>
@@ -100,22 +114,33 @@
 
     <main class="wrap">
         <section class="card">
-            <h1>Manager Authentication Aktif</h1>
+            <h1>Role & Permission Aktif</h1>
             <p>
-                Login Manager, database session, proteksi route, throttling,
-                audit login/logout, dan CSRF sudah terhubung. Tampilan ini
-                masih checkpoint Phase 1A; Manager Shell final dikerjakan pada
-                Phase 1C sesuai UI/UX Acuan CBT-HERO.
+                Authentication Manager sudah FIX. Pada Phase 1B, authority
+                ADMIN/OPERATOR diperiksa kembali oleh server dan permission
+                sensitif tidak bergantung pada menu yang terlihat di browser.
+                Manager Shell final tetap dikerjakan pada Phase 1C.
             </p>
 
-            <div class="status">SESSION MANAGER VALID</div>
+            <div class="status">SESSION + ROLE VALID</div>
 
             <p>
                 Username: <strong><?= esc($auth['username']) ?></strong><br>
                 Role: <strong><?= esc($auth['role']) ?></strong>
             </p>
 
-            <button id="logoutButton" type="button">Logout</button>
+            <div class="actions">
+                <?php if (($auth['role'] ?? '') === 'ADMIN'): ?>
+                    <a
+                        class="action-link primary"
+                        href="<?= base_url('manager/system/users') ?>"
+                    >
+                        User Manager
+                    </a>
+                <?php endif; ?>
+
+                <button id="logoutButton" type="button">Logout</button>
+            </div>
         </section>
     </main>
 
