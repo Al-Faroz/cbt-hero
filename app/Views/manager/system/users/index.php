@@ -1,264 +1,178 @@
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
-    <title>User Manager | CBT-HERO</title>
-    <style>
-        :root {
-            --bg: #f5f7fb;
-            --panel: #fff;
-            --text: #172033;
-            --muted: #667085;
-            --line: #e4e7ec;
-            --primary: #4f46e5;
-            --danger: #b42318;
-            --success: #067647;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--text);
-            background: var(--bg);
-        }
-        .topbar {
-            min-height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 0 24px;
-            color: #fff;
-            background: #101828;
-        }
-        .brand { font-weight: 800; letter-spacing: .04em; }
-        .topbar a { color: #d0d5dd; text-decoration: none; }
-        .wrap {
-            width: min(1180px, calc(100% - 32px));
-            margin: 32px auto;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.45fr) minmax(320px, .55fr);
-            gap: 20px;
-            align-items: start;
-        }
-        .card {
-            padding: 24px;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: var(--panel);
-            box-shadow: 0 10px 30px rgba(16, 24, 40, .04);
-        }
-        h1, h2 { margin-top: 0; }
-        .muted { color: var(--muted); }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 11px 10px;
-            border-bottom: 1px solid var(--line);
-            text-align: left;
-            vertical-align: top;
-            font-size: 14px;
-        }
-        th {
-            color: #475467;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: #eef2ff;
-            color: #4338ca;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        label {
-            display: block;
-            margin: 14px 0 6px;
-            font-size: 13px;
-            font-weight: 700;
-        }
-        input, select {
-            width: 100%;
-            min-height: 43px;
-            padding: 9px 11px;
-            border: 1px solid #d0d5dd;
-            border-radius: 9px;
-            background: #fff;
-            font: inherit;
-        }
-        button {
-            width: 100%;
-            min-height: 44px;
-            margin-top: 18px;
-            border: 0;
-            border-radius: 9px;
-            color: #fff;
-            background: var(--primary);
-            font: inherit;
-            font-weight: 800;
-            cursor: pointer;
-        }
-        button:disabled { opacity: .65; cursor: wait; }
-        .message {
-            display: none;
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            line-height: 1.45;
-        }
-        .message.error { color: var(--danger); background: #fef3f2; }
-        .message.success { color: var(--success); background: #ecfdf3; }
-        @media (max-width: 860px) {
-            .grid { grid-template-columns: 1fr; }
-            .table-wrap { overflow-x: auto; }
-        }
-    </style>
-</head>
-<body>
-    <header class="topbar">
-        <div class="brand">CBT-HERO</div>
-        <a href="<?= base_url('manager/dashboard') ?>">← Dashboard</a>
-    </header>
+<?= $this->extend('manager/layouts/main') ?>
 
-    <main class="wrap">
-        <h1>User Manager</h1>
-        <p class="muted">
-            Phase 1B foundation. Halaman ini Admin-only dan dipakai untuk
-            membuktikan role/permission server-side. Fitur status/reset password
-            lengkap tetap diselesaikan pada modul System.
+<?= $this->section('content') ?>
+
+<section class="manager-page-header">
+    <div>
+        <div class="manager-page-kicker">Sistem</div>
+        <h1 class="manager-page-title">User Manager</h1>
+        <p class="manager-page-description">
+            Account Admin dan Operator. Phase 1B tetap menjadi authority;
+            Phase 1C hanya memindahkan halaman ke Manager Shell yang konsisten.
         </p>
+    </div>
 
-        <div class="grid">
-            <section class="card">
-                <h2>Daftar Manager</h2>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
+    <span class="cbt-badge">ADMIN ONLY</span>
+</section>
+
+<div class="row g-3 align-items-start">
+    <div class="col-xl-8">
+        <section class="manager-section-card">
+            <div class="card-header">
+                <div class="fw-bold">Daftar Manager</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table manager-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Nama</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Login Terakhir</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php foreach ($users as $user): ?>
                             <tr>
-                                <th>Username</th>
-                                <th>Nama</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Login Terakhir</th>
+                                <td class="fw-semibold"><?= esc($user['username']) ?></td>
+                                <td><?= esc($user['nama']) ?></td>
+                                <td><span class="cbt-badge"><?= esc($user['role']) ?></span></td>
+                                <td><?= esc($user['status']) ?></td>
+                                <td><?= esc($user['last_login_at'] ?? '-') ?></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($users as $user): ?>
-                                <tr>
-                                    <td><strong><?= esc($user['username']) ?></strong></td>
-                                    <td><?= esc($user['nama']) ?></td>
-                                    <td><span class="badge"><?= esc($user['role']) ?></span></td>
-                                    <td><?= esc($user['status']) ?></td>
-                                    <td><?= esc($user['last_login_at'] ?? '-') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4">
+        <section class="manager-section-card">
+            <div class="card-header">
+                <div class="fw-bold">Tambah Manager</div>
+                <div class="small text-secondary mt-1">
+                    Foundation LIST + CREATE dari Phase 1B.
                 </div>
-            </section>
+            </div>
 
-            <section class="card">
-                <h2>Tambah Manager</h2>
-                <p class="muted">
-                    Gunakan ini untuk membuat akun OPERATOR saat acceptance test.
-                </p>
-
+            <div class="card-body">
                 <form id="userForm">
-                    <label for="username">Username</label>
-                    <input id="username" maxlength="64" required>
+                    <div class="mb-3">
+                        <label class="cbt-form-label" for="username">Username</label>
+                        <input
+                            class="form-control text-uppercase"
+                            id="username"
+                            maxlength="64"
+                            required
+                        >
+                    </div>
 
-                    <label for="nama">Nama</label>
-                    <input id="nama" maxlength="150" required>
+                    <div class="mb-3">
+                        <label class="cbt-form-label" for="nama">Nama</label>
+                        <input
+                            class="form-control"
+                            id="nama"
+                            maxlength="150"
+                            required
+                        >
+                    </div>
 
-                    <label for="role">Role</label>
-                    <select id="role">
-                        <option value="OPERATOR">OPERATOR</option>
-                        <option value="ADMIN">ADMIN</option>
-                    </select>
+                    <div class="mb-3">
+                        <label class="cbt-form-label" for="role">Role</label>
+                        <select class="form-select" id="role">
+                            <option value="OPERATOR">OPERATOR</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
 
-                    <label for="password">Password</label>
-                    <input id="password" type="password" minlength="10" required>
+                    <div class="mb-2">
+                        <label class="cbt-form-label" for="password">Password</label>
+                        <input
+                            class="form-control"
+                            id="password"
+                            type="password"
+                            minlength="10"
+                            required
+                        >
+                    </div>
 
-                    <button id="submitButton" type="submit">Buat Akun</button>
+                    <button class="btn btn-cbt-primary w-100 mt-2" id="submitButton" type="submit">
+                        Buat Akun
+                    </button>
 
-                    <div id="errorBox" class="message error"></div>
-                    <div id="successBox" class="message success"></div>
+                    <div id="userFeedback" class="cbt-inline-feedback" role="alert"></div>
                 </form>
-            </section>
-        </div>
-    </main>
+            </div>
+        </section>
+    </div>
+</div>
 
-    <script>
-    (() => {
-        'use strict';
+<?= $this->endSection() ?>
 
-        const form = document.getElementById('userForm');
-        const button = document.getElementById('submitButton');
-        const errorBox = document.getElementById('errorBox');
-        const successBox = document.getElementById('successBox');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+<?= $this->section('pageScripts') ?>
+<script>
+(() => {
+    'use strict';
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+    const form = document.getElementById('userForm');
+    const button = document.getElementById('submitButton');
+    const feedback = document.getElementById('userFeedback');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-            errorBox.style.display = 'none';
-            successBox.style.display = 'none';
-            button.disabled = true;
-            button.textContent = 'Memproses...';
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-            try {
-                const response = await fetch('<?= base_url('manager/api/users') ?>', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        username: document.getElementById('username').value.trim().toUpperCase(),
-                        nama: document.getElementById('nama').value.trim(),
-                        role: document.getElementById('role').value,
-                        password: document.getElementById('password').value
-                    })
-                });
+        feedback.className = 'cbt-inline-feedback';
+        feedback.textContent = '';
+        button.disabled = true;
+        button.textContent = 'Memproses...';
 
-                const result = await response.json();
+        try {
+            const response = await fetch('<?= base_url('manager/api/users') ?>', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value.trim().toUpperCase(),
+                    nama: document.getElementById('nama').value.trim(),
+                    role: document.getElementById('role').value,
+                    password: document.getElementById('password').value
+                })
+            });
 
-                if (! response.ok || result.ok !== true) {
-                    const fields = result?.error?.fields ?? {};
-                    const fieldMessage = Object.values(fields)[0];
+            const result = await response.json();
 
-                    throw new Error(
-                        fieldMessage
-                        ?? result?.error?.message
-                        ?? 'Akun Manager gagal dibuat.'
-                    );
-                }
+            if (! response.ok || result.ok !== true) {
+                const fields = result?.error?.fields ?? {};
+                const fieldMessage = Object.values(fields)[0];
 
-                successBox.textContent = 'Akun Manager berhasil dibuat.';
-                successBox.style.display = 'block';
-
-                setTimeout(() => window.location.reload(), 500);
-            } catch (error) {
-                errorBox.textContent = error.message || 'Akun Manager gagal dibuat.';
-                errorBox.style.display = 'block';
-            } finally {
-                button.disabled = false;
-                button.textContent = 'Buat Akun';
+                throw new Error(
+                    fieldMessage
+                    ?? result?.error?.message
+                    ?? 'Akun Manager gagal dibuat.'
+                );
             }
-        });
-    })();
-    </script>
-</body>
-</html>
+
+            feedback.textContent = 'Akun Manager berhasil dibuat.';
+            feedback.className = 'cbt-inline-feedback is-info';
+
+            window.setTimeout(() => window.location.reload(), 450);
+        } catch (error) {
+            feedback.textContent = error.message || 'Akun Manager gagal dibuat.';
+            feedback.className = 'cbt-inline-feedback is-error';
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Buat Akun';
+        }
+    });
+})();
+</script>
+<?= $this->endSection() ?>

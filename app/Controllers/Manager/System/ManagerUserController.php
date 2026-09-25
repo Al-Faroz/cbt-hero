@@ -15,6 +15,9 @@ class ManagerUserController extends BaseController
         return view('manager/system/users/index', [
             'auth' => session()->get('manager_auth'),
             'users' => (new ManagerUserService())->listUsers(),
+            'pageTitle' => 'User Manager',
+            'pageSubtitle' => 'Kelola account Admin dan Operator',
+            'activeMenu' => 'system-users',
         ]);
     }
 

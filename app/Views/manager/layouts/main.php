@@ -1,0 +1,56 @@
+<?php
+$auth = $auth ?? session()->get('manager_auth') ?? [];
+$pageTitle = $pageTitle ?? 'Manager';
+$pageSubtitle = $pageSubtitle ?? 'CBT-HERO Manager';
+$activeMenu = $activeMenu ?? '';
+?>
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
+
+    <title><?= esc($pageTitle) ?> | CBT-HERO</title>
+
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>"
+    >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/vendor/bootstrap-icons/font/bootstrap-icons.min.css') ?>"
+    >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/cbt-hero-theme.css') ?>"
+    >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/manager-shell.css') ?>"
+    >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/manager-sidebar-patch.css') ?>"
+    >
+
+    <?= $this->renderSection('pageStyles') ?>
+</head>
+
+<body class="manager-body">
+
+<?= $this->include('manager/partials/sidebar') ?>
+
+<div class="manager-main">
+    <?= $this->include('manager/partials/topbar') ?>
+
+    <main class="manager-content">
+        <?= $this->renderSection('content') ?>
+    </main>
+</div>
+
+<script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+<script src="<?= base_url('assets/js/manager-shell.js') ?>"></script>
+<?= $this->renderSection('pageScripts') ?>
+</body>
+</html>

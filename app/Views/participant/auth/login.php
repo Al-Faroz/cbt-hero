@@ -1,25 +1,21 @@
 <?= $this->extend('layouts/landing') ?>
 
 <?= $this->section('landingContent') ?>
-<section class="cbt-login-card" aria-labelledby="managerLoginTitle">
-    <div class="cbt-login-eyebrow">Admin / Operator</div>
+<section class="cbt-login-card" aria-labelledby="participantLoginTitle">
+    <div class="cbt-login-eyebrow">Peserta Ujian</div>
 
-    <h2 id="managerLoginTitle">Masuk ke Manager</h2>
+    <h2 id="participantLoginTitle">Masuk ke Ujian</h2>
 
     <p class="cbt-login-intro">
-        Kelola persiapan, pelaksanaan, monitoring, dan hasil ujian dari satu console.
+        Gunakan Username dan Password yang tertera pada kartu peserta.
     </p>
 
-    <form
-        data-manager-login-form
-        data-login-url="<?= base_url('manager/api/auth/login') ?>"
-        autocomplete="on"
-    >
+    <form data-participant-ui-form autocomplete="on">
         <div class="mb-3">
-            <label class="cbt-form-label" for="managerUsername">Username</label>
+            <label class="cbt-form-label" for="participantUsername">Username</label>
             <input
                 class="form-control text-uppercase"
-                id="managerUsername"
+                id="participantUsername"
                 name="username"
                 type="text"
                 maxlength="64"
@@ -31,10 +27,10 @@
         </div>
 
         <div class="mb-2">
-            <label class="cbt-form-label" for="managerPassword">Password</label>
+            <label class="cbt-form-label" for="participantPassword">Password</label>
             <input
                 class="form-control"
-                id="managerPassword"
+                id="participantPassword"
                 name="password"
                 type="password"
                 autocomplete="current-password"
@@ -43,23 +39,23 @@
         </div>
 
         <button class="btn btn-cbt-primary w-100 mt-3" type="submit">
-            Masuk Manager
+            Masuk Ujian
         </button>
 
         <div
             class="cbt-inline-feedback"
-            data-login-feedback
-            role="alert"
+            data-participant-feedback
+            role="status"
         ></div>
     </form>
 
     <div class="cbt-login-meta">
-        <span>Area terproteksi</span>
-        <a href="<?= base_url('/') ?>">Masuk sebagai peserta →</a>
+        <span>Portal Peserta</span>
+        <a href="<?= base_url('manager') ?>">Manager →</a>
     </div>
 </section>
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
-<script src="<?= base_url('assets/js/manager-auth.js') ?>"></script>
+<script src="<?= base_url('assets/js/participant-landing.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -1,0 +1,85 @@
+/*
+ * CBT-HERO Phase 1C Sidebar Cleanup
+ * Load AFTER manager-shell.css.
+ */
+
+.manager-nav-status {
+    display: none !important;
+}
+
+.manager-nav-toggle {
+    width: 100%;
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 11px;
+    color: #aeb8ca;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 680;
+    text-align: left;
+    transition: .15s ease;
+}
+
+.manager-nav-toggle:hover,
+.manager-nav-toggle[aria-expanded="true"] {
+    color: #fff;
+    background: rgba(255,255,255,.055);
+}
+
+.manager-nav-chevron {
+    width: 8px;
+    height: 8px;
+    margin-left: auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform .15s ease;
+}
+
+.manager-nav-toggle[aria-expanded="true"] .manager-nav-chevron {
+    transform: rotate(225deg);
+}
+
+.manager-subnav {
+    margin: 4px 0 6px 30px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255,255,255,.08);
+}
+
+.manager-subnav-link {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 9px;
+    color: #91a0b8;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 620;
+}
+
+.manager-subnav-link:hover {
+    color: #fff;
+    background: rgba(255,255,255,.045);
+}
+
+.manager-subnav-link.active {
+    color: #fff;
+    background: rgba(91,95,242,.20);
+}
+
+.manager-subnav-link.is-unavailable {
+    color: #59667e;
+    cursor: default;
+    user-select: none;
+}
+
+.manager-subnav-link.is-unavailable:hover {
+    color: #59667e;
+    background: transparent;
+}

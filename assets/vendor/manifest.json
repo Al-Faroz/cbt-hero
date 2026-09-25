@@ -1,0 +1,46 @@
+{
+  "generated_for": "CBT-HERO",
+  "policy": "Local assets, no mandatory CDN. Libraries are installed locally but loaded only on pages that need them.",
+  "libraries": {
+    "bootstrap": {
+      "version": "5.3.8",
+      "scope": "shared shell / manager / forms"
+    },
+    "bootstrap-icons": {
+      "version": "1.13.1",
+      "scope": "manager UI icons"
+    },
+    "datatables": {
+      "version": "2.3.8",
+      "scope": "manager large tables, vanilla JS, Bootstrap 5 integration"
+    },
+    "sweetalert2": {
+      "version": "11.26.25",
+      "scope": "manager confirmation / destructive actions / toast"
+    },
+    "chart.js": {
+      "version": "4.5.1",
+      "scope": "manager summaries / analysis only when useful"
+    },
+    "sortablejs": {
+      "version": "1.15.7",
+      "scope": "question/template ordering"
+    },
+    "dexie": {
+      "version": "4.4.6",
+      "scope": "exam IndexedDB runtime"
+    },
+    "dompurify": {
+      "version": "3.4.16",
+      "scope": "rich question render defense-in-depth"
+    },
+    "katex": {
+      "version": "0.18.7",
+      "scope": "formula rendering"
+    },
+    "panzoom": {
+      "version": "4.6.2",
+      "scope": "question image zoom/pan"
+    }
+  }
+}

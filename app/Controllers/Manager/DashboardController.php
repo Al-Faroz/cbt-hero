@@ -10,6 +10,9 @@ class DashboardController extends BaseController
     {
         return view('manager/dashboard/index', [
             'auth' => session()->get('manager_auth'),
+            'pageTitle' => 'Dashboard',
+            'pageSubtitle' => 'Ringkasan operasional CBT-HERO',
+            'activeMenu' => 'dashboard',
         ]);
     }
 }

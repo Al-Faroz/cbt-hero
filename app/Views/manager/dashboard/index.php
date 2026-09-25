@@ -1,184 +1,137 @@
-<!doctype html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
-    <title>Dashboard Manager | CBT-HERO</title>
+<?= $this->extend('manager/layouts/main') ?>
 
-    <style>
-        :root {
-            --bg: #f5f7fb;
-            --panel: #fff;
-            --text: #172033;
-            --muted: #667085;
-            --line: #e4e7ec;
-            --primary: #4f46e5;
-        }
+<?= $this->section('content') ?>
 
-        * { box-sizing: border-box; }
+<section class="manager-page-header">
+    <div>
+        <div class="manager-page-kicker">Manager Console</div>
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            color: var(--text);
-            background: var(--bg);
-        }
+        <h1 class="manager-page-title">
+            Selamat datang, <?= esc($auth['nama']) ?>
+        </h1>
 
-        .topbar {
-            min-height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 0 24px;
-            color: #fff;
-            background: #101828;
-        }
+        <p class="manager-page-description">
+            Fondasi Manager sudah aktif. Shell ini menjadi layout baku untuk seluruh
+            Master Data, Master Ujian, Pelaksanaan, Hasil & Laporan, dan Sistem.
+        </p>
+    </div>
 
-        .brand { font-weight: 800; letter-spacing: .04em; }
-        .user { color: #d0d5dd; font-size: 14px; }
+    <span class="manager-role-chip">
+        <?= esc($auth['role']) ?>
+    </span>
+</section>
 
-        .wrap {
-            width: min(1120px, calc(100% - 32px));
-            margin: 42px auto;
-        }
-
-        .card {
-            padding: 28px;
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            background: var(--panel);
-            box-shadow: 0 12px 36px rgba(16, 24, 40, .06);
-        }
-
-        h1 { margin: 0 0 8px; font-size: 30px; }
-        p { color: var(--muted); line-height: 1.6; }
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            margin-top: 12px;
-            padding: 7px 10px;
-            border-radius: 999px;
-            color: #067647;
-            background: #ecfdf3;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .status::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #12b76a;
-        }
-
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        button, .action-link {
-            display: inline-block;
-            padding: 10px 15px;
-            border: 1px solid #d0d5dd;
-            border-radius: 9px;
-            color: #344054;
-            background: #fff;
-            font: inherit;
-            font-weight: 700;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .action-link.primary {
-            color: #fff;
-            border-color: var(--primary);
-            background: var(--primary);
-        }
-    </style>
-</head>
-<body>
-    <header class="topbar">
-        <div class="brand">CBT-HERO</div>
-        <div class="user">
-            <?= esc($auth['nama']) ?> · <?= esc($auth['role']) ?>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="manager-metric-card">
+            <div class="manager-metric-label">Role Aktif</div>
+            <div class="manager-metric-value"><?= esc($auth['role']) ?></div>
         </div>
-    </header>
+    </div>
 
-    <main class="wrap">
-        <section class="card">
-            <h1>Role & Permission Aktif</h1>
-            <p>
-                Authentication Manager sudah FIX. Pada Phase 1B, authority
-                ADMIN/OPERATOR diperiksa kembali oleh server dan permission
-                sensitif tidak bergantung pada menu yang terlihat di browser.
-                Manager Shell final tetap dikerjakan pada Phase 1C.
-            </p>
+    <div class="col-6 col-xl-3">
+        <div class="manager-metric-card">
+            <div class="manager-metric-label">Session</div>
+            <div class="manager-metric-value">Valid</div>
+        </div>
+    </div>
 
-            <div class="status">SESSION + ROLE VALID</div>
+    <div class="col-6 col-xl-3">
+        <div class="manager-metric-card">
+            <div class="manager-metric-label">Auth</div>
+            <div class="manager-metric-value">Aktif</div>
+        </div>
+    </div>
 
-            <p>
-                Username: <strong><?= esc($auth['username']) ?></strong><br>
-                Role: <strong><?= esc($auth['role']) ?></strong>
-            </p>
+    <div class="col-6 col-xl-3">
+        <div class="manager-metric-card">
+            <div class="manager-metric-label">UI Shell</div>
+            <div class="manager-metric-value">Ready</div>
+        </div>
+    </div>
+</div>
 
-            <div class="actions">
+<div class="row g-3">
+    <div class="col-xl-7">
+        <section class="manager-section-card h-100">
+            <div class="card-header">
+                <div class="fw-bold">Fondasi Modul</div>
+                <div class="small text-secondary mt-1">
+                    Menu akan aktif bertahap mengikuti phase implementasi.
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="manager-placeholder-grid">
+                    <div class="manager-placeholder-item">
+                        <strong>Master Data</strong>
+                        <span>Periode, Rombel, Peserta, Mata Pelajaran</span>
+                    </div>
+
+                    <div class="manager-placeholder-item">
+                        <strong>Master Ujian</strong>
+                        <span>Kegiatan, Ruang, Bank Soal, Jadwal</span>
+                    </div>
+
+                    <div class="manager-placeholder-item">
+                        <strong>Pelaksanaan</strong>
+                        <span>Token, Monitoring, Live Scoring</span>
+                    </div>
+
+                    <div class="manager-placeholder-item">
+                        <strong>Hasil & Laporan</strong>
+                        <span>Nilai, Rekap, Analisis, Psikologis</span>
+                    </div>
+
+                    <div class="manager-placeholder-item">
+                        <strong>Sistem</strong>
+                        <span>Backup, Log, Settings, User Manager</span>
+                    </div>
+
+                    <div class="manager-placeholder-item">
+                        <strong>Participant</strong>
+                        <span>Login, daftar ujian, workspace mobile-first</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-5">
+        <section class="manager-section-card h-100">
+            <div class="card-header">
+                <div class="fw-bold">Akses Cepat</div>
+                <div class="small text-secondary mt-1">
+                    Hanya fungsi yang sudah tersedia yang dibuat aktif.
+                </div>
+            </div>
+
+            <div class="card-body">
                 <?php if (($auth['role'] ?? '') === 'ADMIN'): ?>
                     <a
-                        class="action-link primary"
+                        class="btn btn-cbt-primary w-100"
                         href="<?= base_url('manager/system/users') ?>"
                     >
-                        User Manager
+                        Kelola User Manager
                     </a>
                 <?php endif; ?>
 
-                <button id="logoutButton" type="button">Logout</button>
+                <a
+                    class="btn btn-outline-secondary w-100 mt-2"
+                    href="<?= base_url('/') ?>"
+                    target="_blank"
+                    rel="noopener"
+                >
+                    Lihat Landing Peserta
+                </a>
+
+                <div class="alert alert-light border mt-3 mb-0 small text-secondary">
+                    Landing Peserta dan Manager sekarang menggunakan design system
+                    yang sama dengan Dashboard.
+                </div>
             </div>
         </section>
-    </main>
+    </div>
+</div>
 
-    <script>
-    (() => {
-        'use strict';
-
-        const button = document.getElementById('logoutButton');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-        button.addEventListener('click', async () => {
-            button.disabled = true;
-            button.textContent = 'Memproses...';
-
-            try {
-                const response = await fetch('<?= base_url('manager/api/auth/logout') ?>', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (! response.ok || result.ok !== true) {
-                    throw new Error(result?.error?.message ?? 'Logout gagal.');
-                }
-
-                window.location.assign(result.data.redirect);
-            } catch (error) {
-                alert(error.message || 'Logout gagal.');
-                button.disabled = false;
-                button.textContent = 'Logout';
-            }
-        });
-    })();
-    </script>
-</body>
-</html>
+<?= $this->endSection() ?>
