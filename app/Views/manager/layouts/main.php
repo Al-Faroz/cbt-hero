@@ -3,6 +3,7 @@ $auth = $auth ?? session()->get('manager_auth') ?? [];
 $pageTitle = $pageTitle ?? 'Manager';
 $pageSubtitle = $pageSubtitle ?? 'CBT-HERO Manager';
 $activeMenu = $activeMenu ?? '';
+$branding = config('Branding');
 ?>
 <!doctype html>
 <html lang="id">
@@ -12,6 +13,12 @@ $activeMenu = $activeMenu ?? '';
     <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
 
     <title><?= esc($pageTitle) ?> | CBT-HERO</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="<?= base_url($branding->logo) ?>"
+    >
 
     <link
         rel="stylesheet"
@@ -24,6 +31,10 @@ $activeMenu = $activeMenu ?? '';
     <link
         rel="stylesheet"
         href="<?= base_url('assets/css/cbt-hero-theme.css') ?>"
+    >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/cbt-hero-branding.css') ?>"
     >
     <link
         rel="stylesheet"

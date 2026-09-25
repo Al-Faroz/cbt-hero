@@ -1,7 +1,7 @@
 <?php
-$portalLabel = $portalLabel ?? 'CBT-HERO';
-$heroTitle = $heroTitle ?? 'Ujian digital yang fokus, ringan, dan jelas.';
-$heroText = $heroText ?? 'Satu tampilan yang konsisten untuk peserta, operator, dan admin.';
+$branding = config('Branding');
+$pageTitle = $pageTitle ?? $branding->appName;
+$portalLabel = $portalLabel ?? $branding->productName;
 ?>
 <!doctype html>
 <html lang="id">
@@ -10,7 +10,13 @@ $heroText = $heroText ?? 'Satu tampilan yang konsisten untuk peserta, operator, 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?= esc(csrf_hash()) ?>">
 
-    <title><?= esc($pageTitle ?? 'CBT-HERO') ?></title>
+    <title><?= esc($pageTitle) ?></title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="<?= base_url($branding->logo) ?>"
+    >
 
     <link
         rel="stylesheet"
@@ -20,6 +26,10 @@ $heroText = $heroText ?? 'Satu tampilan yang konsisten untuk peserta, operator, 
         rel="stylesheet"
         href="<?= base_url('assets/css/cbt-hero-theme.css') ?>"
     >
+    <link
+        rel="stylesheet"
+        href="<?= base_url('assets/css/cbt-hero-branding.css') ?>"
+    >
 </head>
 
 <body>
@@ -27,30 +37,36 @@ $heroText = $heroText ?? 'Satu tampilan yang konsisten untuk peserta, operator, 
     <div class="cbt-landing-shell">
 
         <section class="cbt-landing-hero">
-            <a class="cbt-brand" href="<?= base_url('/') ?>">
-                <span class="cbt-brand-mark">H</span>
-                <span class="cbt-brand-copy">
-                    <span class="cbt-brand-title">CBT-HERO</span>
-                    <span class="cbt-brand-subtitle"><?= esc($portalLabel) ?></span>
-                </span>
+            <a
+                class="cbt-landing-brand"
+                href="<?= base_url('/') ?>"
+                aria-label="<?= esc($branding->appName) ?>"
+            >
+                <img
+                    class="cbt-brand-image-full"
+                    src="<?= base_url($branding->logoWithText) ?>"
+                    alt="<?= esc($branding->appName) ?>"
+                >
             </a>
 
             <div class="cbt-landing-hero-copy">
-                <div class="cbt-landing-kicker">CBT · CodeIgniter 4</div>
+                <div class="cbt-landing-kicker">
+                    <?= esc($branding->productName) ?>
+                </div>
 
-                <h1><?= esc($heroTitle) ?></h1>
+                <h1><?= esc($branding->tagline) ?></h1>
 
-                <p><?= esc($heroText) ?></p>
+                <p><?= esc($branding->description) ?></p>
 
                 <div class="cbt-landing-points" aria-label="Karakter CBT-HERO">
-                    <span class="cbt-landing-point">Responsive</span>
-                    <span class="cbt-landing-point">Operational First</span>
-                    <span class="cbt-landing-point">Performance Focused</span>
+                    <span class="cbt-landing-point">Ringan</span>
+                    <span class="cbt-landing-point">Stabil</span>
+                    <span class="cbt-landing-point">Siap Skala Besar</span>
                 </div>
             </div>
 
             <div class="cbt-landing-hero-foot">
-                CBT-HERO · Satu design system untuk seluruh portal
+                <?= esc($branding->footer) ?>
             </div>
         </section>
 

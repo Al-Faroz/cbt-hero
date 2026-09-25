@@ -1,6 +1,7 @@
 <?php
 $role = (string) ($auth['role'] ?? '');
 $isAdmin = $role === 'ADMIN';
+$branding = config('Branding');
 
 $active = static function (string $key) use ($activeMenu): string {
     return $activeMenu === $key ? ' active' : '';
@@ -16,7 +17,14 @@ $systemOpen = $activeMenu === 'system-users';
 >
     <div class="offcanvas-header">
         <a class="cbt-brand" href="<?= base_url('manager/dashboard') ?>">
-            <span class="cbt-brand-mark">H</span>
+            <span class="cbt-sidebar-brand-symbol">
+                <img
+                    class="cbt-brand-image-symbol"
+                    src="<?= base_url($branding->logo) ?>"
+                    alt=""
+                >
+            </span>
+
             <span class="cbt-brand-copy">
                 <span class="cbt-brand-title" id="managerSidebarLabel">CBT-HERO</span>
                 <span class="cbt-brand-subtitle">Manager Console</span>

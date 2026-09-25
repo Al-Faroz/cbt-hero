@@ -4,10 +4,11 @@
 <section class="cbt-login-card" aria-labelledby="managerLoginTitle">
     <div class="cbt-login-eyebrow">Admin / Operator</div>
 
-    <h2 id="managerLoginTitle">Masuk ke Manager</h2>
+    <h2 id="managerLoginTitle">Masuk ke CBT-HERO</h2>
 
     <p class="cbt-login-intro">
-        Kelola persiapan, pelaksanaan, monitoring, dan hasil ujian dari satu console.
+        Akses Manager untuk mengelola persiapan, pelaksanaan, monitoring,
+        dan hasil ujian.
     </p>
 
     <form
@@ -54,8 +55,8 @@
     </form>
 
     <div class="cbt-login-meta">
-        <span>Area terproteksi</span>
-        <a href="<?= base_url('/') ?>">Masuk sebagai peserta →</a>
+        <span>Portal Admin / Operator</span>
+        <a href="<?= base_url('/') ?>">Masuk sebagai Peserta →</a>
     </div>
 </section>
 <?= $this->endSection() ?>

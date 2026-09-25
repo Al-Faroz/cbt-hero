@@ -1,0 +1,507 @@
+/*
+ * CBT-HERO FINAL BRANDING + LANDING VIEWPORT FIT
+ * Goal: Landing Peserta dan Manager muat dalam satu visual viewport
+ * pada desktop maupun mobile tanpa page scrolling.
+ */
+
+.cbt-brand-image-full {
+    width: clamp(190px, 20vw, 250px);
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.cbt-brand-image-symbol {
+    width: 34px;
+    height: 40px;
+    display: block;
+    flex: 0 0 auto;
+    object-fit: contain;
+}
+
+.cbt-landing-brand {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    text-decoration: none;
+}
+
+.cbt-landing-brand:hover {
+    opacity: .96;
+}
+
+.cbt-landing-brand .cbt-brand-image-full {
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .12));
+}
+
+.cbt-sidebar-brand-symbol {
+    width: 40px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+}
+
+.cbt-sidebar-brand-symbol .cbt-brand-image-symbol {
+    width: 34px;
+    height: 40px;
+}
+
+/* ================================================================
+   DESKTOP / TABLET LANDSCAPE
+   ================================================================ */
+
+.cbt-landing {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+}
+
+@supports (height: 100svh) {
+    .cbt-landing {
+        height: 100svh;
+    }
+}
+
+.cbt-landing-shell {
+    height: calc(100vh - 24px);
+    min-height: 0;
+    max-height: calc(100vh - 24px);
+    margin: 12px auto;
+}
+
+@supports (height: 100svh) {
+    .cbt-landing-shell {
+        height: calc(100svh - 24px);
+        max-height: calc(100svh - 24px);
+    }
+}
+
+.cbt-landing-hero {
+    min-height: 0;
+    padding: clamp(26px, 3.4vw, 46px);
+}
+
+.cbt-landing-hero-copy {
+    padding: clamp(18px, 4vh, 34px) 0;
+}
+
+.cbt-landing-kicker {
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.cbt-landing-hero h1 {
+    margin-bottom: 14px;
+    font-size: clamp(36px, 4vw, 54px);
+    line-height: 1;
+}
+
+.cbt-landing-hero p {
+    font-size: clamp(13px, 1.18vw, 16px);
+    line-height: 1.55;
+}
+
+.cbt-landing-points {
+    gap: 7px;
+    margin-top: 18px;
+}
+
+.cbt-landing-point {
+    padding: 6px 9px;
+    font-size: 11px;
+}
+
+.cbt-landing-panel {
+    min-height: 0;
+    overflow: hidden;
+    padding: clamp(24px, 3.4vw, 44px);
+}
+
+.cbt-login-card h2 {
+    margin-bottom: 7px;
+    font-size: clamp(27px, 2.4vw, 32px);
+}
+
+.cbt-login-intro {
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cbt-login-eyebrow {
+    margin-bottom: 7px;
+    font-size: 11px;
+}
+
+.cbt-login-meta {
+    margin-top: 14px;
+    font-size: 11px;
+}
+
+/* Height-critical desktop screens, e.g. 1366x679 */
+@media (min-width: 861px) and (max-height: 720px) {
+    .cbt-landing-shell {
+        height: calc(100vh - 16px);
+        max-height: calc(100vh - 16px);
+        margin: 8px auto;
+        border-radius: 24px;
+    }
+
+    @supports (height: 100svh) {
+        .cbt-landing-shell {
+            height: calc(100svh - 16px);
+            max-height: calc(100svh - 16px);
+        }
+    }
+
+    .cbt-landing-hero {
+        padding: 26px 36px;
+    }
+
+    .cbt-brand-image-full {
+        width: 208px;
+    }
+
+    .cbt-landing-hero-copy {
+        padding: 14px 0;
+    }
+
+    .cbt-landing-kicker {
+        margin-bottom: 9px;
+        padding: 5px 9px;
+        font-size: 10px;
+    }
+
+    .cbt-landing-hero h1 {
+        margin-bottom: 10px;
+        font-size: clamp(38px, 3.6vw, 48px);
+        line-height: .99;
+    }
+
+    .cbt-landing-hero p {
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .cbt-landing-points {
+        margin-top: 12px;
+    }
+
+    .cbt-landing-hero-foot {
+        font-size: 10px;
+    }
+
+    .cbt-landing-panel {
+        padding: 22px 36px;
+    }
+
+    .cbt-login-card h2 {
+        font-size: 27px;
+    }
+
+    .cbt-login-intro {
+        margin-bottom: 14px;
+        font-size: 13px;
+    }
+
+    .cbt-form-label {
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+
+    .cbt-login-card .mb-3 {
+        margin-bottom: .65rem !important;
+    }
+
+    .cbt-login-card .mb-2 {
+        margin-bottom: .4rem !important;
+    }
+
+    .cbt-login-card .form-control {
+        min-height: 42px;
+        padding-top: .45rem;
+        padding-bottom: .45rem;
+        font-size: 14px;
+    }
+
+    .cbt-login-card .btn {
+        min-height: 42px;
+    }
+
+    .cbt-login-card .mt-3 {
+        margin-top: .65rem !important;
+    }
+
+    .cbt-login-meta {
+        margin-top: 10px;
+        font-size: 10.5px;
+    }
+}
+
+/* ================================================================
+   MOBILE PORTRAIT / SMALL TABLET
+   ================================================================ */
+
+@media (max-width: 860px) {
+    .cbt-landing {
+        height: 100vh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    @supports (height: 100svh) {
+        .cbt-landing {
+            height: 100svh;
+        }
+    }
+
+    .cbt-landing-shell {
+        width: 100%;
+        height: 100vh;
+        min-height: 0;
+        max-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 42%) minmax(0, 58%);
+        margin: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    @supports (height: 100svh) {
+        .cbt-landing-shell {
+            height: 100svh;
+            max-height: 100svh;
+        }
+    }
+
+    .cbt-landing-hero {
+        min-height: 0;
+        height: auto;
+        overflow: hidden;
+        padding: 16px 20px 15px;
+    }
+
+    .cbt-brand-image-full {
+        width: clamp(145px, 40vw, 178px);
+    }
+
+    .cbt-landing-hero-copy {
+        padding: 8px 0 0;
+    }
+
+    .cbt-landing-kicker {
+        margin-bottom: 8px;
+        padding: 5px 8px;
+        font-size: 9.5px;
+    }
+
+    .cbt-landing-kicker::before {
+        width: 6px;
+        height: 6px;
+    }
+
+    .cbt-landing-hero h1 {
+        max-width: 100%;
+        margin-bottom: 8px;
+        font-size: clamp(25px, 7.2vw, 34px);
+        line-height: 1.01;
+        letter-spacing: -.038em;
+    }
+
+    .cbt-landing-hero p {
+        max-width: 100%;
+        font-size: clamp(11.5px, 3vw, 13px);
+        line-height: 1.42;
+    }
+
+    .cbt-landing-points,
+    .cbt-landing-hero-foot {
+        display: none;
+    }
+
+    .cbt-landing-panel {
+        min-height: 0;
+        align-items: center;
+        overflow: hidden;
+        padding: 13px 20px 16px;
+    }
+
+    .cbt-login-card {
+        width: min(100%, 420px);
+    }
+
+    .cbt-login-eyebrow {
+        margin-bottom: 4px;
+        font-size: 9.5px;
+        letter-spacing: .1em;
+    }
+
+    .cbt-login-card h2 {
+        margin-bottom: 5px;
+        font-size: clamp(23px, 6vw, 28px);
+        line-height: 1.08;
+    }
+
+    .cbt-login-intro {
+        margin-bottom: 10px;
+        font-size: 12px;
+        line-height: 1.42;
+    }
+
+    .cbt-form-label {
+        margin-bottom: 3px;
+        font-size: 11px;
+    }
+
+    .cbt-login-card .mb-3 {
+        margin-bottom: .5rem !important;
+    }
+
+    .cbt-login-card .mb-2 {
+        margin-bottom: .35rem !important;
+    }
+
+    .cbt-login-card .form-control {
+        min-height: 40px;
+        padding: .42rem .68rem;
+        border-radius: 9px;
+        font-size: 14px;
+    }
+
+    .cbt-login-card .btn {
+        min-height: 40px;
+        border-radius: 9px;
+        font-size: 13px;
+    }
+
+    .cbt-login-card .mt-3 {
+        margin-top: .5rem !important;
+    }
+
+    .cbt-login-meta {
+        margin-top: 8px;
+        font-size: 10px;
+    }
+
+    .cbt-inline-feedback {
+        margin-top: 7px;
+        padding: 7px 9px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+}
+
+/* Short mobile viewport: browser bars visible / smaller Android phones */
+@media (max-width: 860px) and (max-height: 720px) {
+    .cbt-landing-shell {
+        grid-template-rows: minmax(0, 40%) minmax(0, 60%);
+    }
+
+    .cbt-landing-hero {
+        padding: 12px 18px;
+    }
+
+    .cbt-brand-image-full {
+        width: 132px;
+    }
+
+    .cbt-landing-hero-copy {
+        padding-top: 5px;
+    }
+
+    .cbt-landing-kicker {
+        margin-bottom: 5px;
+        padding: 4px 7px;
+        font-size: 9px;
+    }
+
+    .cbt-landing-hero h1 {
+        margin-bottom: 5px;
+        font-size: clamp(22px, 6.5vw, 28px);
+    }
+
+    .cbt-landing-hero p {
+        font-size: 10.8px;
+        line-height: 1.35;
+    }
+
+    .cbt-landing-panel {
+        padding: 10px 18px 12px;
+    }
+
+    .cbt-login-eyebrow {
+        margin-bottom: 3px;
+        font-size: 9px;
+    }
+
+    .cbt-login-card h2 {
+        margin-bottom: 4px;
+        font-size: 22px;
+    }
+
+    .cbt-login-intro {
+        margin-bottom: 7px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    .cbt-login-card .mb-3 {
+        margin-bottom: .38rem !important;
+    }
+
+    .cbt-login-card .mb-2 {
+        margin-bottom: .28rem !important;
+    }
+
+    .cbt-form-label {
+        font-size: 10px;
+    }
+
+    .cbt-login-card .form-control {
+        min-height: 37px;
+        padding: .35rem .62rem;
+        font-size: 13px;
+    }
+
+    .cbt-login-card .btn {
+        min-height: 37px;
+        font-size: 12px;
+    }
+
+    .cbt-login-card .mt-3 {
+        margin-top: .4rem !important;
+    }
+
+    .cbt-login-meta {
+        margin-top: 6px;
+        font-size: 9px;
+    }
+}
+
+/* Very narrow devices */
+@media (max-width: 380px) {
+    .cbt-landing-hero {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .cbt-landing-panel {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .cbt-landing-hero h1 {
+        font-size: 24px;
+    }
+
+    .cbt-login-card h2 {
+        font-size: 22px;
+    }
+}

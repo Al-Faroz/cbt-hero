@@ -4,10 +4,11 @@
 <section class="cbt-login-card" aria-labelledby="participantLoginTitle">
     <div class="cbt-login-eyebrow">Peserta Ujian</div>
 
-    <h2 id="participantLoginTitle">Masuk ke Ujian</h2>
+    <h2 id="participantLoginTitle">Masuk ke CBT-HERO</h2>
 
     <p class="cbt-login-intro">
-        Gunakan Username dan Password yang tertera pada kartu peserta.
+        Masukkan Username dan Password yang tertera pada kartu peserta
+        untuk mengakses ujian.
     </p>
 
     <form data-participant-ui-form autocomplete="on">
@@ -51,7 +52,7 @@
 
     <div class="cbt-login-meta">
         <span>Portal Peserta</span>
-        <a href="<?= base_url('manager') ?>">Manager →</a>
+        <a href="<?= base_url('manager') ?>">Admin / Operator →</a>
     </div>
 </section>
 <?= $this->endSection() ?>
