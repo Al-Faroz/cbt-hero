@@ -124,6 +124,8 @@ $routes->group(
         );
         $routes->get('master-data/peserta/import', 'Manager\\Master\\PesertaController::import',
             ['filter' => 'manager-role:master.data.manage']);
+        $routes->get('master-data/mapel', 'Manager\\Master\\MataPelajaranController::index',
+            ['filter' => 'manager-role:master.data.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -179,6 +181,14 @@ $routes->group(
         $routes->post('imports/(:num)/items/(:num)/exclude', $import . 'exclude/$1/$2', $filter);
         $routes->post('imports/(:num)/items/(:num)/include', $import . 'includeItem/$1/$2', $filter);
         $routes->post('imports/(:num)/commit', $import . 'commit/$1', $filter);
+
+        $mapel = 'Api\\Manager\\Master\\MataPelajaranController::';
+        $routes->get('mapel', $mapel . 'index', $filter);
+        $routes->post('mapel', $mapel . 'create', $filter);
+        $routes->get('mapel/(:num)', $mapel . 'show/$1', $filter);
+        $routes->put('mapel/(:num)', $mapel . 'update/$1', $filter);
+        $routes->patch('mapel/(:num)/status', $mapel . 'status/$1', $filter);
+        $routes->delete('mapel/(:num)', $mapel . 'remove/$1', $filter);
 
         $routes->get(
             'users',
