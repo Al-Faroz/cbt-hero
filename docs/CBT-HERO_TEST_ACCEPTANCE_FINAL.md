@@ -4,6 +4,14 @@
 **Acuan:** `CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, `CBT-HERO_AUTH_SECURITY_SESSION_FINAL.md`, `CBT-HERO_IMPLEMENTATION_SPEC_ROADMAP_FINAL.md`  
 **Status:** checklist eksekusi; Phase 1F menjadi FIX setelah pengujian localhost PASS.
 
+**Pola acceptance:** satu submodul → uji tampilan dan fungsi yang tersedia →
+PASS/FIX → push → submodul berikutnya. Setelah semua submodul dalam kelompok
+selesai, uji integrasi antarmodul sebelum pindah kelompok. Skenario yang
+memerlukan modul atau data masa depan dicatat untuk gerbang integrasi, bukan
+syarat PASS submodul saat ini. Settings dasar boleh dimajukan bila menjadi
+prasyarat Kegiatan atau Kartu; nilai dan hasil cetaknya diuji bersama modul
+pemakai.
+
 ## 1. Persiapan Phase 1F
 
 1. Extract patch di `G:\xampp\htdocs\cbt-hero\` dengan struktur folder tetap. Tidak perlu import ulang schema.
@@ -86,3 +94,31 @@ Master Periode yang sempat diuji tidak diteruskan. Tahun Pelajaran/Semester akan
 4. Periksa `/manager/master-data/periode` dan `/manager/api/periode`: route tersebut tidak lagi tersedia. Pastikan menu Periode hilang dan fungsi login, dashboard, User Manager tetap berjalan.
 
 **Catatan:** Uji CRUD Periode P2A lama membuktikan implementasi sementara saat itu, tetapi tidak lagi menjadi acceptance desain akhir. Pengujian default Settings, validasi Tahun/Semester pada Kegiatan, dan ketahanan riwayat ketika default berubah dilakukan saat fitur tersebut diimplementasikan.
+
+## 7. Phase 2B — Rombel (uji yang dapat dilakukan sekarang)
+
+Gunakan halaman `/manager/master-data/rombel` dengan akun Admin dan Operator. Cukup dua atau tiga Rombel uji yang belum dipakai Peserta. Tidak perlu membuat row Peserta, mengisi puluhan Rombel, menjalankan SQL manual, atau mengirim request API buatan untuk memperoleh PASS pada fase ini.
+
+| ID | Langkah di halaman Rombel | Hasil yang diharapkan |
+| --- | --- | --- |
+| B01 | Login Admin, buka menu **Master Data → Rombel**. Ulangi dengan Operator. | Halaman dan tabel tampil tanpa error untuk kedua role. |
+| B02 | Tambah tingkat `7` kode `A`, lalu tingkat `8` kode `A`. | Muncul dua row berbeda dengan nama otomatis `7-A` dan `8-A`. |
+| B03 | Coba tambah tingkat `7` kode `a` lagi. | Muncul pesan Rombel sudah ada; tidak tercipta row duplikat. |
+| B04 | Edit `8-A` menjadi `8-R`. Masuk mode edit sekali lagi lalu tekan **Batal Edit**. | Perubahan pertama tersimpan sebagai `8-R`; pembatalan tidak mengubah data. |
+| B05 | Cari `7-A`, pilih filter tingkat `8`, lalu reset filter. | Daftar mengikuti pencarian/filter dan kembali lengkap sesudah reset. Tidak perlu menguji halaman kedua pagination karena data uji sedikit. |
+| B06 | Nonaktifkan `7-A`, lalu aktifkan lagi. | Label status berubah sesuai tombol dan tetap benar setelah refresh halaman. |
+| B07 | Pada `8-R` yang belum dipakai Peserta, klik **Hapus** dan pilih **Batal** pada dialog; klik lagi dan setujui. | Pembatalan mempertahankan row; persetujuan menghapus row. |
+| B08 | Cek tampilan pada lebar desktop dan mobile yang tersedia. | Form, tabel, dan tombol dapat digunakan; tabel dapat digulir horizontal bila layar sempit. |
+
+**PASS Phase 2B:** B01–B08 berhasil tanpa error PHP. Rombel `7-A` boleh dihapus setelah pengujian atau disimpan sebagai data awal jika memang akan dipakai.
+
+**Uji lanjutan, bukan syarat PASS sekarang:** penolakan hapus Rombel yang dipakai Peserta diuji pada Phase 2C ketika UI/data Peserta tersedia; pagination ke halaman kedua diuji bila jumlah Rombel nyata melebihi satu halaman. Pengujian request API manual untuk payload tidak valid, ID tidak ada, sort tidak dikenal, dan CSRF dapat ditambahkan dalam pengujian integrasi. Proteksi auth/CSRF dasar sudah diuji pada Phase 1F.
+
+## 8. Gerbang integrasi Master Data (setelah semua submodul selesai)
+
+Uji alur Rombel → Peserta → import dan akun Peserta → Mata Pelajaran dengan
+data nyata yang dibuat melalui UI. Di tahap ini verifikasi referensi Peserta ke
+Rombel, penolakan penghapusan Rombel yang dipakai, status Rombel pada pilihan
+Peserta baru, konsistensi impor, permission Admin/Operator, dan pagination
+sesuai volume data yang benar-benar tersedia. Gerbang ini belum dijalankan
+pada Phase 2B.

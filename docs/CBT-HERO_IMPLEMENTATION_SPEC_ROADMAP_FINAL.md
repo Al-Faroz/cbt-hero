@@ -182,7 +182,7 @@ PHASE 7   Pelaksanaan + Token + Monitoring + Kontrol
 PHASE 8   Scoring Akademik + Live Edit + Finalisasi
 PHASE 9   Hasil + Laporan + Analisis + Public Live Scoring
 PHASE 10  Psikologis
-PHASE 11  Settings + Backup/Restore + Log + Pengosongan Data
+PHASE 11  Settings lanjutan + Backup/Restore + Log + Pengosongan Data
 PHASE 12  Performance Hardening + Regression + Final Polish
 ```
 
@@ -563,7 +563,11 @@ Preflight administratif
 
 ## 7.2 Dependency
 
-Phase 2.
+Phase 2 sudah lulus uji integrasi Master Data. Sebelum membuat Kegiatan,
+implementasikan Settings dasar untuk default Tahun Pelajaran/Semester. Sebelum
+mencetak Kartu, implementasikan Settings identitas instansi/logo/alamat/URL CBT
+yang digunakan kartu. Pengaturan lain yang tidak diperlukan modul awal tetap
+berada pada Phase 11.
 
 ## 7.3 Controller
 
@@ -1839,7 +1843,16 @@ Untuk runtime exam tambahkan:
 
 # 20. GIT / DELIVERY CHECKPOINT
 
-Direkomendasikan setiap Phase mempunyai commit/tag checkpoint yang jelas.
+Setiap submodul dikerjakan dan diuji secara mandiri: contoh Rombel → uji
+tampilan/fungsi Rombel → perbaikan → PASS → push → lanjut Peserta. Jangan
+mensyaratkan data/modul yang belum dibuat pada acceptance submodul. Setelah
+seluruh submodul dalam satu kelompok selesai, lakukan uji integrasi antarmodul
+dan perbaiki sebelum kelompok berikutnya.
+
+Setiap submodul mempunyai commit checkpoint; akhir Phase dapat diberi tag.
+Settings dasar boleh dikerjakan lebih awal sebagai dependency nyata Kegiatan
+dan Kartu. Perubahan pada Settings dasar diuji kembali ketika modul pemakainya
+dibuat.
 
 Contoh:
 

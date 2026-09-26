@@ -112,6 +112,12 @@ $routes->group(
         $routes->get('dashboard', 'Manager\\DashboardController::index');
 
         $routes->get(
+            'master-data/rombel',
+            'Manager\\Master\\RombelController::index',
+            ['filter' => 'manager-role:master.data.manage']
+        );
+
+        $routes->get(
             'system/users',
             'Manager\\System\\ManagerUserController::index',
             ['filter' => 'manager-role:system.users.manage']
@@ -128,6 +134,15 @@ $routes->group(
     'manager/api',
     ['filter' => 'manager-auth:api'],
     static function (RouteCollection $routes): void {
+        $rombel = 'Api\\Manager\\Master\\RombelController::';
+        $filter = ['filter' => 'manager-role:master.data.manage,api'];
+        $routes->get('rombel', $rombel . 'index', $filter);
+        $routes->post('rombel', $rombel . 'create', $filter);
+        $routes->get('rombel/(:num)', $rombel . 'show/$1', $filter);
+        $routes->put('rombel/(:num)', $rombel . 'update/$1', $filter);
+        $routes->patch('rombel/(:num)/status', $rombel . 'status/$1', $filter);
+        $routes->delete('rombel/(:num)', $rombel . 'remove/$1', $filter);
+
         $routes->get(
             'users',
             'Manager\\System\\ManagerUserController::list',

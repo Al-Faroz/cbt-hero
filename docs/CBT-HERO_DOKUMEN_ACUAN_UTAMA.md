@@ -396,6 +396,12 @@ Display contoh:
 9-P
 ```
 
+Tingkat valid 7/8/9. Kode Rombel berupa huruf/angka 1–20 karakter,
+dinormalisasi uppercase. `display_name` dibentuk server dari tingkat dan kode.
+Kombinasi `(tingkat, kode_rombel)` unik. Status `ACTIVE/INACTIVE` berlaku untuk
+pilihan pada penugasan Peserta baru; menonaktifkan Rombel tidak mengubah data
+Peserta lama. Penghapusan ditolak jika masih direferensikan Peserta.
+
 ## 7.3 Peserta
 
 Data minimum:

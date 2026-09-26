@@ -8,6 +8,7 @@ $active = static function (string $key) use ($activeMenu): string {
 };
 
 $systemOpen = $activeMenu === 'system-users';
+$masterOpen = $activeMenu === 'master-rombel';
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -63,7 +64,7 @@ $systemOpen = $activeMenu === 'system-users';
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#navMasterData"
-                aria-expanded="false"
+                aria-expanded="<?= $masterOpen ? 'true' : 'false' ?>"
                 aria-controls="navMasterData"
                 title="Master Data"
             >
@@ -72,8 +73,8 @@ $systemOpen = $activeMenu === 'system-users';
                 <span class="manager-nav-chevron"></span>
             </button>
 
-            <div class="collapse manager-subnav" id="navMasterData">
-                <span class="manager-subnav-link is-unavailable">Rombel</span>
+            <div class="collapse manager-subnav<?= $masterOpen ? ' show' : '' ?>" id="navMasterData">
+                <a class="manager-subnav-link<?= $active('master-rombel') ?>" href="<?= base_url('manager/master-data/rombel') ?>">Rombel</a>
                 <span class="manager-subnav-link is-unavailable">Peserta</span>
                 <span class="manager-subnav-link is-unavailable">Mata Pelajaran</span>
             </div>
