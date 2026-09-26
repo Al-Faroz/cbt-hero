@@ -86,6 +86,7 @@ Untuk kompatibilitas MySQL/MariaDB/shared hosting, payload fleksibel dapat disim
 ```text
 SYSTEM
 ├── sys_settings
+├── credential_operations
 ├── manager_users
 ├── auth_login_attempts
 ├── audit_logs
@@ -285,6 +286,13 @@ updated_at
 
 Satu display publik hanya menunjuk **satu Jadwal** pada satu waktu.
 
+## 3.8 `credential_operations`
+
+`idempotency_key` unik, `action`, `payload_hash`, `status`, `affected_count`,
+`created_by`, `created_at`, dan `finished_at`. Mencatat hasil operasi credential
+massal agar request yang sama tidak mereset ulang password. Tidak menyimpan
+password plaintext atau daftar password hasil generate.
+
 ---
 
 # 4. MASTER TABLES
@@ -336,6 +344,7 @@ username UNIQUE nullable
 password_hash nullable
 password_encrypted nullable
 credential_status
+credential_revision
 failed_login_count
 locked_until
 last_login_at

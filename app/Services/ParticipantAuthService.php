@@ -160,6 +160,7 @@ class ParticipantAuthService
             'participant' => [
                 'id' => $participantId,
                 'username' => (string) $participant['username'],
+                'credential_revision' => (int) ($participant['credential_revision'] ?? 0),
             ],
         ];
     }
@@ -174,13 +175,15 @@ class ParticipantAuthService
         }
 
         $participant = $this->participants
-            ->select('id, username, status')
+            ->select('id, username, status, credential_revision')
             ->find((int) $auth['peserta_id']);
 
         if (
             ! is_array($participant)
             || ($participant['status'] ?? '') !== 'ACTIVE'
             || empty($participant['username'])
+            || ! isset($auth['credential_revision'])
+            || (int) $auth['credential_revision'] !== (int) $participant['credential_revision']
         ) {
             return null;
         }

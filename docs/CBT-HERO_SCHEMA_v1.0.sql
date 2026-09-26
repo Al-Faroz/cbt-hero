@@ -113,6 +113,7 @@ CREATE TABLE peserta (
   password_hash VARCHAR(255) NULL,
   password_encrypted LONGTEXT NULL,
   credential_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+  credential_revision INT UNSIGNED NOT NULL DEFAULT 0,
   failed_login_count INT UNSIGNED NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
   last_login_at DATETIME NULL,
@@ -123,6 +124,18 @@ CREATE TABLE peserta (
   UNIQUE KEY uq_peserta_username (username),
   KEY idx_peserta_rombel_status (rombel_id, status),
   CONSTRAINT fk_peserta_rombel FOREIGN KEY (rombel_id) REFERENCES rombel(id) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE credential_operations (
+  idempotency_key VARCHAR(100) PRIMARY KEY,
+  action VARCHAR(40) NOT NULL,
+  payload_hash CHAR(64) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS',
+  affected_count INT UNSIGNED NOT NULL DEFAULT 0,
+  created_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finished_at DATETIME NULL,
+  CONSTRAINT fk_credential_operation_actor FOREIGN KEY (created_by) REFERENCES manager_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE kegiatan (

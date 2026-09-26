@@ -140,3 +140,34 @@ Prasyarat: setidaknya satu Rombel `ACTIVE` dari Phase 2B. Pengujian ini hanya me
 **PASS Phase 2C:** C01–C07 berhasil tanpa error PHP. Data Peserta uji dapat dibiarkan untuk langkah Account Login/Import berikutnya. Data yang belum diberi credential tetap berstatus `PENDING`; login Peserta belum dapat diuji dengan row baru ini.
 
 **Gerbang integrasi nanti:** penolakan edit Peserta yang terikat Kegiatan `BERJALAN`, impor Peserta, credential, dan hubungan dengan Kartu/Ujian diuji setelah fitur yang memakainya tersedia. Uji pagination lintas halaman hanya bila volume data nyata cukup. Tidak ada DELETE Peserta pada langkah ini.
+
+## 10. Phase 2D — Penyelesaian Master Data Peserta
+
+Sebelum menguji, buat backup database dan **impor hanya file `.sql`** `tools/phase2d_credential_revision.sql` sekali melalui phpMyAdmin pada database lama `cbt_hero`. Jika database dibuat dari schema baru yang sudah memuat `credential_revision`, jangan impor migrasi lagi. Setelah migrasi, sesi login Peserta yang lama perlu login ulang. Gunakan satu Peserta uji dari Phase 2C yang berstatus Aktif dan belum terikat Kegiatan berjalan.
+
+| ID | Langkah di UI | Hasil yang diharapkan |
+| --- | --- | --- |
+| D01 | Buka Master Data → Peserta, klik **Account** pada Peserta uji. | Panel menampilkan identitas dan status credential, tanpa password otomatis terbuka. |
+| D02 | Klik **Generate Username**, lalu simpan Username manual lain pada Peserta uji. | Username dibuat dan ditampilkan uppercase; perubahan manual tersimpan. Username generated tidak memakai `O I L 0 1`. |
+| D03 | Klik **Buat / Reset Password** dengan input manual kosong. | Password delapan karakter huruf kapital + angka ditampilkan; tidak memakai `O I L 0 1`. |
+| D04 | Login sebagai Peserta dengan Username dan Password tadi melalui halaman `/`. | Login berhasil dan `/ujian` dapat dibuka (daftar ujian boleh kosong). |
+| D05 | Saat sesi Peserta masih aktif pada browser lain, reset Password dari Manager. | Password baru bisa dipakai login; sesi Peserta lama ditolak pada request protected berikutnya. |
+| D06 | Klik **Lihat Password Cetak**, lalu **Sembunyikan** dan **Tutup**. | Nilai terbaru dapat dibaca sementara dan hilang dari panel setelah disembunyikan/ditutup. |
+| D07 | Coba beri Username manual yang sudah dimiliki Peserta lain (bila tersedia), atau Username terlalu pendek. | Data ditolak dengan pesan validasi/duplikat; Username yang sebelumnya tetap berlaku. Jika hanya satu Peserta uji, cukup uji Username terlalu pendek. |
+
+**Account individual D01–D07:** sudah diuji pada patch sebelumnya. Semua fitur sisa Account dan Import diselesaikan dalam patch penyelesaian Peserta ini. Kartu Ujian tetap berada pada Phase 3 karena membutuhkan Kegiatan/Ruang yang belum dibuat.
+
+Sebelum pengujian lanjutan: backup database, lalu impor **hanya file SQL** `tools/phase2_peserta_completion.sql` sekali melalui phpMyAdmin. Tabel `credential_operations` menyimpan idempotensi operasi massal. Database baru yang diimpor dari schema revisi tidak memerlukan migrasi ini.
+
+| ID | Langkah melalui UI yang tersedia | Hasil yang diharapkan |
+| --- | --- | --- |
+| D08 | Buat dua Peserta uji, pilih kedua checkbox, klik **Generate Username kosong**, lalui dua konfirmasi. | Kedua Username terisi; jumlah yang diproses tampil. Mengulang pada akun yang sudah punya Username memproses 0 tanpa menggantinya. |
+| D09 | Pilih dua Peserta tadi, klik **Reset Password massal**, lalui dua konfirmasi. | Kedua akun berstatus READY; password terbaru dapat dilihat satu per satu lewat panel Account dan digunakan login. |
+| D10 | Pilih satu akun, klik **Regenerate Username**, batalkan pada konfirmasi pertama; kemudian ulangi dan setujui dua konfirmasi. | Pembatalan tidak mengubah Username; persetujuan menggantinya. Sesi lama akun itu ditolak. |
+| D11 | Unduh template Excel. | Ada Sheet 1 Data Peserta dan Sheet 2 Panduan & Rombel dengan daftar Rombel aktif. |
+| D12 | Isi tiga baris di Sheet 1: satu valid, satu NISN duplikat, satu Rombel salah. Upload, Parse, lalu Validasi. | Job staging menampilkan baris valid/invalid beserta kesalahan; belum ada Peserta baru sebelum Commit. |
+| D13 | Exclude baris duplikat, perbaiki Rombel salah lewat form, lalu Validasi Ulang. | Kedua baris tersisa VALID, satu EXCLUDED; jumlah valid/invalid sesuai. |
+| D14 | Klik Commit dan konfirmasi. Buka halaman Peserta. | Hanya dua Peserta valid masuk ke database. Baris EXCLUDED tidak masuk; job berubah COMMITTED. |
+| D15 | Jika mengisi Username/Password opsional pada baris valid lain, impor lewat alur yang sama. | Account siap login dan password cetak hanya terlihat dari panel Account berizin. Jika keduanya kosong, peserta tetap tersimpan tanpa credential untuk digenerate kemudian. |
+
+**PASS Master Data Peserta:** D01–D15 sesuai hasil wajib. D15 cukup memakai satu baris tambahan untuk mencoba salah satu variasi opsional, lalu satu baris tanpa credential; tidak perlu data massal. Perlindungan Kegiatan BERJALAN dan pagination volume besar tetap diuji ketika data/fitur terkait tersedia. Jangan menguji Kartu Ujian pada fase ini.

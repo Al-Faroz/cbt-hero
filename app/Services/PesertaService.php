@@ -39,6 +39,7 @@ class PesertaService
             $builder->groupStart()
                 ->like('p.nisn', $q)
                 ->orLike('p.nama', $q)
+                ->orLike('p.username', $q)
                 ->orLike('p.keterangan', $q)
                 ->groupEnd();
         }
@@ -52,7 +53,7 @@ class PesertaService
         $pages = max(1, (int) ceil($filtered / $perPage));
         $page = min($page, $pages);
         $items = $builder->select([
-            'p.id', 'p.nisn', 'p.nama', 'p.jenis_kelamin', 'p.rombel_id',
+            'p.id', 'p.nisn', 'p.nama', 'p.username', 'p.jenis_kelamin', 'p.rombel_id',
             'r.display_name AS rombel', 'r.status AS rombel_status',
             'p.status', 'p.keterangan', 'p.credential_status',
             'p.created_at', 'p.updated_at',
@@ -73,7 +74,7 @@ class PesertaService
         }
         return Database::connect()->table('peserta AS p')
             ->select([
-                'p.id', 'p.nisn', 'p.nama', 'p.jenis_kelamin', 'p.rombel_id',
+                'p.id', 'p.nisn', 'p.nama', 'p.username', 'p.jenis_kelamin', 'p.rombel_id',
                 'r.display_name AS rombel', 'r.status AS rombel_status',
                 'p.status', 'p.keterangan', 'p.credential_status',
                 'p.created_at', 'p.updated_at',

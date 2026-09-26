@@ -2156,6 +2156,7 @@ Session CI4/database driver jika dipilih.
 - password_hash;
 - password_encrypted;
 - credential timestamps/status.
+- credential_revision untuk membatalkan sesi lama setelah perubahan Username/Password.
 
 ## 46.3 Kegiatan
 

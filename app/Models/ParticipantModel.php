@@ -23,6 +23,7 @@ class ParticipantModel extends Model
         'password_hash',
         'password_encrypted',
         'credential_status',
+        'credential_revision',
         'failed_login_count',
         'locked_until',
         'last_login_at',

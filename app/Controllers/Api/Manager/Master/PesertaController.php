@@ -12,6 +12,7 @@ class PesertaController extends BaseController
 
     public function index()
     {
+        $this->response->setHeader('Cache-Control', 'no-store, private');
         return $this->apiSuccess((new PesertaService())->list($this->request->getGet()));
     }
 

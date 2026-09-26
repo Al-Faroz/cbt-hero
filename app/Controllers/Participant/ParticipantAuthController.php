@@ -69,6 +69,7 @@ class ParticipantAuthController extends BaseController
             'logged_in' => true,
             'peserta_id' => (int) $participant['id'],
             'username' => (string) $participant['username'],
+            'credential_revision' => (int) $participant['credential_revision'],
             'login_at' => date(DATE_ATOM),
         ]);
 

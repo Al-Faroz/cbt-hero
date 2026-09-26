@@ -520,6 +520,18 @@ Aturan:
 
 # 15. BULK SELECTION
 
+Pada Master Data Peserta, tombol **Pilih Semua (Halaman Ini)** dan checkbox header
+memilih maksimal 100 Peserta pada halaman yang sedang tampil. Pilihan dapat
+dipertahankan ketika berpindah halaman, tetapi dihapus saat filter atau jumlah
+baris per halaman berubah. Jumlah terpilih terlihat sebelum aksi Username atau
+Password, dan aksi massal meminta dua konfirmasi.
+
+Tabel Peserta menampilkan Username dan kolom Password. Isi Password dibuka
+per baris melalui tombol **Lihat** pada endpoint credential berizin dan dapat
+disembunyikan lagi; plaintext tidak ikut dalam response daftar Peserta.
+Form Tambah/Edit Peserta memakai modal singkat, sedangkan import memakai halaman
+staging tersendiri.
+
 Header checkbox default:
 
 ```text

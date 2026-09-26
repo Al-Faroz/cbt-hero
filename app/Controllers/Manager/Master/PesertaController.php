@@ -15,4 +15,14 @@ class PesertaController extends BaseController
             'activeMenu' => 'master-peserta',
         ]);
     }
+
+    public function import()
+    {
+        return view('manager/master/peserta/import', [
+            'auth' => session()->get('manager_auth'),
+            'pageTitle' => 'Import Peserta',
+            'pageSubtitle' => 'Master Data',
+            'activeMenu' => 'master-peserta',
+        ]);
+    }
 }

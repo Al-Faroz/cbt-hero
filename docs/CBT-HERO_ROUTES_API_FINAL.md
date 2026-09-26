@@ -1101,13 +1101,16 @@ Jika dikunci:
 ```text
 GET  /manager/api/peserta/{id}/account
 POST /manager/api/peserta/{id}/account/generate-username
+PUT  /manager/api/peserta/{id}/account/username
 POST /manager/api/peserta/{id}/account/reset-password
+GET  /manager/api/peserta/{id}/account/printable
 ```
 
 Bulk:
 
 ```text
 POST /manager/api/peserta/accounts/generate-usernames
+POST /manager/api/peserta/accounts/regenerate-usernames
 POST /manager/api/peserta/accounts/reset-passwords
 ```
 
