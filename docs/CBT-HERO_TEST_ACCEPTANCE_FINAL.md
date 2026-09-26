@@ -1,6 +1,6 @@
 # CBT-HERO — Test & Acceptance
 
-**Versi:** 1.0 · **Fokus saat ini:** Phase 1F Auth / Security Acceptance  
+**Versi:** 1.1 · **Fokus saat ini:** Phase 1F Auth / Security Acceptance  
 **Acuan:** `CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, `CBT-HERO_AUTH_SECURITY_SESSION_FINAL.md`, `CBT-HERO_IMPLEMENTATION_SPEC_ROADMAP_FINAL.md`  
 **Status:** checklist eksekusi; Phase 1F menjadi FIX setelah pengujian localhost PASS.
 
@@ -53,7 +53,7 @@ Catat `PASS/FAIL`, HTTP status, dan temuan pada setiap baris. Bersihkan lockout 
 | A10 | Login OPERATOR, akses `/manager/system/users`, `GET /manager/api/users`, `POST /manager/api/users` dengan CSRF valid | UI dan kedua endpoint User Manager HTTP 403; tidak ada account baru. ADMIN boleh mengakses. |
 | A11 | Dengan session ADMIN, ubah role akun uji di DB dari ADMIN ke OPERATOR; ulangi akses User Manager | Akses langsung HTTP 403 tanpa login ulang. Kembalikan role akun uji sesudah tes. |
 | A12 | POST login/logout atau create user tanpa `X-CSRF-TOKEN`, lalu dengan token salah; bandingkan dengan token benar | Mutation tanpa token/bertoken salah ditolak (HTTP 403) dan tidak mengubah state. Request valid diproses. GET tidak memerlukan token. |
-| A13 | Login PESERTA A; coba `/ujian/{jadwalId}/konfirmasi` dan `/api/ujian/{jadwalId}/konfirmasi` untuk jadwal hanya milik PESERTA B | UI 404, API 404 JSON; tidak mengungkap data peserta lain. Ulangi untuk jadwal SUSULAN yang tidak menarget A. |
+| A13 | Review source `ParticipantExamController`, `ExamDiscoveryController`, dan `ParticipantExamDiscoveryService`; saat login Peserta coba ID jadwal yang tidak ada pada kedua URL konfirmasi | Kedua controller mengambil `peserta_id` dari session, bukan dari input request; `confirmationData()` mencari ID jadwal hanya pada `listForParticipant()` dan mengembalikan null jika tidak ada. ID yang tidak ada memberi UI 404 dan API 404 JSON. Ini pemeriksaan boundary awal, **belum membuktikan IDOR antar peserta**; uji R13 wajib saat data jadwal tersedia. |
 | A14 | Login MANAGER saja lalu akses `/api/ujian`; login PESERTA saja lalu akses `/manager/api/users` | Keduanya HTTP 401 JSON; satu realm tidak menjadi authority realm lain. |
 | A15 | Setelah login, hapus cookie `cbt_hero_session` atau tunggu session kedaluwarsa; ulangi endpoint protected | UI menuju login terkait, API HTTP 401 JSON; tidak ada loop redirect atau error SQL. |
 | A16 | Pada login gagal dan logout, cek `auth_login_attempts` dan `audit_logs` | Realm, alasan gagal, dan login/logout Manager tercatat sesuai implementasi; response API tidak membocorkan hash/password atau exception SQL. |
@@ -62,14 +62,16 @@ Catat `PASS/FAIL`, HTTP status, dan temuan pada setiap baris. Bersihkan lockout 
 
 - Gunakan DevTools → Network untuk status HTTP, response JSON, `Set-Cookie`, dan token CSRF di `<meta name="csrf-token">` pada halaman login/shell. Untuk request JSON via `fetch`, kirim header `X-CSRF-TOKEN` dan `Content-Type: application/json` pada same origin.
 - Uji A11 memakai akun ADMIN **uji**, bukan satu-satunya ADMIN. Kembalikan status/role setelah tes; perubahan langsung di DB hanya untuk simulasi revalidasi session.
-- Untuk A13, buat dua peserta yang masing-masing memiliki membership/jadwal terpisah. ID pada URL harus benar-benar ada tetapi tidak dimiliki A; ID yang tidak ada saja tidak cukup menguji IDOR.
+- A13 memakai source review dan ID yang tidak ada karena data ujian belum tersedia. ID yang tidak ada **bukan** pengganti uji kepemilikan jadwal. Uji R13 di bawah tetap wajib sebelum fitur ujian dianggap siap.
 - `auth_login_attempts` mencatat kegagalan login; `audit_logs` mencatat login/logout Manager. Jangan mengharapkan audit logout Peserta bila belum ditetapkan di fase ini.
 - Phase 1E hanya menghitung status discovery untuk tampilan. START/RESUME harus melakukan pemeriksaan ulang secara authoritative pada Attempt Engine nanti, termasuk prepared assignment yang stale.
 
 ## 4. Kriteria PASS Phase 1F
 
-Semua A01–A16 PASS di localhost, `ci_sessions` aktif sebagai penyimpanan session, tidak ada kebocoran lintas realm/IDOR, dan tidak ada mutation tanpa CSRF. Jika gagal, lampirkan ID kasus, status HTTP, response ringkas, dan log error terkait tanpa kredensial. Setelah PASS, push patch ke `main`; audit commit sebelum memulai Phase 2.
+Semua A01–A16 PASS sesuai metode pada tabel (A13 mencakup source review dan 404 untuk ID yang tidak ada), `ci_sessions` aktif sebagai penyimpanan session, dua auth realm terpisah, dan tidak ada mutation tanpa CSRF. **Jangan mengklaim uji IDOR antar peserta sudah PASS pada Phase 1F.** Catat R13 sebagai `DEFERRED — belum ada jadwal`, lalu jalankan setelah data Jadwal/Peserta Kegiatan tersedia. Jika gagal, lampirkan ID kasus, status HTTP, response ringkas, dan log error terkait tanpa kredensial. Setelah Phase 1F PASS, push revisi dokumen; audit commit sebelum memulai Phase 2.
 
 ## 5. Acceptance lanjutan
+
+**R13 — IDOR jadwal (wajib ketika modul Jadwal dan Peserta Kegiatan siap):** buat Peserta A dan B dengan membership/jadwal yang terpisah. Login sebagai A, lalu panggil UI dan API konfirmasi dengan ID jadwal nyata milik B; wajib UI 404 dan API 404 JSON tanpa data B. Ulangi pada jadwal SUSULAN yang menarget B tetapi tidak menarget A. Pastikan jadwal milik A tetap dapat diakses. ID jadwal yang tidak ada tidak memenuhi R13. START/RESUME kelak memerlukan uji ownership authoritative tersendiri.
 
 Setiap subphase setelah Phase 1F menambah kasus pengujian ke dokumen ini: Master Data (CRUD/import/credential), Kegiatan, Bank, Jadwal dan Prepared Assignment, Attempt/Answer/Timer, Monitoring, Scoring/Hasil, Psikologis, Backup/Restore, dan performance. Target load final tetap 500/1.000/1.500/2.000 concurrent; stress 2.500, stretch 3.000 jika lingkungan memungkinkan. Kasus masa depan belum dianggap PASS oleh dokumen Phase 1F ini.
