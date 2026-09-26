@@ -91,6 +91,11 @@ class ManagerRoleFilter implements FilterInterface
 
         return service('response')
             ->setStatusCode(403)
-            ->setBody(view('manager/errors/forbidden'));
+            ->setBody(view('manager/errors/forbidden', [
+                'auth' => session()->get('manager_auth') ?? [],
+                'pageTitle' => 'Akses Ditolak',
+                'pageSubtitle' => 'Permission Manager',
+                'activeMenu' => '',
+            ]));
     }
 }

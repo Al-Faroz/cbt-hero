@@ -1,0 +1,75 @@
+# CBT-HERO — Test & Acceptance
+
+**Versi:** 1.0 · **Fokus saat ini:** Phase 1F Auth / Security Acceptance  
+**Acuan:** `CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, `CBT-HERO_AUTH_SECURITY_SESSION_FINAL.md`, `CBT-HERO_IMPLEMENTATION_SPEC_ROADMAP_FINAL.md`  
+**Status:** checklist eksekusi; Phase 1F menjadi FIX setelah pengujian localhost PASS.
+
+## 1. Persiapan Phase 1F
+
+1. Extract patch di `G:\xampp\htdocs\cbt-hero\` dengan struktur folder tetap. Tidak perlu import ulang schema.
+2. `.env` localhost Anda sudah menunjuk database `cbt_hero` dan menetapkan `session.driver = 'CodeIgniter\Session\Handlers\DatabaseHandler'`, `session.savePath = 'ci_sessions'`, serta `session.cookieName = 'cbt_hero_session'`. Pertahankan pengaturan tersebut. Patch menyamakan default `Config\Session` dengan konfigurasi yang sudah aktif.
+3. Siapkan satu ADMIN, satu OPERATOR, satu PESERTA `ACTIVE`, dan akun uji `INACTIVE` untuk tiap realm. Gunakan akun uji khusus untuk pengujian lockout. Jangan menguji lockout dengan akun operasional.
+4. Gunakan browser yang sama untuk uji isolasi dua realm. Gunakan mode privat atau hapus cookie `cbt_hero_session` untuk memulai skenario baru.
+5. Setelah perubahan handler session, login ulang. Session file lama tidak otomatis dipindahkan ke tabel DB.
+
+**Batas fase:** Phase 1F tidak membuat Attempt, START/RESUME, token validation, answer sync, maupun Exam Browser. Tombol START pada halaman Konfirmasi tetap disabled.
+
+## 2. Pemeriksaan cepat
+
+Jalankan dari root proyek melalui terminal XAMPP dengan PHP yang tersedia:
+
+```powershell
+php spark routes
+```
+
+Pastikan route yang ada mencakup `/`, `/ujian`, `/ujian/{id}/konfirmasi`, `/api/auth/*`, `/api/ujian*`, `/manager`, `/manager/dashboard`, `/manager/system/users`, dan `/manager/api/*` dengan metode HTTP sesuai `app/Config/Routes.php`. Route otomatis harus nonaktif.
+
+Setelah membuka halaman login, cek database:
+
+```sql
+SELECT id, ip_address, timestamp
+FROM ci_sessions
+ORDER BY timestamp DESC
+LIMIT 5;
+```
+
+Harus ada row baru. Jangan menampilkan kolom `data` karena berisi state session. Jika tabel tetap kosong, periksa koneksi database. Cookie `cbt_hero_session` memakai path `/cbt-hero/`, `HttpOnly`, dan `SameSite=Lax`. Prefix cookie umum `cbthero_` tidak ditambahkan oleh CI4 pada cookie session. Di localhost HTTP, `Secure=false`; pada deployment HTTPS, set `cookie.secure=true`.
+
+## 3. Matriks acceptance Phase 1F
+
+Catat `PASS/FAIL`, HTTP status, dan temuan pada setiap baris. Bersihkan lockout akun uji sebelum beralih ke kasus lain.
+
+| ID | Langkah | Hasil wajib |
+| --- | --- | --- |
+| A01 | Tanpa login akses `/manager/dashboard`, `/manager/system/users`, `/ujian`, `/ujian/123/konfirmasi` | UI dialihkan ke landing realm masing-masing. |
+| A02 | Tanpa login akses `/manager/api/auth/session`, `/manager/api/users`, `/api/auth/session`, `/api/ujian`, `/api/ujian/123/konfirmasi` | HTTP 401 JSON `AUTH_REQUIRED`, bukan HTML login. |
+| A03 | Login ADMIN dengan username huruf kecil; cek dashboard dan `/manager/api/auth/session` | Login sukses, username normal uppercase, session terisi, ID cookie berubah sesudah login. |
+| A04 | Login PESERTA dengan username huruf kecil; cek `/ujian` dan `/api/auth/session` | Login sukses, username normal uppercase, ID cookie berubah; daftar berasal dari DB. |
+| A05 | Salah password pada akun uji Manager sebanyak 5 kali; ulangi password benar sebelum 10 menit | Percobaan ke-5 dan login berikutnya HTTP 429; counter/audit sesuai. Setelah masa lock habis, login benar sukses dan counter kembali 0. |
+| A06 | Salah password pada akun uji Peserta sebanyak 10 kali; ulangi password benar sebelum 5 menit | Percobaan ke-10 dan login berikutnya HTTP 429; setelah masa lock habis, login benar sukses dan counter kembali 0. |
+| A07 | Coba login akun INACTIVE pada dua realm | Ditolak; tidak membuat state login. Sesudah akun yang sedang login dinonaktifkan, request protected berikutnya ditolak dan state realm itu dihapus. |
+| A08 | Login ADMIN lalu PESERTA dalam browser yang sama | Kedua `/manager/api/auth/session` dan `/api/auth/session` sukses; login realm kedua tidak menghapus realm pertama. |
+| A09 | Dengan kedua realm login, logout PESERTA; cek kedua session endpoint; kemudian login PESERTA lagi dan logout MANAGER | Logout hanya memutus realm terkait; realm lain tetap sukses. Session ID berubah setelah logout. |
+| A10 | Login OPERATOR, akses `/manager/system/users`, `GET /manager/api/users`, `POST /manager/api/users` dengan CSRF valid | UI dan kedua endpoint User Manager HTTP 403; tidak ada account baru. ADMIN boleh mengakses. |
+| A11 | Dengan session ADMIN, ubah role akun uji di DB dari ADMIN ke OPERATOR; ulangi akses User Manager | Akses langsung HTTP 403 tanpa login ulang. Kembalikan role akun uji sesudah tes. |
+| A12 | POST login/logout atau create user tanpa `X-CSRF-TOKEN`, lalu dengan token salah; bandingkan dengan token benar | Mutation tanpa token/bertoken salah ditolak (HTTP 403) dan tidak mengubah state. Request valid diproses. GET tidak memerlukan token. |
+| A13 | Login PESERTA A; coba `/ujian/{jadwalId}/konfirmasi` dan `/api/ujian/{jadwalId}/konfirmasi` untuk jadwal hanya milik PESERTA B | UI 404, API 404 JSON; tidak mengungkap data peserta lain. Ulangi untuk jadwal SUSULAN yang tidak menarget A. |
+| A14 | Login MANAGER saja lalu akses `/api/ujian`; login PESERTA saja lalu akses `/manager/api/users` | Keduanya HTTP 401 JSON; satu realm tidak menjadi authority realm lain. |
+| A15 | Setelah login, hapus cookie `cbt_hero_session` atau tunggu session kedaluwarsa; ulangi endpoint protected | UI menuju login terkait, API HTTP 401 JSON; tidak ada loop redirect atau error SQL. |
+| A16 | Pada login gagal dan logout, cek `auth_login_attempts` dan `audit_logs` | Realm, alasan gagal, dan login/logout Manager tercatat sesuai implementasi; response API tidak membocorkan hash/password atau exception SQL. |
+
+### Catatan eksekusi
+
+- Gunakan DevTools → Network untuk status HTTP, response JSON, `Set-Cookie`, dan token CSRF di `<meta name="csrf-token">` pada halaman login/shell. Untuk request JSON via `fetch`, kirim header `X-CSRF-TOKEN` dan `Content-Type: application/json` pada same origin.
+- Uji A11 memakai akun ADMIN **uji**, bukan satu-satunya ADMIN. Kembalikan status/role setelah tes; perubahan langsung di DB hanya untuk simulasi revalidasi session.
+- Untuk A13, buat dua peserta yang masing-masing memiliki membership/jadwal terpisah. ID pada URL harus benar-benar ada tetapi tidak dimiliki A; ID yang tidak ada saja tidak cukup menguji IDOR.
+- `auth_login_attempts` mencatat kegagalan login; `audit_logs` mencatat login/logout Manager. Jangan mengharapkan audit logout Peserta bila belum ditetapkan di fase ini.
+- Phase 1E hanya menghitung status discovery untuk tampilan. START/RESUME harus melakukan pemeriksaan ulang secara authoritative pada Attempt Engine nanti, termasuk prepared assignment yang stale.
+
+## 4. Kriteria PASS Phase 1F
+
+Semua A01–A16 PASS di localhost, `ci_sessions` aktif sebagai penyimpanan session, tidak ada kebocoran lintas realm/IDOR, dan tidak ada mutation tanpa CSRF. Jika gagal, lampirkan ID kasus, status HTTP, response ringkas, dan log error terkait tanpa kredensial. Setelah PASS, push patch ke `main`; audit commit sebelum memulai Phase 2.
+
+## 5. Acceptance lanjutan
+
+Setiap subphase setelah Phase 1F menambah kasus pengujian ke dokumen ini: Master Data (CRUD/import/credential), Kegiatan, Bank, Jadwal dan Prepared Assignment, Attempt/Answer/Timer, Monitoring, Scoring/Hasil, Psikologis, Backup/Restore, dan performance. Target load final tetap 500/1.000/1.500/2.000 concurrent; stress 2.500, stretch 3.000 jika lingkungan memungkinkan. Kasus masa depan belum dianggap PASS oleh dokumen Phase 1F ini.
