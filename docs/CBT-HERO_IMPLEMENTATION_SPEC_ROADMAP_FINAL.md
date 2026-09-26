@@ -424,8 +424,9 @@ audit_logs
 
 ## 6.1 Scope
 
+Default Tahun Pelajaran/Semester berada di Settings, sedangkan Kegiatan menyimpan nilai historisnya. Tidak ada modul Master Periode.
+
 ```text
-Periode
 Rombel
 Peserta
 Account Login Peserta
@@ -440,11 +441,9 @@ Phase 1.
 ## 6.3 Controller
 
 ```text
-Manager/Master/PeriodeController
 Manager/Master/RombelController
 Manager/Master/PesertaController
 Manager/Master/MataPelajaranController
-Api/Manager/Master/PeriodeController
 Api/Manager/Master/RombelController
 Api/Manager/Master/PesertaController
 Api/Manager/Master/MataPelajaranController
@@ -454,7 +453,6 @@ Api/Manager/ImportController
 ## 6.4 Service
 
 ```text
-PeriodeService
 RombelService
 PesertaService
 ParticipantCredentialService
@@ -466,7 +464,6 @@ ImportValidationService
 ## 6.5 Model
 
 ```text
-PeriodeModel
 RombelModel
 PesertaModel
 MataPelajaranModel
@@ -529,7 +526,6 @@ UPLOAD
 ## 6.8 Tables
 
 ```text
-periode
 rombel
 peserta
 mata_pelajaran
@@ -646,7 +642,6 @@ kegiatan
 ruang
 peserta_kegiatan
 peserta
-periode
 rombel
 ```
 

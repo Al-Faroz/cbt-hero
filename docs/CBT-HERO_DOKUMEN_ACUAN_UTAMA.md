@@ -188,7 +188,6 @@ Baseline menu manager:
 DASHBOARD
 
 MASTER DATA
-├── Periode
 ├── Rombel
 ├── Peserta
 └── Mata Pelajaran
@@ -369,7 +368,6 @@ Aturan:
 
 ```text
 MASTER DATA
-├── Periode
 ├── Rombel
 ├── Peserta
 │   ├── Data Peserta
@@ -379,14 +377,9 @@ MASTER DATA
 └── Mata Pelajaran
 ```
 
-## 7.1 Periode
+## 7.1 Konteks Tahun Pelajaran dan Semester
 
-Periode hanya memuat:
-
-- Tahun Pelajaran;
-- Semester Ganjil/Genap.
-
-Tidak ada status aktif tunggal.
+Tidak ada entitas atau menu Master Periode. Pengaturan menyimpan default Tahun Pelajaran dan Semester (Ganjil/Genap) untuk mengisi awal formulir Kegiatan. Setiap Kegiatan menyimpan salinan nilai tersebut. Mengganti default tidak mengubah Kegiatan yang sudah dibuat; tidak ada periode aktif tunggal atau pembatas akses berdasarkan default.
 
 ## 7.2 Rombel
 
@@ -477,7 +470,8 @@ Jenis Ujian cukup menjadi atribut Kegiatan.
 
 - Nama Kegiatan;
 - Jenis;
-- Periode;
+- Tahun Pelajaran;
+- Semester;
 - Keterangan;
 - Status.
 
@@ -2017,7 +2011,7 @@ Settings minimal:
 - logo;
 - alamat;
 - URL CBT;
-- tahun/default display;
+- default Tahun Pelajaran dan Semester untuk pengisian Kegiatan baru;
 - timezone;
 - identitas kartu;
 - footer/copyright;
@@ -2129,11 +2123,6 @@ Session CI4/database driver jika dipilih.
 
 ## 46.2 Master
 
-### `periode`
-
-- tahun_pelajaran;
-- semester.
-
 ### `rombel`
 
 - tingkat;
@@ -2168,7 +2157,8 @@ Session CI4/database driver jika dipilih.
 
 - nama;
 - jenis;
-- periode_id;
+- tahun_pelajaran;
+- semester;
 - keterangan;
 - status DRAFT/BERJALAN/SELESAI;
 - exam_browser_required;

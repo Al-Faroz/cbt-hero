@@ -94,7 +94,6 @@ SYSTEM
 └── live_scoring_config
 
 MASTER
-├── periode
 ├── rombel
 ├── mata_pelajaran
 └── peserta
@@ -290,23 +289,9 @@ Satu display publik hanya menunjuk **satu Jadwal** pada satu waktu.
 
 # 4. MASTER TABLES
 
-## 4.1 `periode`
+## 4.1 Konteks Tahun Pelajaran dan Semester
 
-```text
-id
-tahun_pelajaran
-semester
-created_at
-updated_at
-```
-
-Unique:
-
-```text
-(tahun_pelajaran, semester)
-```
-
-Tidak ada status aktif.
+`sys_settings` menyimpan default pengisian Kegiatan (`default_tahun_pelajaran`, `default_semester`). Nilai Tahun Pelajaran dan Semester disalin ke `kegiatan` saat dibuat. Perubahan default tidak mengubah riwayat Kegiatan. Tidak ada tabel `periode` atau status aktif tunggal.
 
 ## 4.2 `rombel`
 
@@ -378,7 +363,8 @@ Aturan:
 id
 nama
 jenis                 AKADEMIK / PSIKOLOGIS
-periode_id
+tahun_pelajaran
+semester
 keterangan
 status                DRAFT / BERJALAN / SELESAI
 exam_browser_required
@@ -1404,7 +1390,6 @@ psych_item(psych_instrument_id, status, sort_order)
 erDiagram
     MANAGER_USERS ||--o{ AUDIT_LOGS : acts
     MANAGER_USERS ||--o{ KEGIATAN : creates
-    PERIODE ||--o{ KEGIATAN : groups
     ROMBEL ||--o{ PESERTA : current
     PESERTA ||--o{ PESERTA_KEGIATAN : joins
     KEGIATAN ||--o{ PESERTA_KEGIATAN : contains
@@ -1509,7 +1494,7 @@ Urutan pembuatan tabel:
 
 ```text
 1. manager_users / sys_settings / session / audit
-2. periode / rombel / mapel / peserta
+2. rombel / mapel / peserta
 3. kegiatan / ruang / peserta_kegiatan
 4. media / import
 5. bank akademik + revisions

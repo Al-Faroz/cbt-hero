@@ -65,7 +65,7 @@
                 <div class="manager-placeholder-grid">
                     <div class="manager-placeholder-item">
                         <strong>Master Data</strong>
-                        <span>Periode, Rombel, Peserta, Mata Pelajaran</span>
+                        <span>Rombel, Peserta, Mata Pelajaran</span>
                     </div>
 
                     <div class="manager-placeholder-item">

@@ -76,15 +76,6 @@ CREATE TABLE ci_sessions (
   KEY ci_sessions_timestamp (timestamp)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE periode (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  tahun_pelajaran VARCHAR(20) NOT NULL,
-  semester VARCHAR(20) NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_periode (tahun_pelajaran, semester)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE rombel (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   tingkat TINYINT UNSIGNED NOT NULL,
@@ -138,7 +129,8 @@ CREATE TABLE kegiatan (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nama VARCHAR(180) NOT NULL,
   jenis VARCHAR(20) NOT NULL,
-  periode_id BIGINT UNSIGNED NOT NULL,
+  tahun_pelajaran VARCHAR(20) NOT NULL,
+  semester VARCHAR(20) NOT NULL,
   keterangan VARCHAR(500) NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
   exam_browser_required TINYINT(1) NOT NULL DEFAULT 0,
@@ -146,8 +138,7 @@ CREATE TABLE kegiatan (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   KEY idx_kegiatan_status (status),
-  KEY idx_kegiatan_periode (periode_id),
-  CONSTRAINT fk_kegiatan_periode FOREIGN KEY (periode_id) REFERENCES periode(id) ON DELETE RESTRICT,
+  KEY idx_kegiatan_tahun_semester (tahun_pelajaran, semester),
   CONSTRAINT fk_kegiatan_creator FOREIGN KEY (created_by) REFERENCES manager_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

@@ -982,7 +982,6 @@ Dashboard API non-kritis dan boleh diturunkan refresh-nya di bawah high load.
 ```text
 /manager/dashboard
 
-/manager/master-data/periode
 /manager/master-data/rombel
 /manager/master-data/peserta
 /manager/master-data/mapel
@@ -1014,25 +1013,9 @@ Detail modal/drawer tidak perlu route page baru bila cukup ditangani API + UI co
 
 ---
 
-# 20. MASTER DATA — PERIODE API
+# 20. KONTEKS TAHUN PELAJARAN DAN SEMESTER
 
-```text
-GET    /manager/api/periode
-POST   /manager/api/periode
-GET    /manager/api/periode/{id}
-PUT    /manager/api/periode/{id}
-DELETE /manager/api/periode/{id}
-```
-
-Actor: Admin/Operator.
-
-Delete hanya jika tidak direferensikan. Jika dependency ada:
-
-```text
-409 DEPENDENCY_EXISTS
-```
-
-Periode tidak mempunyai status aktif tunggal.
+Default Tahun Pelajaran dan Semester disimpan di Settings sebagai isian awal Kegiatan baru. API Kegiatan menerima `tahun_pelajaran` dan `semester`, lalu menyimpan keduanya pada row Kegiatan. Perubahan Settings tidak mengubah Kegiatan lama. Tidak ada route Master Periode.
 
 ---
 
@@ -1246,7 +1229,8 @@ Field utama:
 ```text
 nama
 jenis AKADEMIK/PSIKOLOGIS
-periode_id
+tahun_pelajaran
+semester
 keterangan
 exam_browser_required
 status
@@ -2572,7 +2556,6 @@ AttemptFinalizeService
 Controllers:
 ManagerAuthController
 DashboardController
-PeriodeController
 RombelController
 PesertaController
 MapelController

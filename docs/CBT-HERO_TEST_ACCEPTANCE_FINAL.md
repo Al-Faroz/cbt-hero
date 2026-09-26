@@ -1,6 +1,6 @@
 # CBT-HERO — Test & Acceptance
 
-**Versi:** 1.1 · **Fokus saat ini:** Phase 1F Auth / Security Acceptance  
+**Versi:** 1.2 · **Fokus saat ini:** Revisi konteks Tahun/Semester setelah Phase 1F  
 **Acuan:** `CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, `CBT-HERO_AUTH_SECURITY_SESSION_FINAL.md`, `CBT-HERO_IMPLEMENTATION_SPEC_ROADMAP_FINAL.md`  
 **Status:** checklist eksekusi; Phase 1F menjadi FIX setelah pengujian localhost PASS.
 
@@ -75,3 +75,14 @@ Semua A01–A16 PASS sesuai metode pada tabel (A13 mencakup source review dan 40
 **R13 — IDOR jadwal (wajib ketika modul Jadwal dan Peserta Kegiatan siap):** buat Peserta A dan B dengan membership/jadwal yang terpisah. Login sebagai A, lalu panggil UI dan API konfirmasi dengan ID jadwal nyata milik B; wajib UI 404 dan API 404 JSON tanpa data B. Ulangi pada jadwal SUSULAN yang menarget B tetapi tidak menarget A. Pastikan jadwal milik A tetap dapat diakses. ID jadwal yang tidak ada tidak memenuhi R13. START/RESUME kelak memerlukan uji ownership authoritative tersendiri.
 
 Setiap subphase setelah Phase 1F menambah kasus pengujian ke dokumen ini: Master Data (CRUD/import/credential), Kegiatan, Bank, Jadwal dan Prepared Assignment, Attempt/Answer/Timer, Monitoring, Scoring/Hasil, Psikologis, Backup/Restore, dan performance. Target load final tetap 500/1.000/1.500/2.000 concurrent; stress 2.500, stretch 3.000 jika lingkungan memungkinkan. Kasus masa depan belum dianggap PASS oleh dokumen Phase 1F ini.
+
+## 6. Revisi rancangan Phase 2A — Konteks Tahun/Semester
+
+Master Periode yang sempat diuji tidak diteruskan. Tahun Pelajaran/Semester akan menjadi default pengisian di Settings dan disalin ke setiap Kegiatan. UI dan API Settings/Kegiatan dibangun pada fase terkait; revisi ini menyelaraskan acuan, schema, dan database lama.
+
+1. Buat backup database lokal. Extract patch revisi ke root proyek, lalu jalankan `tools/phase2a_remove_periode.ps1` dari root proyek agar enam file modul lama terhapus. Route, sidebar, dan trait lama telah diganti melalui patch.
+2. Untuk database yang sudah diimport dari schema lama, jalankan `tools/phase2a_context_migration.sql` **sekali**. Pastikan `kegiatan_tanpa_konteks = 0` pada SELECT sebelum melanjutkan DROP. Jika query gagal, hentikan migrasi dan periksa backup/database. Database kosong yang baru dibuat memakai schema revisi dan tidak memerlukan migrasi.
+3. Periksa `SHOW COLUMNS FROM kegiatan`: harus ada `tahun_pelajaran` dan `semester`, tidak ada `periode_id`. Periksa `SHOW TABLES LIKE 'periode'`: kosong. Bila ada Kegiatan lama, bandingkan Tahun/Semester dengan data sebelum migrasi.
+4. Periksa `/manager/master-data/periode` dan `/manager/api/periode`: route tersebut tidak lagi tersedia. Pastikan menu Periode hilang dan fungsi login, dashboard, User Manager tetap berjalan.
+
+**Catatan:** Uji CRUD Periode P2A lama membuktikan implementasi sementara saat itu, tetapi tidak lagi menjadi acceptance desain akhir. Pengujian default Settings, validasi Tahun/Semester pada Kegiatan, dan ketahanan riwayat ketika default berubah dilakukan saat fitur tersebut diimplementasikan.

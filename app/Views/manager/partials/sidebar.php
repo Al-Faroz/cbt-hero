@@ -73,7 +73,6 @@ $systemOpen = $activeMenu === 'system-users';
             </button>
 
             <div class="collapse manager-subnav" id="navMasterData">
-                <span class="manager-subnav-link is-unavailable">Periode</span>
                 <span class="manager-subnav-link is-unavailable">Rombel</span>
                 <span class="manager-subnav-link is-unavailable">Peserta</span>
                 <span class="manager-subnav-link is-unavailable">Mata Pelajaran</span>

@@ -409,7 +409,6 @@ Aturan:
 
 | Area | Default | Catatan |
 |---|---:|---|
-| Periode | 25 | dataset kecil; plain table boleh |
 | Rombel | 25 | plain/DataTables sesuai kebutuhan |
 | Mata Pelajaran | 25 | plain/DataTables |
 | Peserta | 50 | server-side |
@@ -1578,7 +1577,6 @@ Print tidak membawa sidebar/topbar.
 | Modul | Main Pattern | Data Handling |
 |---|---|---|
 | Dashboard | Summary + warning + quick action | selective |
-| Periode | Table/Form | small |
 | Rombel | Table/Form | small |
 | Mata Pelajaran | Table/Form | small |
 | Peserta | DataTables | server-side 50 |
