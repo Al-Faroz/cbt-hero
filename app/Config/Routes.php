@@ -134,6 +134,8 @@ $routes->group(
             'Manager\\System\\ManagerUserController::index',
             ['filter' => 'manager-role:system.users.manage']
         );
+        $routes->get('system/settings', 'Manager\\System\\SettingsController::index',
+            ['filter' => 'manager-role:system.settings.manage']);
     }
 );
 
@@ -201,5 +203,9 @@ $routes->group(
             'Manager\\System\\ManagerUserController::create',
             ['filter' => 'manager-role:system.users.manage,api']
         );
+        $settings = 'Api\\Manager\\System\\SettingsController::';
+        $settingsFilter = ['filter' => 'manager-role:system.settings.manage,api'];
+        $routes->get('settings/academic', $settings . 'index', $settingsFilter);
+        $routes->put('settings/academic', $settings . 'update', $settingsFilter);
     }
 );

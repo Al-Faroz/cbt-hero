@@ -7,7 +7,7 @@ $active = static function (string $key) use ($activeMenu): string {
     return $activeMenu === $key ? ' active' : '';
 };
 
-$systemOpen = $activeMenu === 'system-users';
+$systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
 ?>
 <aside
@@ -174,7 +174,7 @@ $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-
                         User Manager
                     </a>
 
-                    <span class="manager-subnav-link is-unavailable">Pengaturan</span>
+                    <a class="manager-subnav-link<?= $active('system-settings') ?>" href="<?= base_url('manager/system/settings') ?>">Pengaturan</a>
                     <span class="manager-subnav-link is-unavailable">Pengosongan Data</span>
                 <?php endif; ?>
 
