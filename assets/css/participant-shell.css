@@ -1,0 +1,537 @@
+/*
+ * CBT-HERO Participant Shell
+ * Mobile-first. Daftar ujian tidak memakai DataTables.
+ */
+
+body.participant-body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(circle at 16% -8%, rgba(91,95,242,.12), transparent 32%),
+        var(--cbt-bg);
+}
+
+.participant-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    border-bottom: 1px solid rgba(228,231,236,.88);
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(14px);
+}
+
+.participant-topbar-inner {
+    width: min(100%, 1080px);
+    min-height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 auto;
+    padding: 8px 14px;
+}
+
+.participant-brand {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.participant-brand img {
+    width: 138px;
+    height: auto;
+    display: block;
+}
+
+.participant-account-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 5px 4px 4px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: #344054;
+    background: transparent;
+}
+
+.participant-account-button:hover,
+.participant-account-button.show {
+    border-color: var(--cbt-line);
+    background: #fff;
+}
+
+.participant-avatar {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    border-radius: 11px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--cbt-primary), #3b82f6);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.participant-account-copy {
+    display: none;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.15;
+}
+
+.participant-account-copy strong {
+    max-width: 190px;
+    display: block;
+    overflow: hidden;
+    color: #344054;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.participant-account-copy span {
+    display: block;
+    margin-top: 3px;
+    color: var(--cbt-muted);
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.participant-account .dropdown-menu {
+    min-width: 230px;
+    padding: 8px;
+    border-color: var(--cbt-line);
+    border-radius: 14px;
+    box-shadow: var(--cbt-shadow-soft);
+}
+
+.participant-account .dropdown-item {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    border-radius: 9px;
+    font-size: 13px;
+}
+
+.participant-main {
+    width: min(100% - 24px, 980px);
+    margin: 0 auto;
+    padding: 20px 0 36px;
+}
+
+.participant-welcome {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.participant-kicker {
+    color: var(--cbt-primary);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.participant-page-title {
+    margin: 4px 0 0;
+    color: #101828;
+    font-size: clamp(26px, 7vw, 34px);
+    font-weight: 840;
+    line-height: 1.04;
+    letter-spacing: -.035em;
+}
+
+.participant-page-description {
+    max-width: 660px;
+    margin: 7px 0 0;
+    color: var(--cbt-muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.participant-identity {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 15px;
+    border: 1px solid var(--cbt-line);
+    border-radius: 14px;
+    background: rgba(255,255,255,.90);
+    box-shadow: 0 5px 18px rgba(16,24,40,.035);
+}
+
+.participant-identity-name {
+    margin: 0;
+    color: #1d2939;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.participant-identity-meta {
+    margin-top: 4px;
+    color: var(--cbt-muted);
+    font-size: 11px;
+}
+
+.participant-identity-badge {
+    padding: 6px 9px;
+    border-radius: 999px;
+    color: #4338ca;
+    background: var(--cbt-primary-soft);
+    font-size: 10px;
+    font-weight: 850;
+}
+
+.participant-section-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 24px 0 12px;
+}
+
+.participant-section-title {
+    margin: 0;
+    color: #1d2939;
+    font-size: 18px;
+    font-weight: 820;
+}
+
+.participant-section-subtitle {
+    margin: 4px 0 0;
+    color: var(--cbt-muted);
+    font-size: 11px;
+}
+
+.participant-exam-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.participant-exam-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--cbt-line);
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 7px 22px rgba(16,24,40,.045);
+}
+
+.participant-exam-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: #d0d5dd;
+}
+
+.participant-exam-card.is-ready::before,
+.participant-exam-card.is-resume::before {
+    background: var(--cbt-primary);
+}
+
+.participant-exam-card.is-finished::before {
+    background: #12b76a;
+}
+
+.participant-exam-card-body {
+    padding: 16px 16px 14px 18px;
+}
+
+.participant-exam-topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 10px;
+}
+
+.participant-state-badge,
+.participant-type-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 9.5px;
+    font-weight: 850;
+    letter-spacing: .025em;
+}
+
+.participant-state-badge {
+    color: #475467;
+    background: #f2f4f7;
+}
+
+.participant-state-badge.is-ready,
+.participant-state-badge.is-resume {
+    color: #4338ca;
+    background: #eef0ff;
+}
+
+.participant-state-badge.is-finished {
+    color: #067647;
+    background: #ecfdf3;
+}
+
+.participant-type-badge {
+    color: #475467;
+    background: #f9fafb;
+    border: 1px solid #eaecf0;
+}
+
+.participant-exam-title {
+    margin: 0;
+    color: #101828;
+    font-size: 18px;
+    font-weight: 830;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+}
+
+.participant-exam-activity {
+    margin: 5px 0 0;
+    color: var(--cbt-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.participant-exam-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.participant-exam-meta-item {
+    padding: 9px 10px;
+    border: 1px solid #eaecf0;
+    border-radius: 10px;
+    background: #fafbfc;
+}
+
+.participant-exam-meta-label {
+    display: block;
+    color: #98a2b3;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.participant-exam-meta-value {
+    display: block;
+    margin-top: 3px;
+    color: #344054;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.participant-exam-message {
+    margin: 12px 0 0;
+    color: var(--cbt-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.participant-exam-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.participant-exam-actions .btn {
+    min-height: 42px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.participant-list-state {
+    padding: 26px 18px;
+    border: 1px dashed #d0d5dd;
+    border-radius: 15px;
+    color: var(--cbt-muted);
+    background: rgba(255,255,255,.72);
+    text-align: center;
+}
+
+.participant-list-state-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 10px;
+    border-radius: 13px;
+    color: var(--cbt-primary);
+    background: var(--cbt-primary-soft);
+    font-size: 20px;
+}
+
+.participant-list-state strong {
+    display: block;
+    color: #344054;
+    font-size: 13px;
+}
+
+.participant-list-state span {
+    display: block;
+    max-width: 420px;
+    margin: 5px auto 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+
+.participant-skeleton {
+    height: 205px;
+    border-radius: 15px;
+    background:
+        linear-gradient(
+            90deg,
+            #f2f4f7 25%,
+            #fafafa 37%,
+            #f2f4f7 63%
+        );
+    background-size: 400% 100%;
+    animation: participant-skeleton 1.3s ease infinite;
+}
+
+@keyframes participant-skeleton {
+    0% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+/* Confirmation */
+.participant-confirm-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.participant-confirm-card {
+    padding: 16px;
+    border: 1px solid var(--cbt-line);
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 7px 22px rgba(16,24,40,.045);
+}
+
+.participant-confirm-title {
+    margin: 0 0 12px;
+    color: #101828;
+    font-size: 18px;
+    font-weight: 820;
+}
+
+.participant-confirm-list {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+}
+
+.participant-confirm-row {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 12px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid #f0f1f3;
+}
+
+.participant-confirm-row:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.participant-confirm-row dt {
+    color: #98a2b3;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.participant-confirm-row dd {
+    margin: 0;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.participant-confirm-instruction {
+    color: #475467;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.participant-start-box {
+    display: grid;
+    gap: 12px;
+}
+
+.participant-start-box .form-check-label {
+    color: #344054;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.participant-start-box .form-control {
+    min-height: 44px;
+}
+
+.participant-start-box .btn {
+    min-height: 44px;
+}
+
+.participant-dev-note {
+    margin: 0;
+    color: #667085;
+    font-size: 10.5px;
+    line-height: 1.45;
+}
+
+@media (min-width: 640px) {
+    .participant-account-copy {
+        display: block;
+    }
+
+    .participant-main {
+        width: min(100% - 36px, 980px);
+        padding-top: 26px;
+    }
+
+    .participant-welcome {
+        grid-template-columns: minmax(0, 1fr) minmax(280px, .65fr);
+        align-items: end;
+    }
+
+    .participant-exam-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .participant-confirm-grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+        align-items: start;
+    }
+}
+
+@media (min-width: 900px) {
+    .participant-topbar-inner {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .participant-brand img {
+        width: 150px;
+    }
+
+    .participant-main {
+        padding-top: 30px;
+    }
+
+    .participant-exam-card-body {
+        padding: 18px 18px 16px 20px;
+    }
+}

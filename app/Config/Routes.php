@@ -8,18 +8,23 @@ use CodeIgniter\Router\RouteCollection;
 |--------------------------------------------------------------------------
 | PARTICIPANT REALM
 |--------------------------------------------------------------------------
-|
-| GET / bersifat optional-auth:
-| - belum login  -> Landing/Login Peserta
-| - sudah login  -> /ujian
-|
 */
 $routes->get('/', 'Participant\\ParticipantAuthController::index');
 
-$routes->get(
-    'ujian',
-    'Participant\\ParticipantExamController::index',
-    ['filter' => 'participant-auth']
+$routes->group(
+    '',
+    ['filter' => 'participant-auth'],
+    static function (RouteCollection $routes): void {
+        $routes->get(
+            'ujian',
+            'Participant\\ParticipantExamController::index'
+        );
+
+        $routes->get(
+            'ujian/(:num)/konfirmasi',
+            'Participant\\ParticipantExamController::confirmation/$1'
+        );
+    }
 );
 
 /*
@@ -45,6 +50,27 @@ $routes->group('api/auth', static function (RouteCollection $routes): void {
         ['filter' => 'participant-auth:api']
     );
 });
+
+/*
+|--------------------------------------------------------------------------
+| PARTICIPANT EXAM DISCOVERY API
+|--------------------------------------------------------------------------
+*/
+$routes->group(
+    'api/ujian',
+    ['filter' => 'participant-auth:api'],
+    static function (RouteCollection $routes): void {
+        $routes->get(
+            '',
+            'Api\\Participant\\ExamDiscoveryController::index'
+        );
+
+        $routes->get(
+            '(:num)/konfirmasi',
+            'Api\\Participant\\ExamDiscoveryController::confirmation/$1'
+        );
+    }
+);
 
 /*
 |--------------------------------------------------------------------------
