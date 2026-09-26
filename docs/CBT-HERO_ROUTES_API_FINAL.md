@@ -1075,10 +1075,18 @@ Tidak ada teacher/KKM/schedule pada Master Mapel.
 ```text
 GET   /manager/api/peserta
 POST  /manager/api/peserta
+GET   /manager/api/peserta/rombel-options
 GET   /manager/api/peserta/{id}
 PUT   /manager/api/peserta/{id}
 PATCH /manager/api/peserta/{id}/status
 ```
+
+`rombel-options` mengembalikan seluruh Rombel untuk filter riwayat; form
+Peserta baru hanya menampilkan Rombel aktif. Edit Peserta
+yang masih terhubung Rombel nonaktif boleh mempertahankan Rombel tersebut;
+pemindahan ke Rombel nonaktif ditolak. API daftar/detail Peserta tidak memuat
+hash/enkripsi password. Langkah data inti Peserta tidak menyediakan DELETE;
+Account Login dan import dikerjakan dalam submodul berikutnya.
 
 Data yang mempengaruhi pelaksanaan **dikunci jika peserta terikat Kegiatan BERJALAN**.
 
@@ -2860,4 +2868,3 @@ Setelah dokumen ini FINAL, route baru tidak boleh ditambahkan hanya karena kenya
 1. implementasi langsung requirement yang sudah ada;
 2. kebutuhan teknis internal yang tidak mengubah business contract;
 3. revisi eksplisit Dokumen Acuan bila benar-benar ada requirement baru.
-

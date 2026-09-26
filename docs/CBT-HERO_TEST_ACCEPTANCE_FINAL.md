@@ -122,3 +122,21 @@ Rombel, penolakan penghapusan Rombel yang dipakai, status Rombel pada pilihan
 Peserta baru, konsistensi impor, permission Admin/Operator, dan pagination
 sesuai volume data yang benar-benar tersedia. Gerbang ini belum dijalankan
 pada Phase 2B.
+
+## 9. Phase 2C — Data inti Peserta (uji submodul)
+
+Prasyarat: setidaknya satu Rombel `ACTIVE` dari Phase 2B. Pengujian ini hanya menggunakan halaman **Master Data → Peserta** dan Rombel yang sudah tersedia. Belum perlu Account Login, import Excel, Kegiatan, ataupun data ujian.
+
+| ID | Langkah di UI | Hasil yang diharapkan |
+| --- | --- | --- |
+| C01 | Login Admin dan Operator secara bergantian, buka halaman Peserta. | Halaman tampil dan pilihan Rombel aktif tersedia tanpa error. |
+| C02 | Tambah Peserta uji dengan NISN angka, nama, jenis kelamin L/P, Rombel aktif, serta keterangan opsional. | Row tampil dengan NISN, nama, JK, Rombel, dan status Aktif yang sesuai. Tidak perlu credential. |
+| C03 | Tambah lagi dengan NISN yang sama. | Muncul pesan NISN sudah digunakan; hanya satu row tersimpan. |
+| C04 | Edit nama/keterangan Peserta uji; buka edit lagi lalu klik **Batal Edit**. | Perubahan pertama tersimpan; pembatalan tidak mengubah data. |
+| C05 | Cari NISN/nama, pilih filter Rombel dan status, lalu reset. | Daftar mengikuti filter dan kembali lengkap setelah reset. Tidak perlu membuat 51 row untuk memicu halaman kedua. |
+| C06 | Nonaktifkan Peserta uji lalu aktifkan lagi. | Status berubah dan tetap benar setelah halaman di-refresh. |
+| C07 | Buka halaman pada desktop dan mobile. | Form dan tabel dapat digunakan; tabel dapat digulir horizontal pada mobile. |
+
+**PASS Phase 2C:** C01–C07 berhasil tanpa error PHP. Data Peserta uji dapat dibiarkan untuk langkah Account Login/Import berikutnya. Data yang belum diberi credential tetap berstatus `PENDING`; login Peserta belum dapat diuji dengan row baru ini.
+
+**Gerbang integrasi nanti:** penolakan edit Peserta yang terikat Kegiatan `BERJALAN`, impor Peserta, credential, dan hubungan dengan Kartu/Ujian diuji setelah fitur yang memakainya tersedia. Uji pagination lintas halaman hanya bila volume data nyata cukup. Tidak ada DELETE Peserta pada langkah ini.

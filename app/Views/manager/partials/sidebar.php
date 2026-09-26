@@ -8,7 +8,7 @@ $active = static function (string $key) use ($activeMenu): string {
 };
 
 $systemOpen = $activeMenu === 'system-users';
-$masterOpen = $activeMenu === 'master-rombel';
+$masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -75,7 +75,7 @@ $masterOpen = $activeMenu === 'master-rombel';
 
             <div class="collapse manager-subnav<?= $masterOpen ? ' show' : '' ?>" id="navMasterData">
                 <a class="manager-subnav-link<?= $active('master-rombel') ?>" href="<?= base_url('manager/master-data/rombel') ?>">Rombel</a>
-                <span class="manager-subnav-link is-unavailable">Peserta</span>
+                <a class="manager-subnav-link<?= $active('master-peserta') ?>" href="<?= base_url('manager/master-data/peserta') ?>">Peserta</a>
                 <span class="manager-subnav-link is-unavailable">Mata Pelajaran</span>
             </div>
 

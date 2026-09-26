@@ -118,6 +118,12 @@ $routes->group(
         );
 
         $routes->get(
+            'master-data/peserta',
+            'Manager\\Master\\PesertaController::index',
+            ['filter' => 'manager-role:master.data.manage']
+        );
+
+        $routes->get(
             'system/users',
             'Manager\\System\\ManagerUserController::index',
             ['filter' => 'manager-role:system.users.manage']
@@ -142,6 +148,14 @@ $routes->group(
         $routes->put('rombel/(:num)', $rombel . 'update/$1', $filter);
         $routes->patch('rombel/(:num)/status', $rombel . 'status/$1', $filter);
         $routes->delete('rombel/(:num)', $rombel . 'remove/$1', $filter);
+
+        $peserta = 'Api\\Manager\\Master\\PesertaController::';
+        $routes->get('peserta', $peserta . 'index', $filter);
+        $routes->post('peserta', $peserta . 'create', $filter);
+        $routes->get('peserta/rombel-options', $peserta . 'rombelOptions', $filter);
+        $routes->get('peserta/(:num)', $peserta . 'show/$1', $filter);
+        $routes->put('peserta/(:num)', $peserta . 'update/$1', $filter);
+        $routes->patch('peserta/(:num)/status', $peserta . 'status/$1', $filter);
 
         $routes->get(
             'users',
