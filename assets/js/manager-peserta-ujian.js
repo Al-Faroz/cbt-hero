@@ -96,6 +96,21 @@
             if (options.includes(previous)) select.value = previous;
         }
     };
+    const renderAssignRombel = (options) => {
+        const select = $('pesertaUjianRombel');
+        const candidate = $('pesertaUjianCandidateRombel');
+        const previous = select.value, candidatePrevious = candidate.value;
+        select.replaceChildren();
+        candidate.replaceChildren(new Option('Semua Rombel aktif', ''));
+        for (const item of options) {
+            select.add(new Option(item.display_name, item.id));
+            candidate.add(new Option(item.display_name, item.id));
+        }
+        if (options.some((item) => String(item.id) === previous)) select.value = previous;
+        if (options.some((item) => String(item.id) === candidatePrevious)) candidate.value = candidatePrevious;
+        select.disabled = options.length === 0;
+        feedback('pesertaUjianAssignFeedback', options.length ? '' : 'Belum ada Rombel aktif. Tambahkan atau aktifkan Rombel di Master Data.', !options.length);
+    };
     const roomCell = (item) => {
         const td = document.createElement('td');
         if (!state.draft) {
@@ -150,6 +165,7 @@
             $('pesertaUjianMemberSelectAll').indeterminate = false;
             renderSummary(data);
             renderRombelScopes(data.rombel_options);
+            renderAssignRombel(data.assign_rombel_options ?? []);
             $('pesertaUjianRuangCount').textContent = data.unassigned_room + ' dari ' + data.pagination.total + ' anggota belum ditempatkan';
             $('pesertaUjianNomorCount').textContent = data.without_number + ' dari ' + data.pagination.total + ' anggota belum memiliki nomor';
             const body = $('pesertaUjianRows'); body.replaceChildren();
@@ -346,6 +362,7 @@
         if (selector === 'TINGKAT') value = $('pesertaUjianTingkat').value;
         if (selector === 'ROMBEL') value = $('pesertaUjianRombel').value;
         if (selector === 'IDS') value = [...state.candidates.ids];
+        if (selector === 'ROMBEL' && !value) {feedback('pesertaUjianAssignFeedback', 'Pilih Rombel aktif terlebih dahulu.', true); return;}
         if (selector === 'IDS' && !value.length) {feedback('pesertaUjianAssignFeedback', 'Pilih Peserta terlebih dahulu.', true); return;}
         const label = selector === 'ALL' ? 'semua Peserta aktif' : selector === 'IDS' ? value.length + ' Peserta' : selector + ' ' + value;
         if (!window.confirm('Tambahkan ' + label + ' ke Kegiatan ini?')) return;
@@ -375,14 +392,8 @@
     }
     $('pesertaUjianCandidatePrevious').addEventListener('click', () => {if (state.candidates.page > 1) {state.candidates.page--; loadCandidates();}});
     $('pesertaUjianCandidateNext').addEventListener('click', () => {if (state.candidates.page < state.candidates.pages) {state.candidates.page++; loadCandidates();}});
-    api(app.dataset.rombelApi).then((data) => {
-        for (const item of data.items.filter((row) => row.status === 'ACTIVE')) {
-            for (const id of ['pesertaUjianRombel', 'pesertaUjianCandidateRombel']) {
-                const option = document.createElement('option');
-                option.value = item.id; option.textContent = item.display_name; $(id).append(option);
-            }
-        }
-    }).catch((error) => feedback('pesertaUjianAssignFeedback', error.message, true));
+    $('pesertaUjianRombel').disabled = true;
+    $('pesertaUjianRombel').add(new Option('Memuat Rombel...', ''));
     loadRooms().catch((error) => feedback('pesertaUjianRuangFeedback', error.message, true))
         .finally(loadMembers);
 })();

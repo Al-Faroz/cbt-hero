@@ -42,8 +42,12 @@ class PesertaKegiatanService
             ->get()->getResultArray();
         $rombelOptions = $db->table('peserta_kegiatan')->distinct()->select('rombel_snapshot')
             ->where('kegiatan_id', $kegiatanId)->orderBy('rombel_snapshot')->get()->getResultArray();
+        $assignRombelOptions = $db->table('rombel')->select('id, display_name')
+            ->where('status', 'ACTIVE')->orderBy('tingkat', 'ASC')->orderBy('kode_rombel', 'ASC')
+            ->get()->getResultArray();
         return ['ok' => true, 'status' => 200, 'kegiatan' => $kegiatan, 'items' => $items,
             'summary' => $summaryRows, 'rombel_options' => array_column($rombelOptions, 'rombel_snapshot'),
+            'assign_rombel_options' => $assignRombelOptions,
             'unassigned_room' => $unassigned,
             'without_number' => $withoutNumber,
             'pagination' => $this->pagination($page, $perPage, $pages, $total, $filtered)];

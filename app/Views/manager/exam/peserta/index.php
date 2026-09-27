@@ -12,7 +12,7 @@
         <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kembali ke Kegiatan</a>
     </div>
 </section>
-<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-rombel-api="<?= esc(base_url('manager/api/peserta/rombel-options'), 'attr') ?>" data-ruang-api="<?= esc(base_url('manager/api/ruang/options'), 'attr') ?>" data-nomor-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/nomor-peserta/generate'), 'attr') ?>">
+<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-ruang-api="<?= esc(base_url('manager/api/ruang/options'), 'attr') ?>" data-nomor-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/nomor-peserta/generate'), 'attr') ?>">
     <section class="manager-section-card mb-3" id="pesertaUjianAssignCard" hidden>
         <div class="card-header"><div class="fw-bold">Tambahkan Peserta</div></div>
         <div class="card-body">
