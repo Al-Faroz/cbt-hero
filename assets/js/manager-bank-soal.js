@@ -54,6 +54,10 @@
                 const row = document.createElement('tr');
                 row.append(td(item.nama_bank), td(item.kegiatan_nama), td(item.mapel_nama), td(item.tingkat), td(item.status));
                 const actions = document.createElement('td'); actions.className = 'text-nowrap';
+                const composition = document.createElement('a');
+                composition.href = app.dataset.uiBase + '/' + item.id + '/komposisi';
+                composition.className = 'btn btn-outline-primary btn-sm me-1';
+                composition.textContent = 'Komposisi'; actions.append(composition);
                 if (item.status === 'DRAFT' && item.kegiatan_status === 'DRAFT') {
                     const edit = document.createElement('button'); edit.type = 'button';
                     edit.className = 'btn btn-outline-primary btn-sm me-1'; edit.textContent = 'Edit';

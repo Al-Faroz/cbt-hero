@@ -138,6 +138,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal', 'Manager\\Bank\\BankSoalController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -237,6 +239,8 @@ $routes->group(
         $routes->get('bank-soal/(:num)', $bank . 'show/$1', $examFilter);
         $routes->put('bank-soal/(:num)', $bank . 'update/$1', $examFilter);
         $routes->delete('bank-soal/(:num)', $bank . 'remove/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::index/$1', $examFilter);
+        $routes->put('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::update/$1', $examFilter);
 
         $routes->get(
             'users',

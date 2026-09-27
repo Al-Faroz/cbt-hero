@@ -2931,3 +2931,7 @@ tidak mengembalikan key rahasia atau berkas logo.
 ## Phase 4A — Bank Soal Akademik
 
 `GET /manager/master-ujian/bank-soal` adalah halaman Bank Soal. CRUD menggunakan kontrak `/manager/api/bank-soal` pada bagian 29.1; `GET /manager/api/bank-soal/options` mengembalikan opsi Kegiatan Akademik dan Mapel bagi form/filter. Semua Bank baru DRAFT; READY menunggu validasi tipe/soal.
+
+## Phase 4B — Komposisi Tipe Bank
+
+`GET /manager/master-ujian/bank-soal/{id}/komposisi` membuka form komposisi. `GET`/`PUT /manager/api/bank-soal/{id}/type-config` mengikuti bagian 29.2. PUT mengganti komposisi tipe terpilih secara atomik dan wajib membawa `expected_version`; jika versi Bank berubah, server menolak 409. Jumlah/bobot diperiksa pada DRAFT, sedangkan kelayakan READY menunggu soal dan validasi lengkap.

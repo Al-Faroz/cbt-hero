@@ -5,7 +5,7 @@
         <p class="manager-page-description">Wadah soal Akademik per Kegiatan, Mata Pelajaran, dan Tingkat.</p></div>
     <button class="btn btn-cbt-primary" type="button" id="bankAdd">Tambah Bank</button>
 </section>
-<div id="bankApp" data-api="<?= esc(base_url('manager/api/bank-soal'), 'attr') ?>">
+<div id="bankApp" data-api="<?= esc(base_url('manager/api/bank-soal'), 'attr') ?>" data-ui-base="<?= esc(base_url('manager/master-ujian/bank-soal'), 'attr') ?>">
     <section class="manager-section-card">
         <div class="card-body"><div class="row g-2 align-items-end">
             <div class="col-md-4"><label class="cbt-form-label" for="bankKegiatanFilter">Kegiatan Akademik</label><select class="form-select" id="bankKegiatanFilter"><option value="">Semua Kegiatan</option></select></div>
