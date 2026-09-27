@@ -64,6 +64,10 @@
                 members.className = 'btn btn-outline-primary btn-sm me-1';
                 members.href = app.dataset.uiBase + '/' + item.id + '/peserta';
                 members.textContent = 'Peserta'; actions.append(members);
+                const cards = document.createElement('a');
+                cards.className = 'btn btn-outline-primary btn-sm me-1';
+                cards.href = app.dataset.uiBase + '/' + item.id + '/kartu';
+                cards.textContent = 'Kartu'; actions.append(cards);
                 if (item.status === 'DRAFT') {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);

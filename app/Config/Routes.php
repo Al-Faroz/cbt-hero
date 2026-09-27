@@ -130,6 +130,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/kegiatan/(:num)/peserta', 'Manager\\Exam\\PesertaUjianController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/kegiatan/(:num)/kartu', 'Manager\\Exam\\KartuUjianController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/ruang', 'Manager\\Exam\\RuangController::index',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',

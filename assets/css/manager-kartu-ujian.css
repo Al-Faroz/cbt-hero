@@ -1,0 +1,15 @@
+@font-face{font-family:Ubuntu;src:url('../fonts/ubuntu/Ubuntu-Regular.woff') format('woff');font-weight:400}
+@font-face{font-family:Ubuntu;src:url('../fonts/ubuntu/Ubuntu-Bold.woff') format('woff');font-weight:700}
+*{box-sizing:border-box}body{margin:0;background:#e9edf4;color:#172038;font-family:Ubuntu,Arial,sans-serif}
+.toolbar,.filters,.batch-nav{max-width:1000px;margin:14px auto;display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid #d2d9e5;border-radius:10px;padding:12px 16px}
+.toolbar p{margin:4px 0 0;color:#59657a;font-size:13px}.toolbar-actions{display:flex;gap:12px;align-items:center}
+a{color:#294db2}button{background:#294db2;color:white;border:0;border-radius:6px;padding:9px 14px;cursor:pointer;font:inherit}button:disabled{opacity:.55}
+.filters{justify-content:flex-start;flex-wrap:wrap}.filters label{display:grid;gap:4px;font-size:13px}.filters select{min-width:145px;padding:7px;border:1px solid #a8b5c7;border-radius:6px;font:inherit}.filters [hidden]{display:none}
+.notice{max-width:1000px;margin:10px auto;padding:10px 14px;border-radius:8px;background:#fff2d3;color:#5f4200}.batch-nav{font-size:14px}
+.sheet{width:210mm;height:297mm;margin:16px auto;background:white;padding:8mm;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,53.8mm);gap:3mm;box-shadow:0 8px 28px #14203322;overflow:hidden}
+.exam-card{min-width:0;min-height:0;border:1px solid #52678e;border-radius:2mm;padding:2mm 2.6mm;display:flex;flex-direction:column;overflow:hidden;background:white;font-size:8pt;line-height:1.12}
+.card-head{display:flex;align-items:center;gap:2mm;padding-bottom:1mm;border-bottom:1px solid #9ba9c2}.card-head img{width:8mm;height:8mm;object-fit:contain;flex:none}.card-heading{min-width:0;display:grid;gap:.5mm}.card-heading strong{font-size:9pt;line-height:1.05}.card-heading small{font-size:6.5pt;line-height:1.1;overflow:hidden;max-height:5mm}
+.card-event{font-size:7.5pt;font-weight:700;padding:1.2mm 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-details{display:grid;grid-template-columns:23mm minmax(0,1fr);column-gap:1mm;row-gap:.5mm;line-height:1.07}.card-details>*{min-width:0;overflow-wrap:anywhere}.card-label{color:#4c5870}.credential{font-family:'JetBrains Mono','DejaVu Sans Mono',Consolas,monospace;font-weight:700;letter-spacing:.1px}.card-url{margin-top:auto;padding-top:1mm;border-top:1px solid #d3dbe8;font-size:7pt;overflow-wrap:anywhere}
+@media(max-width:850px){.sheet{transform:scale(.7);transform-origin:top left;margin-bottom:-80mm}.toolbar,.filters,.batch-nav,.notice{margin:8px}.toolbar{flex-wrap:wrap}}
+@page{size:A4 portrait;margin:0}
+@media print{html,body{width:210mm;margin:0;padding:0;background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}.toolbar,.filters,.notice,.batch-nav{display:none!important}.sheet{margin:0;box-shadow:none;break-after:page;page-break-after:always;transform:none}.sheet:last-child{break-after:auto;page-break-after:auto}.exam-card{break-inside:avoid;page-break-inside:avoid}}

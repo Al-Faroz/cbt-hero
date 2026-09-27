@@ -2920,3 +2920,6 @@ ADMIN: `GET /manager/api/settings/card-identity` dan
 `GET /manager/system/card-logo` menyajikan logo kustom untuk sesi Manager,
 dari direktori `writable` yang tidak dapat diakses langsung. API identitas
 tidak mengembalikan key rahasia atau berkas logo.
+# Phase 3E2 — Halaman cetak kartu
+
+`GET /manager/master-ujian/kegiatan/{id}/kartu?scope=ALL|ROMBEL|RUANG&value=...&page=1` adalah halaman HTML khusus cetak untuk Manager dengan izin Master Ujian. Maksimal 100 kartu per batch, 10 kartu per lembar A4. Data credential tidak dikirim melalui API daftar peserta, dan respons halaman ini memakai `no-store, private`.
