@@ -136,6 +136,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/ruang', 'Manager\\Exam\\RuangController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal', 'Manager\\Bank\\BankSoalController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -228,6 +230,13 @@ $routes->group(
         $routes->patch('kegiatan/(:num)/peserta/(:num)/ruang', $ruang . 'assignIndividual/$1/$2', $examFilter);
         $routes->post('kegiatan/(:num)/nomor-peserta/generate',
             'Api\\Manager\\Exam\\NomorPesertaController::generate/$1', $examFilter);
+        $bank = 'Api\\Manager\\Bank\\BankSoalController::';
+        $routes->get('bank-soal', $bank . 'index', $examFilter);
+        $routes->get('bank-soal/options', $bank . 'options', $examFilter);
+        $routes->post('bank-soal', $bank . 'create', $examFilter);
+        $routes->get('bank-soal/(:num)', $bank . 'show/$1', $examFilter);
+        $routes->put('bank-soal/(:num)', $bank . 'update/$1', $examFilter);
+        $routes->delete('bank-soal/(:num)', $bank . 'remove/$1', $examFilter);
 
         $routes->get(
             'users',

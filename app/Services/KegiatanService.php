@@ -106,6 +106,11 @@ class KegiatanService
                 $db->transRollback();
                 return $this->error(423, 'DATA_LOCKED', 'Kegiatan yang sudah berjalan tidak dapat diubah.');
             }
+            if ($old !== null && $old['jenis'] !== $jenis
+                && $db->table('bank_soal')->where('kegiatan_id', $id)->countAllResults() > 0) {
+                $db->transRollback();
+                return $this->error(409, 'DEPENDENCY_EXISTS', 'Jenis Kegiatan tidak dapat diubah karena sudah memiliki Bank Soal.');
+            }
             if ($id === null) {
                 $values['status'] = 'DRAFT';
                 $values['created_by'] = (int) ($actor['user_id'] ?? 0);

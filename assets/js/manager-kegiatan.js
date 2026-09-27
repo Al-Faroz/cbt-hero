@@ -72,6 +72,12 @@
                 preflight.className = 'btn btn-outline-primary btn-sm me-1';
                 preflight.href = app.dataset.uiBase + '/' + item.id + '/preflight';
                 preflight.textContent = 'Kesiapan'; actions.append(preflight);
+                if (item.jenis === 'AKADEMIK') {
+                    const banks = document.createElement('a');
+                    banks.className = 'btn btn-outline-primary btn-sm me-1';
+                    banks.href = app.dataset.bankBase + '?kegiatan_id=' + item.id;
+                    banks.textContent = 'Bank Soal'; actions.append(banks);
+                }
                 if (item.status === 'DRAFT') {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);

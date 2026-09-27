@@ -8,7 +8,7 @@
     </div>
     <button class="btn btn-cbt-primary" type="button" id="kegiatanAdd">Tambah Kegiatan</button>
 </section>
-<div id="kegiatanApp" data-api="<?= esc(base_url('manager/api/kegiatan'), 'attr') ?>" data-ui-base="<?= esc(base_url('manager/master-ujian/kegiatan'), 'attr') ?>">
+<div id="kegiatanApp" data-api="<?= esc(base_url('manager/api/kegiatan'), 'attr') ?>" data-ui-base="<?= esc(base_url('manager/master-ujian/kegiatan'), 'attr') ?>" data-bank-base="<?= esc(base_url('manager/master-ujian/bank-soal'), 'attr') ?>">
     <section class="manager-section-card">
         <div class="card-body">
             <div class="row g-2 align-items-end">

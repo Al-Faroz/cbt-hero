@@ -2927,3 +2927,7 @@ tidak mengembalikan key rahasia atau berkas logo.
 ## Phase 3F — Kesiapan Kegiatan
 
 `GET /manager/master-ujian/kegiatan/{id}/preflight` menyajikan pemeriksaan administratif baca saja untuk Manager berizin Master Ujian. Jumlah anggota dan kekurangan nomor, ruang, credential, status akun, serta identitas kartu diperiksa tanpa mengirim password atau key rahasia. Lifecycle tidak berubah.
+
+## Phase 4A — Bank Soal Akademik
+
+`GET /manager/master-ujian/bank-soal` adalah halaman Bank Soal. CRUD menggunakan kontrak `/manager/api/bank-soal` pada bagian 29.1; `GET /manager/api/bank-soal/options` mengembalikan opsi Kegiatan Akademik dan Mapel bagi form/filter. Semua Bank baru DRAFT; READY menunggu validasi tipe/soal.
