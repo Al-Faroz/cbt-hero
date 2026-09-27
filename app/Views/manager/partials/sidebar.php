@@ -9,6 +9,7 @@ $active = static function (string $key) use ($activeMenu): string {
 
 $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
+$examOpen = $activeMenu === 'exam-kegiatan';
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -86,7 +87,7 @@ $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#navMasterUjian"
-                aria-expanded="false"
+                aria-expanded="<?= $examOpen ? 'true' : 'false' ?>"
                 aria-controls="navMasterUjian"
                 title="Master Ujian"
             >
@@ -95,8 +96,8 @@ $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-
                 <span class="manager-nav-chevron"></span>
             </button>
 
-            <div class="collapse manager-subnav" id="navMasterUjian">
-                <span class="manager-subnav-link is-unavailable">Kegiatan Ujian</span>
+            <div class="collapse manager-subnav<?= $examOpen ? ' show' : '' ?>" id="navMasterUjian">
+                <a class="manager-subnav-link<?= $active('exam-kegiatan') ?>" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kegiatan Ujian</a>
                 <span class="manager-subnav-link is-unavailable">Peserta Ujian</span>
                 <span class="manager-subnav-link is-unavailable">Ruang</span>
                 <span class="manager-subnav-link is-unavailable">Bank Soal</span>
