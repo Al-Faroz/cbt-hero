@@ -9,7 +9,7 @@ use Throwable;
 class BankTypeConfigService
 {
     private const TYPES = [
-        'PG', 'PG_KOMPLEKS', 'MATCHING', 'ISIAN_SINGKAT', 'URAIAN', 'PG_BERTINGKAT',
+        'PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING', 'ISIAN_SINGKAT', 'URAIAN',
     ];
     private const SHUFFLE_QUESTIONS = ['PG', 'PG_KOMPLEKS', 'MATCHING', 'PG_BERTINGKAT'];
     private const SHUFFLE_OPTIONS = ['PG', 'PG_KOMPLEKS', 'MATCHING', 'PG_BERTINGKAT'];

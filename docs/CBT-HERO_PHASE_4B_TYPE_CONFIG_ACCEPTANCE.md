@@ -2,6 +2,8 @@
 
 Tahap ini mengatur enam tipe teknis pada Bank Soal Akademik DRAFT melalui tombol **Komposisi** di daftar Bank Soal. Tidak ada migrasi SQL. Satu baris konfigurasi tersimpan per tipe yang dicentang pada `bank_type_config`. Status READY belum tersedia sampai editor dan validasi soal selesai.
 
+Urutan tampilan: grup **Pilihan Ganda / Klik** (Pilihan Ganda, PG Kompleks, PG Bertingkat, Menjodohkan), kemudian grup **Isian & Uraian / Ketik** (Isian Singkat, Uraian). Pengelompokan ini hanya mengubah tampilan; kode keenam tipe dan data tersimpan tetap sama.
+
 | ID | Langkah | Hasil yang diharapkan |
 | --- | --- | --- |
 | T01 | Buat Bank kosong DRAFT, buka Komposisi. Centang PG dan Isian Singkat; set jumlah dipilih 20 dan 5, bobot 80 dan 20, acak soal/opsi hanya pada PG. Simpan dan reload. | Dua tipe dan pengaturannya tetap tersimpan; total bobot 100%. Bank tetap DRAFT. |

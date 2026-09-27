@@ -26,7 +26,7 @@
         return node;
     };
     const cell = (node) => {const td = document.createElement('td'); td.append(node); return td;};
-    const current = () => [...$('typeRows').querySelectorAll('tr')].filter((row) => row.enabled.checked).map((row) => ({
+    const current = () => [...$('typeRows').querySelectorAll('tr[data-type]')].filter((row) => row.enabled.checked).map((row) => ({
         question_type: row.dataset.type, selection_count: Number(row.count.value),
         weight_percent: row.weight.value.trim(), shuffle_questions: row.questions.checked,
         shuffle_options: row.options.checked,
@@ -45,7 +45,15 @@
             data.bank.mapel_nama + ' · Tingkat ' + data.bank.tingkat + ' · ' + data.bank.status;
         const configs = new Map(data.items.map((item) => [item.question_type, item]));
         const body = $('typeRows'); body.replaceChildren();
+        const groupHeader = (label) => {
+            const row = document.createElement('tr'); row.className = 'table-light';
+            const heading = document.createElement('th'); heading.colSpan = 7;
+            heading.scope = 'rowgroup'; heading.textContent = label;
+            row.append(heading); body.append(row);
+        };
         for (const type of data.types) {
+            if (type === 'PG') groupHeader('PILIHAN GANDA / KLIK');
+            if (type === 'ISIAN_SINGKAT') groupHeader('ISIAN & URAIAN / KETIK');
             const config = configs.get(type); const row = document.createElement('tr'); row.dataset.type = type;
             const enabled = input('checkbox', Boolean(config), 'form-check-input');
             enabled.setAttribute('aria-label', 'Gunakan ' + labels[type]); row.enabled = enabled;
