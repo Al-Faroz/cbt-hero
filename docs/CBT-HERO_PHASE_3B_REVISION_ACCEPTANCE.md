@@ -21,8 +21,8 @@ Keanggotaan lama berlabel **Asal belum tercatat**. Sistem tidak bisa menyimpulka
 | R06 | Klik Hapus Terpilih lalu batalkan; ulangi dan setujui. | Pembatalan tidak mengubah data; persetujuan menghapus semua anggota terpilih secara atomik. Total dan ringkasan langsung berkurang; Master Peserta tetap ada. |
 | R07 | Cari anggota atau pindah halaman setelah memilih anggota. | Pilihan dibersihkan agar anggota tersembunyi dari halaman lain tidak ikut terhapus. |
 | R08 | Buka halaman Peserta Ujian dari Kegiatan Ujian dan periksa sidebar. | Kegiatan Ujian tetap ditandai aktif; tidak ada menu Peserta Ujian yang berdiri sendiri. |
-| R09 | Buka Dashboard, Master Data, Kegiatan, Peserta Ujian, Settings (Admin), dan login Manager sambil melihat Console. | Tidak ada `Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')`. Fungsi halaman tetap berjalan. |
+| R09 | Buka Dashboard, Master Data, Kegiatan, Peserta Ujian, Settings (Admin), dan login Manager sambil melihat Console. | Tidak ada error dari berkas aplikasi `assets/js/` atau kegagalan fungsi halaman. Bila ada pesan dari skrip ekstensi browser, periksa URL sumbernya secara terpisah. |
 
 Pengujian kunci Kegiatan BERJALAN dan relasi Jadwal/Attempt akan ditulis pada acceptance modul yang mengimplementasikan lifecycle dan Jadwal tersebut.
 
-Debug Toolbar CodeIgniter tidak dimuat otomatis karena skrip vendor toolbar memanggil `addEventListener` tanpa memastikan tombol internalnya ada. Error PHP tetap dapat diperiksa lewat log di `writable/logs`. Bila R09 masih menunjukkan pesan yang sama, catat **nama file dan nomor baris** yang muncul di sisi kanan pesan Console agar sumber skrip dapat diperbaiki secara tepat.
+Jika muncul `share-modal.js:1:135`, berkas itu tidak berada pada repo CBT-HERO. Klik nama berkas di Console untuk melihat URL lengkap. Awalan `chrome-extension://` menunjukkan skrip dari ekstensi Chrome; uji ulang dengan ekstensi tersebut dimatikan untuk situs lokal. Debug Toolbar CI4 tetap tersedia pada lingkungan development.
