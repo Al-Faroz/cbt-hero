@@ -4,6 +4,7 @@ namespace App\Controllers\Api\Manager\Bank;
 
 use App\Controllers\BaseController;
 use App\Services\QuestionService;
+use App\Services\AdvancedQuestionService;
 use App\Traits\ApiResponseTrait;
 
 class SoalController extends BaseController
@@ -22,12 +23,16 @@ class SoalController extends BaseController
 
     public function create(string $bankId)
     {
-        return $this->respond((new QuestionService())->save((int) $bankId, null, $this->payload(), $this->actor()));
+        $payload = $this->payload();
+        $service = ($payload['question_type'] ?? 'PG') === 'PG' ? new QuestionService() : new AdvancedQuestionService();
+        return $this->respond($service->save((int) $bankId, null, $payload, $this->actor()));
     }
 
     public function update(string $bankId, string $id)
     {
-        return $this->respond((new QuestionService())->save((int) $bankId, (int) $id, $this->payload(), $this->actor()));
+        $payload = $this->payload();
+        $service = ($payload['question_type'] ?? 'PG') === 'PG' ? new QuestionService() : new AdvancedQuestionService();
+        return $this->respond($service->save((int) $bankId, (int) $id, $payload, $this->actor()));
     }
 
     public function remove(string $bankId, string $id)

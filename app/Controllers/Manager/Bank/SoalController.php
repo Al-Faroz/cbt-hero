@@ -13,4 +13,12 @@ class SoalController extends BaseController
             'pageSubtitle' => 'Master Ujian', 'activeMenu' => 'exam-bank', 'bankId' => (int) $id,
         ]);
     }
+
+    public function advanced(string $id)
+    {
+        return view('manager/bank/soal-advanced', [
+            'auth' => session()->get('manager_auth'), 'pageTitle' => 'Soal Akademik Lanjutan',
+            'pageSubtitle' => 'Master Ujian', 'activeMenu' => 'exam-bank', 'bankId' => (int) $id,
+        ]);
+    }
 }

@@ -142,6 +142,18 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/soal-lanjutan', 'Manager\\Bank\\SoalController::advanced/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/impor', 'Manager\\Bank\\ImportSoalController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/cetak', 'Manager\\Bank\\PrintController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/preview', 'Manager\\Bank\\PrintController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('import-template/bank-soal.xlsx', 'Api\\Manager\\Bank\\ImportSoalController::template/xlsx',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('import-template/bank-soal.docx', 'Api\\Manager\\Bank\\ImportSoalController::template/docx',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -190,16 +202,16 @@ $routes->group(
         $routes->post('peserta/accounts/generate-usernames', $account . 'bulkUsername', $filter);
         $routes->post('peserta/accounts/regenerate-usernames', $account . 'bulkRegenerateUsername', $filter);
         $routes->post('peserta/accounts/reset-passwords', $account . 'bulkResetPassword', $filter);
-        $import = 'Api\\Manager\\Master\\PesertaImportController::';
-        $routes->post('imports', $import . 'upload', $filter);
-        $routes->get('imports/(:num)', $import . 'show/$1', $filter);
-        $routes->get('imports/(:num)/items', $import . 'items/$1', $filter);
-        $routes->post('imports/(:num)/parse', $import . 'parse/$1', $filter);
-        $routes->post('imports/(:num)/validate', $import . 'validateJob/$1', $filter);
-        $routes->patch('imports/(:num)/items/(:num)', $import . 'fix/$1/$2', $filter);
-        $routes->post('imports/(:num)/items/(:num)/exclude', $import . 'exclude/$1/$2', $filter);
-        $routes->post('imports/(:num)/items/(:num)/include', $import . 'includeItem/$1/$2', $filter);
-        $routes->post('imports/(:num)/commit', $import . 'commit/$1', $filter);
+        $import = 'Api\\Manager\\ImportController::';
+        $routes->post('imports', $import . 'upload');
+        $routes->get('imports/(:num)', $import . 'show/$1');
+        $routes->get('imports/(:num)/items', $import . 'items/$1');
+        $routes->post('imports/(:num)/parse', $import . 'parse/$1');
+        $routes->post('imports/(:num)/validate', $import . 'validateJob/$1');
+        $routes->patch('imports/(:num)/items/(:num)', $import . 'fix/$1/$2');
+        $routes->post('imports/(:num)/items/(:num)/exclude', $import . 'exclude/$1/$2');
+        $routes->post('imports/(:num)/items/(:num)/include', $import . 'includeItem/$1/$2');
+        $routes->post('imports/(:num)/commit', $import . 'commit/$1');
 
         $mapel = 'Api\\Manager\\Master\\MataPelajaranController::';
         $routes->get('mapel', $mapel . 'index', $filter);
@@ -241,6 +253,9 @@ $routes->group(
         $routes->get('bank-soal/(:num)', $bank . 'show/$1', $examFilter);
         $routes->put('bank-soal/(:num)', $bank . 'update/$1', $examFilter);
         $routes->delete('bank-soal/(:num)', $bank . 'remove/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/preflight', $bank . 'preflight/$1', $examFilter);
+        $routes->post('bank-soal/(:num)/ready', $bank . 'ready/$1', $examFilter);
+        $routes->post('bank-soal/(:num)/draft', $bank . 'draft/$1', $examFilter);
         $routes->get('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::index/$1', $examFilter);
         $routes->put('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::update/$1', $examFilter);
         $question = 'Api\\Manager\\Bank\\SoalController::';
@@ -249,6 +264,17 @@ $routes->group(
         $routes->get('bank-soal/(:num)/soal/(:num)', $question . 'show/$1/$2', $examFilter);
         $routes->put('bank-soal/(:num)/soal/(:num)', $question . 'update/$1/$2', $examFilter);
         $routes->delete('bank-soal/(:num)/soal/(:num)', $question . 'remove/$1/$2', $examFilter);
+        $import = 'Api\\Manager\\Bank\\ImportSoalController::';
+        $routes->get('bank-soal/template/(:segment)', $import . 'template/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/imports', $import . 'index/$1', $examFilter);
+        $routes->post('bank-soal/(:num)/imports', $import . 'upload/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/imports/(:num)', $import . 'show/$1/$2', $examFilter);
+        $routes->post('bank-soal/(:num)/imports/(:num)/validate', $import . 'validateJob/$1/$2', $examFilter);
+        $routes->put('bank-soal/(:num)/imports/(:num)/items/(:num)/(:segment)', $import . 'change/$1/$2/$3/$4', $examFilter);
+        $routes->post('bank-soal/(:num)/imports/(:num)/commit', $import . 'commit/$1/$2', $examFilter);
+        $routes->post('question-media', 'Api\\Manager\\Bank\\MediaController::upload', $examFilter);
+        $routes->post('question-media/video', 'Api\\Manager\\Bank\\MediaController::video', $examFilter);
+        $routes->get('question-media/(:num)', 'Api\\Manager\\Bank\\MediaController::show/$1', $examFilter);
 
         $routes->get(
             'users',

@@ -23,7 +23,8 @@
     const preview = () => {
         const data = {question_text: $('questionText').value, options: state.options.map((content, index) => ({
             option_key: String.fromCharCode(65 + index), content_text: content,
-        })), correct_key: state.correctIndex < 0 ? null : String.fromCharCode(65 + state.correctIndex)};
+        })), correct_key: state.correctIndex < 0 ? null : String.fromCharCode(65 + state.correctIndex),
+            media: {...(state.media || {}), ...(window.CbtMediaPreview || {})}};
         $('questionPreview').replaceChildren(window.CbtQuestionRenderer.renderPg(data, {showAnswer: true}));
     };
     const renderOptions = () => {
@@ -61,6 +62,7 @@
         state.revision = item ? Number(item.current_revision_no) : null;
         state.options = item ? item.options.map((option) => option.content_text) : ['', '', '', ''];
         state.correctIndex = item ? item.options.findIndex((option) => Number(option.is_correct) === 1) : -1;
+        state.media = item?.media || window.CbtMediaPreview || {};
         $('questionText').value = item?.question_text ?? '';
         $('questionPoint').value = item?.max_point ?? '1';
         $('questionText').disabled = !state.editable; $('questionPoint').disabled = !state.editable;

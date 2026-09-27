@@ -18,13 +18,17 @@ class QuestionService
         $page = min($this->positive($query['page'] ?? null, 1), 100000);
         $size = $this->positive($query['per_page'] ?? null, 25);
         $size = in_array($size, [25, 50, 100], true) ? $size : 25;
+        $type = is_string($query['type'] ?? null) ? $query['type'] : 'PG';
+        if (! in_array($type, ['ALL', 'ADVANCED'], true) && ! in_array($type, QuestionValidationService::TYPES, true))
+            return $this->error(422, 'VALIDATION_FAILED', 'Filter tipe soal tidak valid.');
         $builder = $db->table('soal AS s')->join('soal_revision AS sr',
             'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no')
-            ->where('s.bank_soal_id', $bankId)->where('s.status', 'ACTIVE')
-            ->where('sr.question_type', 'PG');
+            ->where('s.bank_soal_id', $bankId)->where('s.status', 'ACTIVE');
+        if ($type === 'ADVANCED') $builder->whereIn('sr.question_type', array_slice(QuestionValidationService::TYPES, 1));
+        elseif ($type !== 'ALL') $builder->where('sr.question_type', $type);
         $total = (int) $builder->countAllResults(false);
         $pages = max(1, (int) ceil($total / $size)); $page = min($page, $pages);
-        $items = $builder->select('s.id, s.sort_order, s.current_revision_no, sr.question_html, sr.max_point, sr.metadata_json')
+        $items = $builder->select('s.id, s.sort_order, s.current_revision_no, sr.question_type, sr.question_html, sr.max_point, sr.metadata_json')
             ->orderBy('s.sort_order', 'ASC')->orderBy('s.id', 'ASC')
             ->limit($size, ($page - 1) * $size)->get()->getResultArray();
         foreach ($items as &$item) {
@@ -45,20 +49,41 @@ class QuestionService
         $row = $db->table('soal AS s')->join('soal_revision AS sr',
             'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no')
             ->select('s.id, s.bank_soal_id, s.current_revision_no, s.sort_order, sr.id AS revision_id, '
-                . 'sr.question_type, sr.question_html, sr.max_point, sr.metadata_json')
+                . 'sr.question_type, sr.question_html, sr.stimulus_html, sr.max_point, '
+                . 'sr.scoring_mode, sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance, '
+                . 'sr.rubric_html, sr.metadata_json')
             ->where('s.bank_soal_id', $bankId)->where('s.id', $id)->where('s.status', 'ACTIVE')
             ->get()->getRowArray();
-        if ($row === null || $row['question_type'] !== 'PG')
-            return $this->error(404, 'NOT_FOUND', 'Soal PG tidak ditemukan pada Bank ini.');
+        if ($row === null) return $this->error(404, 'NOT_FOUND', 'Soal tidak ditemukan pada Bank ini.');
         if (($this->metadata($row['metadata_json'])['source'] ?? '') !== self::SOURCE)
             return $this->error(409, 'UNSUPPORTED_CONTENT', 'Soal ini memerlukan editor rich content.');
-        $options = $db->table('soal_opsi')->select('option_key, content_html, is_correct, sort_order')
+        $options = $db->table('soal_opsi')->select('option_key, content_html, is_correct, point_value, sort_order')
             ->where('soal_revision_id', $row['revision_id'])->orderBy('sort_order', 'ASC')->get()->getResultArray();
         $row['question_text'] = $this->plainText($row['question_html']);
+        $row['stimulus_text'] = $row['stimulus_html'] === null ? '' : $this->plainText($row['stimulus_html']);
+        $row['rubric_text'] = $row['rubric_html'] === null ? '' : $this->plainText($row['rubric_html']);
         unset($row['metadata_json']);
         foreach ($options as &$option) $option['content_text'] = $this->plainText($option['content_html']);
         unset($option);
         $row['options'] = $options;
+        $pairs = $db->table('soal_matching_pair')->select('left_key, left_html, right_key, right_html, sort_order')
+            ->where('soal_revision_id', $row['revision_id'])->orderBy('sort_order')->get()->getResultArray();
+        foreach ($pairs as &$pair) {
+            $pair['left_text'] = $this->plainText($pair['left_html']);
+            $pair['right_text'] = $this->plainText($pair['right_html']);
+        }
+        unset($pair);
+        $row['pairs'] = $pairs;
+        $row['accepted_values'] = array_column($db->table('soal_short_answer_text')
+            ->select('accepted_value')->where('soal_revision_id', $row['revision_id'])
+            ->orderBy('sort_order')->get()->getResultArray(), 'accepted_value');
+        $media = $db->table('soal_revision_media AS link')->select('link.media_asset_id, asset.media_kind, asset.external_url, asset.status')
+            ->join('media_assets AS asset', 'asset.id = link.media_asset_id')
+            ->where('link.soal_revision_id', $row['revision_id'])->get()->getResultArray();
+        $row['media'] = [];
+        foreach ($media as $asset) if ($asset['status'] === 'ACTIVE') $row['media'][(string) $asset['media_asset_id']] = [
+            'kind' => $asset['media_kind'], 'url' => $asset['media_kind'] === 'VIDEO' ? $asset['external_url']
+                : base_url('manager/api/question-media/' . $asset['media_asset_id'])];
         return $this->success(['item' => $row]);
     }
 
@@ -143,6 +168,7 @@ class QuestionService
                 'created_by' => (int) ($actor['user_id'] ?? 0)]);
             $revisionId = (int) $db->insertID();
             foreach ($options as $option) $db->table('soal_opsi')->insert(['soal_revision_id' => $revisionId] + $option);
+            (new QuestionMediaService())->attach($db, $revisionId, $payload);
             if ($old !== null) $db->table('soal')->where('id', $id)->update(['current_revision_no' => $next]);
             $db->table('bank_soal')->where('id', $bankId)->set('version_no', 'version_no + 1', false)
                 ->update(['fingerprint' => null, 'updated_by' => (int) ($actor['user_id'] ?? 0)]);
@@ -178,8 +204,7 @@ class QuestionService
                 . 'WHERE s.id = ? AND s.bank_soal_id = ? AND s.status = ? FOR UPDATE',
                 [$id, $bankId, 'ACTIVE'])->getRowArray();
             if ($question === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Soal tidak ditemukan.'); }
-            if ($question['question_type'] !== 'PG'
-                || ($this->metadata($question['metadata_json'])['source'] ?? '') !== self::SOURCE) {
+            if (($this->metadata($question['metadata_json'])['source'] ?? '') !== self::SOURCE) {
                 $db->transRollback(); return $this->error(409, 'UNSUPPORTED_CONTENT', 'Soal ini memerlukan editor lain.');
             }
             if ($db->table('jadwal')->where('bank_soal_id', $bankId)->countAllResults() > 0) {
@@ -193,7 +218,7 @@ class QuestionService
             return $this->success(['removed' => $id]);
         } catch (Throwable $e) {
             $db->transRollback();
-            log_message('error', 'Hapus Soal PG gagal: {message}', ['message' => $e->getMessage()]);
+            log_message('error', 'Hapus Soal gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'DEPENDENCY_EXISTS', 'Soal tidak dapat dihapus.');
         }
     }
@@ -237,7 +262,7 @@ class QuestionService
     private function audit(int $bankId, int $id, string $action, array $actor): void
     {
         (new AuditService())->log('MANAGER', (int) ($actor['user_id'] ?? 0),
-            $action . '_SOAL_PG', 'MASTER_UJIAN', $action . ' Soal PG #' . $id . ' Bank #' . $bankId,
+            $action . '_SOAL', 'MASTER_UJIAN', $action . ' Soal #' . $id . ' Bank #' . $bankId,
             (string) ($actor['ip'] ?? ''), (string) ($actor['agent'] ?? ''), 'soal', $id);
     }
 

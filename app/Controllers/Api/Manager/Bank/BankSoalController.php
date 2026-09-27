@@ -4,6 +4,7 @@ namespace App\Controllers\Api\Manager\Bank;
 
 use App\Controllers\BaseController;
 use App\Services\BankSoalService;
+use App\Services\BankReadinessService;
 use App\Traits\ApiResponseTrait;
 
 class BankSoalController extends BaseController
@@ -40,6 +41,34 @@ class BankSoalController extends BaseController
     public function remove(string $id)
     {
         return $this->respond((new BankSoalService())->delete((int) $id, $this->actor()));
+    }
+
+    public function preflight(string $id)
+    {
+        return $this->respondData((new BankReadinessService())->inspect((int) $id));
+    }
+
+    public function ready(string $id)
+    {
+        return $this->transition($id, 'READY');
+    }
+
+    public function draft(string $id)
+    {
+        return $this->transition($id, 'DRAFT');
+    }
+
+    private function transition(string $id, string $target)
+    {
+        $payload = $this->payload();
+        return $this->respondData((new BankReadinessService())->change((int) $id, $target,
+            (int) ($payload['expected_version'] ?? 0), $this->actor()));
+    }
+
+    private function respondData(array $result)
+    {
+        return ($result['ok'] ?? false) ? $this->apiSuccess($result['data'], $result['status'])
+            : $this->apiError($result['code'], $result['message'], $result['status']);
     }
 
     private function payload(): array

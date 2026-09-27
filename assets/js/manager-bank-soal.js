@@ -62,6 +62,34 @@
                 questions.href = app.dataset.uiBase + '/' + item.id + '/soal';
                 questions.className = 'btn btn-outline-primary btn-sm me-1';
                 questions.textContent = 'Soal PG'; actions.append(questions);
+                const advanced = document.createElement('a');
+                advanced.href = app.dataset.uiBase + '/' + item.id + '/soal-lanjutan';
+                advanced.className = 'btn btn-outline-primary btn-sm me-1';
+                advanced.textContent = 'Tipe Lain'; actions.append(advanced);
+                const importer = document.createElement('a');
+                importer.href = app.dataset.uiBase + '/' + item.id + '/impor';
+                importer.className = 'btn btn-outline-primary btn-sm me-1';
+                importer.textContent = 'Impor'; actions.append(importer);
+                const print = document.createElement('a');
+                print.href = app.dataset.uiBase + '/' + item.id + '/cetak';
+                print.target = '_blank'; print.rel = 'noopener';
+                print.className = 'btn btn-outline-secondary btn-sm me-1';
+                print.textContent = 'Cetak PDF'; actions.append(print);
+                const preflight = document.createElement('button'); preflight.type = 'button';
+                preflight.className = 'btn btn-outline-info btn-sm me-1'; preflight.textContent = 'Validasi / Status';
+                preflight.addEventListener('click', async () => {
+                    try {
+                        const check = await api(base + '/' + item.id + '/preflight');
+                        const summary = Object.entries(check.counts).map(([type, count]) =>
+                            type + ': ' + count.available + '/' + count.required).join('\n');
+                        if (!check.pass && item.status === 'DRAFT') {window.alert('Bank belum siap:\n' + check.errors.join('\n') + '\n' + summary); return;}
+                        if (item.kegiatan_status !== 'DRAFT') {window.alert('Kegiatan terkunci.\n' + summary); return;}
+                        const target = item.status === 'READY' ? 'DRAFT' : 'READY';
+                        if (!window.confirm((check.pass ? 'Validasi lulus.\n' : 'Bank memiliki catatan validasi.\n') + summary + '\nUbah status Bank ke ' + target + '?')) return;
+                        await api(base + '/' + item.id + '/' + target.toLowerCase(), 'POST', {expected_version: Number(item.version_no)});
+                        await load(); feedback('bankFeedback', 'Status Bank menjadi ' + target + '.');
+                    } catch(error) {feedback('bankFeedback', error.message, true);}
+                }); actions.append(preflight);
                 if (item.status === 'DRAFT' && item.kegiatan_status === 'DRAFT') {
                     const edit = document.createElement('button'); edit.type = 'button';
                     edit.className = 'btn btn-outline-primary btn-sm me-1'; edit.textContent = 'Edit';

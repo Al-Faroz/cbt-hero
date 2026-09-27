@@ -101,7 +101,8 @@ class BankTypeConfigService
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Konfigurasi telah berubah. Muat ulang sebelum menyimpan.');
             }
             $usedTypes = $db->table('soal_revision AS sr')->distinct()->select('sr.question_type')
-                ->join('soal AS s', 's.id = sr.soal_id')->where('s.bank_soal_id', $bankId)
+                ->join('soal AS s', 's.id = sr.soal_id AND s.current_revision_no = sr.revision_no')
+                ->where('s.bank_soal_id', $bankId)->where('s.status', 'ACTIVE')
                 ->get()->getResultArray();
             foreach ($usedTypes as $used) {
                 if (! isset($items[$used['question_type']])) {

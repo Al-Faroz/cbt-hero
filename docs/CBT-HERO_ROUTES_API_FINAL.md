@@ -2939,3 +2939,11 @@ tidak mengembalikan key rahasia atau berkas logo.
 ## Phase 4C1 — Editor Soal PG Teks Biasa
 
 `GET /manager/master-ujian/bank-soal/{id}/soal` dan CRUD `/manager/api/bank-soal/{id}/soal` mengikuti bagian 29.3. Pada tahap ini POST/PUT menerima `question_text`, `options` (2–6 teks), `correct_key` tunggal, dan `max_point`; PUT juga wajib `expected_revision`. Konten teks di-escape pada penyimpanan. Edit DRAFT menambah row `soal_revision` serta `soal_opsi`, bukan menimpa revisi lama. Renderer pratinjau membangun DOM dari teks; rich content/import dan tipe lain menyusul.
+
+## Phase 4D — Bank Soal Akademik terpadu
+
+Enam tipe di editor memakai CRUD soal bagian 29.3. `question_type` wajib untuk PG Kompleks, PG Bertingkat, Menjodohkan, Isian Singkat, dan Uraian; PG biasa tetap menerima payload lama. `expected_revision` wajib saat edit. Pembacaan soal dan kunci hanya tersedia di realm Manager dengan izin `master.exam.manage`.
+
+Halaman Manager tersedia pada `/manager/master-ujian/bank-soal/{id}/soal-lanjutan`, `/impor`, `/preview`, dan `/cetak`. Halaman `/cetak` menggunakan dialog browser **Save as PDF**. Alih status mengikuti `POST /manager/api/bank-soal/{id}/ready` dan `/draft` dengan `expected_version`; `GET /manager/api/bank-soal/{id}/preflight` menampilkan hitungan dan kesalahan.
+
+Template diunduh dari `/manager/import-template/bank-soal.xlsx` atau `.docx`. Impor mengikuti kontrak generik bagian 24 dengan `import_type=BANK_EXCEL|BANK_WORD`, `context_type=bank_soal`, `context_id={id}`, dan `Idempotency-Key` pada commit. Halaman Manager juga memakai alias `/manager/api/bank-soal/{id}/imports` untuk daftar job Bank dan staging ringkas. Media lokal dan video reference dikelola melalui `/manager/api/question-media`.
