@@ -31,12 +31,10 @@ $initial = mb_strtoupper(mb_substr(trim($nama) !== '' ? trim($nama) : 'M', 0, 1)
         <span><?= esc($pageSubtitle) ?></span>
     </div>
 
-    <div class="manager-context" title="Context Kegiatan akan aktif setelah modul Kegiatan tersedia">
-        <div>
-            <div class="manager-context-label">Kegiatan</div>
-            <div class="manager-context-value">Belum ada context aktif</div>
-        </div>
-    </div>
+    <button type="button" class="manager-theme-toggle" data-manager-theme-toggle aria-label="Ganti tema" title="Ganti tema">
+        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+        <span>Tema gelap</span>
+    </button>
 
     <div class="dropdown manager-account">
         <button

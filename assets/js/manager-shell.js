@@ -6,6 +6,32 @@
     const body = document.body;
     const root = document.documentElement;
     const toggle = document.querySelector('[data-manager-sidebar-toggle]');
+    const themeToggle = document.querySelector('[data-manager-theme-toggle]');
+    const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const themeKey = 'cbthero.manager.theme';
+
+    const updateThemeControl = () => {
+        if (! themeToggle) return;
+        const dark = root.getAttribute('data-bs-theme') === 'dark';
+        const label = dark ? 'Aktifkan tema terang' : 'Aktifkan tema gelap';
+        themeToggle.setAttribute('aria-label', label);
+        themeToggle.setAttribute('title', label);
+        themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false');
+        themeToggle.querySelector('i').className = dark ? 'bi bi-sun' : 'bi bi-moon-stars';
+        themeToggle.querySelector('span').textContent = dark ? 'Tema terang' : 'Tema gelap';
+    };
+    updateThemeControl();
+    themeToggle?.addEventListener('click', () => {
+        const next = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-bs-theme', next);
+        try { localStorage.setItem(themeKey, next); } catch (_) { /* storage may be disabled */ }
+        updateThemeControl();
+    });
+    themeQuery.addEventListener?.('change', () => {
+        try { if (localStorage.getItem(themeKey)) return; } catch (_) { /* use system preference */ }
+        root.setAttribute('data-bs-theme', themeQuery.matches ? 'dark' : 'light');
+        updateThemeControl();
+    });
 
     const readCollapsedPreference = () => {
         try {

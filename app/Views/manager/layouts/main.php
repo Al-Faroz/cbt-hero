@@ -22,7 +22,10 @@ $branding = config('Branding');
 
     <script>
     (() => {
+        const key = 'cbthero.manager.theme';
+        let theme = null;
         try {
+            theme = localStorage.getItem(key);
             if (
                 window.matchMedia('(min-width: 992px)').matches
                 && localStorage.getItem('cbthero.manager.sidebar.collapsed') === '1'
@@ -32,6 +35,11 @@ $branding = config('Branding');
         } catch (_) {
             //
         }
+        document.documentElement.setAttribute('data-bs-theme',
+            theme === 'light' || theme === 'dark'
+                ? theme
+                : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        );
     })();
     </script>
 
@@ -63,6 +71,7 @@ $branding = config('Branding');
         rel="stylesheet"
         href="<?= base_url('assets/css/manager-ui-standard.css') ?>"
     >
+    <link rel="stylesheet" href="<?= base_url('assets/css/manager-theme-modes.css') ?>">
 
     <style>
         @media (min-width: 992px) {
