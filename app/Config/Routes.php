@@ -130,6 +130,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/kegiatan/(:num)/peserta', 'Manager\\Exam\\PesertaUjianController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/ruang', 'Manager\\Exam\\RuangController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -210,6 +212,15 @@ $routes->group(
         $routes->post('kegiatan/(:num)/peserta', $pesertaUjian . 'assign/$1', $examFilter);
         $routes->post('kegiatan/(:num)/peserta/bulk-remove', $pesertaUjian . 'bulkRemove/$1', $examFilter);
         $routes->delete('kegiatan/(:num)/peserta/(:num)', $pesertaUjian . 'remove/$1/$2', $examFilter);
+        $ruang = 'Api\\Manager\\Exam\\RuangController::';
+        $routes->get('ruang', $ruang . 'index', $examFilter);
+        $routes->get('ruang/options', $ruang . 'options', $examFilter);
+        $routes->post('ruang', $ruang . 'create', $examFilter);
+        $routes->put('ruang/(:num)', $ruang . 'update/$1', $examFilter);
+        $routes->patch('ruang/(:num)/status', $ruang . 'status/$1', $examFilter);
+        $routes->delete('ruang/(:num)', $ruang . 'remove/$1', $examFilter);
+        $routes->post('kegiatan/(:num)/peserta/assign-ruang', $ruang . 'assign/$1', $examFilter);
+        $routes->patch('kegiatan/(:num)/peserta/(:num)/ruang', $ruang . 'assignIndividual/$1/$2', $examFilter);
 
         $routes->get(
             'users',

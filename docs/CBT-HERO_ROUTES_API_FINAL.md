@@ -1359,13 +1359,26 @@ Individual:
 
 ```text
 PATCH /manager/api/kegiatan/{kegiatanId}/peserta/{pesertaKegiatanId}/ruang
+{ "ruang_id": 2 }
 ```
 
 Bulk:
 
 ```text
 POST /manager/api/kegiatan/{kegiatanId}/peserta/assign-ruang
+{ "ruang_id": 2, "scope": "ROMBEL", "value": "7-A" }
 ```
+
+`ruang_id: null` melepaskan Ruang. Cakupan bulk: `IDS` (array ID keanggotaan,
+maksimal 100), `ROMBEL` (nama snapshot, misalnya `7-A`), `TINGKAT` (`7`/`8`/`9`),
+atau `ALL` (semua anggota Kegiatan). Respons sukses berisi `selected` dan
+`updated`. Semua perubahan hanya saat Kegiatan DRAFT, dan Ruang tujuan harus aktif.
+
+Ruang reusable: `GET /manager/api/ruang` (filter/pagination),
+`GET /manager/api/ruang/options` (aktif), `POST /manager/api/ruang`,
+`PUT /manager/api/ruang/{id}`, `PATCH /manager/api/ruang/{id}/status`,
+`DELETE /manager/api/ruang/{id}`. Ruang yang sedang dipakai tidak bisa
+dinonaktifkan atau dihapus.
 
 ## 27.5 Generate / Regenerate Nomor Peserta
 

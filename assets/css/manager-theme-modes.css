@@ -50,6 +50,7 @@ html[data-bs-theme="dark"] {
 .manager-placeholder-item { background: var(--manager-raised); border-color: var(--manager-border); }
 .manager-table thead th { background: var(--manager-raised); color: var(--cbt-muted); border-color: var(--manager-border); }
 .manager-table tbody td { border-color: var(--manager-border); }
+.manager-table .form-select-sm { min-height: 34px; min-width: 180px; }
 .manager-role-chip { color: var(--cbt-primary); background: var(--cbt-primary-soft); }
 .manager-section-card .card-header { border-color: var(--manager-border); }
 .manager-sidebar { background: linear-gradient(180deg, #0b1220, #101d32); }

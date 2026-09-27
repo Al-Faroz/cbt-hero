@@ -4,7 +4,7 @@
     if (!app) return;
     const $ = (id) => document.getElementById(id);
     const base = app.dataset.api;
-    const state = {draft: false, members: {page: 1, pages: 1, seq: 0, ids: new Set()},
+    const state = {draft: false, rooms: [], members: {page: 1, pages: 1, seq: 0, ids: new Set()},
         candidates: {page: 1, pages: 1, seq: 0, ids: new Set()}};
     let memberDebounce, candidateDebounce;
     const feedback = (id, message, error = false) => {
@@ -81,6 +81,53 @@
             box.append(inner); target.append(box);
         }
     };
+    const loadRooms = async () => {
+        const data = await api(app.dataset.ruangApi);
+        state.rooms = data.items;
+        const select = $('pesertaUjianRuangTarget');
+        select.replaceChildren(new Option('Tanpa Ruang', ''));
+        for (const room of state.rooms) select.add(new Option(room.kode + ' · ' + room.nama, room.id));
+    };
+    const renderRombelScopes = (options) => {
+        const select = $('pesertaUjianRuangRombel');
+        const previous = select.value;
+        select.replaceChildren();
+        for (const name of options) select.add(new Option(name, name));
+        if (options.includes(previous)) select.value = previous;
+    };
+    const roomCell = (item) => {
+        const td = document.createElement('td');
+        if (!state.draft) {
+            td.textContent = item.ruang_id ? (item.ruang_kode + ' · ' + item.ruang_nama) : '-';
+            return td;
+        }
+        const select = document.createElement('select');
+        select.className = 'form-select form-select-sm';
+        select.setAttribute('aria-label', 'Ruang untuk ' + item.nama_snapshot);
+        select.add(new Option('Tanpa Ruang', ''));
+        for (const room of state.rooms) select.add(new Option(room.kode + ' · ' + room.nama, room.id));
+        if (item.ruang_id && !state.rooms.some((room) => Number(room.id) === Number(item.ruang_id))) {
+            const inactive = new Option((item.ruang_kode || 'Ruang') + ' · ' + (item.ruang_nama || 'Nonaktif'), item.ruang_id);
+            inactive.disabled = true;
+            select.add(inactive);
+        }
+        select.value = item.ruang_id || '';
+        select.addEventListener('change', async () => {
+            const old = item.ruang_id || '';
+            const target = select.value;
+            if (!window.confirm('Ubah Ruang untuk ' + item.nama_snapshot + '?')) {select.value = old; return;}
+            select.disabled = true;
+            try {
+                await api(base + '/' + item.id + '/ruang', 'PATCH', {ruang_id: target ? Number(target) : null});
+                await loadMembers();
+                feedback('pesertaUjianRuangFeedback', 'Ruang peserta diperbarui.');
+            } catch (error) {
+                select.value = old; select.disabled = false;
+                feedback('pesertaUjianRuangFeedback', error.message, true);
+            }
+        });
+        td.append(select); return td;
+    };
     const loadMembers = async () => {
         const s = state.members, seq = ++s.seq;
         feedback('pesertaUjianFeedback', 'Memuat anggota...');
@@ -94,11 +141,14 @@
                 ' · ' + data.kegiatan.tahun_pelajaran + ' / ' + data.kegiatan.semester +
                 ' · ' + data.kegiatan.status;
             $('pesertaUjianAssignCard').hidden = !state.draft;
+            $('pesertaUjianRuangCard').hidden = !state.draft;
             $('pesertaUjianBulkRemove').hidden = !state.draft;
             $('pesertaUjianMemberSelectAll').hidden = !state.draft;
             s.ids.clear(); $('pesertaUjianMemberSelectAll').checked = false;
             $('pesertaUjianMemberSelectAll').indeterminate = false;
             renderSummary(data);
+            renderRombelScopes(data.rombel_options);
+            $('pesertaUjianRuangCount').textContent = data.unassigned_room + ' dari ' + data.pagination.total + ' anggota belum ditempatkan';
             const body = $('pesertaUjianRows'); body.replaceChildren();
             for (const item of data.items) {
                 const row = document.createElement('tr');
@@ -118,7 +168,7 @@
                 row.append(select, cell(item.nisn_snapshot), cell(item.nama_snapshot),
                     cell(item.jenis_kelamin_snapshot), cell(item.rombel_snapshot),
                     cell(sourceLabel(item)),
-                    cell(item.nomor_peserta), cell(item.ruang_id));
+                    cell(item.nomor_peserta), roomCell(item));
                 const actions = document.createElement('td');
                 if (state.draft) {
                     const remove = document.createElement('button');
@@ -213,6 +263,35 @@
             feedback('pesertaUjianFeedback', result.removed + ' anggota berhasil dihapus.');
         } catch (error) {feedback('pesertaUjianFeedback', error.message, true); updateMemberSelection();}
     });
+    $('pesertaUjianRuangScope').addEventListener('change', () => {
+        const scope = $('pesertaUjianRuangScope').value;
+        $('pesertaUjianRuangRombelWrap').hidden = scope !== 'ROMBEL';
+        $('pesertaUjianRuangTingkatWrap').hidden = scope !== 'TINGKAT';
+    });
+    $('pesertaUjianRuangAssign').addEventListener('click', async () => {
+        const scope = $('pesertaUjianRuangScope').value;
+        let value = null;
+        if (scope === 'IDS') value = [...state.members.ids];
+        if (scope === 'ROMBEL') value = $('pesertaUjianRuangRombel').value;
+        if (scope === 'TINGKAT') value = $('pesertaUjianRuangTingkat').value;
+        if ((scope === 'IDS' && !value.length) || (scope === 'ROMBEL' && !value)) {
+            feedback('pesertaUjianRuangFeedback', 'Pilih anggota atau Rombel terlebih dahulu.', true); return;
+        }
+        const target = $('pesertaUjianRuangTarget');
+        const roomId = target.value ? Number(target.value) : null;
+        const label = scope === 'ALL' ? 'SEMUA anggota Kegiatan' :
+            scope === 'IDS' ? value.length + ' anggota terpilih di halaman ini' :
+            scope === 'ROMBEL' ? 'Rombel ' + value : 'Tingkat ' + value;
+        if (!window.confirm('Terapkan ' + target.selectedOptions[0].textContent + ' untuk ' + label + '? Penempatan sebelumnya dalam cakupan ini akan diganti.')) return;
+        const button = $('pesertaUjianRuangAssign'); button.disabled = true;
+        feedback('pesertaUjianRuangFeedback', 'Memproses penempatan...');
+        try {
+            const result = await api(base + '/assign-ruang', 'POST', {scope, value, ruang_id: roomId});
+            await loadMembers();
+            feedback('pesertaUjianRuangFeedback', result.selected + ' anggota diproses, ' + result.updated + ' berubah.');
+        } catch (error) {feedback('pesertaUjianRuangFeedback', error.message, true);}
+        finally {button.disabled = false;}
+    });
     $('pesertaUjianSelectAll').addEventListener('change', (event) => {
         const s = state.candidates; s.ids.clear();
         for (const checkbox of $('pesertaUjianCandidateRows').querySelectorAll('input[type="checkbox"]')) {
@@ -264,5 +343,6 @@
             }
         }
     }).catch((error) => feedback('pesertaUjianAssignFeedback', error.message, true));
-    loadMembers();
+    loadRooms().catch((error) => feedback('pesertaUjianRuangFeedback', error.message, true))
+        .finally(loadMembers);
 })();

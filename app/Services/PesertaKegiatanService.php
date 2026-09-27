@@ -17,7 +17,10 @@ class PesertaKegiatanService
         $q = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
         $db = Database::connect();
         $total = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->countAllResults();
-        $builder = $db->table('peserta_kegiatan AS pk')->where('pk.kegiatan_id', $kegiatanId);
+        $unassigned = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)
+            ->where('ruang_id IS NULL', null, false)->countAllResults();
+        $builder = $db->table('peserta_kegiatan AS pk')->join('ruang AS r', 'r.id = pk.ruang_id', 'left')
+            ->where('pk.kegiatan_id', $kegiatanId);
         if ($q !== '') {
             $builder->groupStart()->like('pk.nisn_snapshot', $q)
                 ->orLike('pk.nama_snapshot', $q)->orLike('pk.rombel_snapshot', $q)->groupEnd();
@@ -25,7 +28,7 @@ class PesertaKegiatanService
         $filtered = (int) $builder->countAllResults(false);
         $pages = max(1, (int) ceil($filtered / $perPage));
         $page = min($page, $pages);
-        $items = $builder->select('pk.id, pk.peserta_id, pk.nisn_snapshot, pk.nama_snapshot, pk.jenis_kelamin_snapshot, pk.rombel_snapshot, pk.assignment_source, pk.assignment_scope, pk.nomor_peserta, pk.ruang_id, pk.status, pk.created_at')
+        $items = $builder->select('pk.id, pk.peserta_id, pk.nisn_snapshot, pk.nama_snapshot, pk.jenis_kelamin_snapshot, pk.rombel_snapshot, pk.assignment_source, pk.assignment_scope, pk.nomor_peserta, pk.ruang_id, r.kode AS ruang_kode, r.nama AS ruang_nama, pk.status, pk.created_at')
             ->orderBy('pk.rombel_snapshot', 'ASC')->orderBy('pk.nama_snapshot', 'ASC')
             ->orderBy('pk.id', 'ASC')->limit($perPage, ($page - 1) * $perPage)
             ->get()->getResultArray();
@@ -34,8 +37,11 @@ class PesertaKegiatanService
             ->groupBy(['assignment_source', 'assignment_scope'])
             ->orderBy('assignment_source', 'ASC')->orderBy('assignment_scope', 'ASC')
             ->get()->getResultArray();
+        $rombelOptions = $db->table('peserta_kegiatan')->distinct()->select('rombel_snapshot')
+            ->where('kegiatan_id', $kegiatanId)->orderBy('rombel_snapshot')->get()->getResultArray();
         return ['ok' => true, 'status' => 200, 'kegiatan' => $kegiatan, 'items' => $items,
-            'summary' => $summaryRows,
+            'summary' => $summaryRows, 'rombel_options' => array_column($rombelOptions, 'rombel_snapshot'),
+            'unassigned_room' => $unassigned,
             'pagination' => $this->pagination($page, $perPage, $pages, $total, $filtered)];
     }
 

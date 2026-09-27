@@ -8,7 +8,7 @@
     </div>
     <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kembali ke Kegiatan</a>
 </section>
-<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-rombel-api="<?= esc(base_url('manager/api/peserta/rombel-options'), 'attr') ?>">
+<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-rombel-api="<?= esc(base_url('manager/api/peserta/rombel-options'), 'attr') ?>" data-ruang-api="<?= esc(base_url('manager/api/ruang/options'), 'attr') ?>">
     <section class="manager-section-card mb-3" id="pesertaUjianAssignCard" hidden>
         <div class="card-header"><div class="fw-bold">Tambahkan Peserta</div></div>
         <div class="card-body">
@@ -40,6 +40,23 @@
             <div class="fw-semibold mb-2" id="pesertaUjianSummaryTotal">Total: 0 peserta</div>
             <div id="pesertaUjianSummary" class="row g-2"></div>
             <p class="small text-secondary mb-0 mt-3">Asal penugasan dicatat saat Peserta pertama kali masuk. Menjalankan cakupan lain tidak mengubah asal anggota yang sudah ada.</p>
+        </div>
+    </section>
+    <section class="manager-section-card mb-3" id="pesertaUjianRuangCard" hidden>
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div><div class="fw-bold">Penempatan Ruang</div><span class="small text-secondary" id="pesertaUjianRuangCount"></span></div>
+            <a class="btn btn-outline-secondary btn-sm" href="<?= base_url('manager/master-ujian/ruang') ?>">Kelola Ruang</a>
+        </div>
+        <div class="card-body">
+            <p class="small text-secondary">Pilih cakupan anggota lalu Ruang tujuan. Cakupan Semua berlaku untuk seluruh anggota Kegiatan, bukan hanya halaman/filter yang terlihat.</p>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3"><label class="cbt-form-label" for="pesertaUjianRuangScope">Cakupan</label><select class="form-select" id="pesertaUjianRuangScope"><option value="IDS">Anggota terpilih di halaman ini</option><option value="ROMBEL">Rombel</option><option value="TINGKAT">Tingkat</option><option value="ALL">Semua anggota Kegiatan</option></select></div>
+                <div class="col-md-2" id="pesertaUjianRuangRombelWrap" hidden><label class="cbt-form-label" for="pesertaUjianRuangRombel">Rombel</label><select class="form-select" id="pesertaUjianRuangRombel"></select></div>
+                <div class="col-md-2" id="pesertaUjianRuangTingkatWrap" hidden><label class="cbt-form-label" for="pesertaUjianRuangTingkat">Tingkat</label><select class="form-select" id="pesertaUjianRuangTingkat"><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+                <div class="col-md-3"><label class="cbt-form-label" for="pesertaUjianRuangTarget">Ruang tujuan</label><select class="form-select" id="pesertaUjianRuangTarget"><option value="">Tanpa Ruang</option></select></div>
+                <div class="col-md-2"><button class="btn btn-cbt-primary" type="button" id="pesertaUjianRuangAssign">Terapkan Ruang</button></div>
+            </div>
+            <div id="pesertaUjianRuangFeedback" class="cbt-inline-feedback mt-2" role="status" aria-live="polite"></div>
         </div>
     </section>
     <section class="manager-section-card">
