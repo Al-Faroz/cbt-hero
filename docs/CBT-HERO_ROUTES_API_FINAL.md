@@ -2935,3 +2935,7 @@ tidak mengembalikan key rahasia atau berkas logo.
 ## Phase 4B — Komposisi Tipe Bank
 
 `GET /manager/master-ujian/bank-soal/{id}/komposisi` membuka form komposisi. `GET`/`PUT /manager/api/bank-soal/{id}/type-config` mengikuti bagian 29.2. PUT mengganti komposisi tipe terpilih secara atomik dan wajib membawa `expected_version`; jika versi Bank berubah, server menolak 409. Jumlah/bobot diperiksa pada DRAFT, sedangkan kelayakan READY menunggu soal dan validasi lengkap.
+
+## Phase 4C1 — Editor Soal PG Teks Biasa
+
+`GET /manager/master-ujian/bank-soal/{id}/soal` dan CRUD `/manager/api/bank-soal/{id}/soal` mengikuti bagian 29.3. Pada tahap ini POST/PUT menerima `question_text`, `options` (2–6 teks), `correct_key` tunggal, dan `max_point`; PUT juga wajib `expected_revision`. Konten teks di-escape pada penyimpanan. Edit DRAFT menambah row `soal_revision` serta `soal_opsi`, bukan menimpa revisi lama. Renderer pratinjau membangun DOM dari teks; rich content/import dan tipe lain menyusul.

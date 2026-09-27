@@ -140,6 +140,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -241,6 +243,12 @@ $routes->group(
         $routes->delete('bank-soal/(:num)', $bank . 'remove/$1', $examFilter);
         $routes->get('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::index/$1', $examFilter);
         $routes->put('bank-soal/(:num)/type-config', 'Api\\Manager\\Bank\\BankTypeConfigController::update/$1', $examFilter);
+        $question = 'Api\\Manager\\Bank\\SoalController::';
+        $routes->get('bank-soal/(:num)/soal', $question . 'index/$1', $examFilter);
+        $routes->post('bank-soal/(:num)/soal', $question . 'create/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/soal/(:num)', $question . 'show/$1/$2', $examFilter);
+        $routes->put('bank-soal/(:num)/soal/(:num)', $question . 'update/$1/$2', $examFilter);
+        $routes->delete('bank-soal/(:num)/soal/(:num)', $question . 'remove/$1/$2', $examFilter);
 
         $routes->get(
             'users',

@@ -58,6 +58,10 @@
                 composition.href = app.dataset.uiBase + '/' + item.id + '/komposisi';
                 composition.className = 'btn btn-outline-primary btn-sm me-1';
                 composition.textContent = 'Komposisi'; actions.append(composition);
+                const questions = document.createElement('a');
+                questions.href = app.dataset.uiBase + '/' + item.id + '/soal';
+                questions.className = 'btn btn-outline-primary btn-sm me-1';
+                questions.textContent = 'Soal PG'; actions.append(questions);
                 if (item.status === 'DRAFT' && item.kegiatan_status === 'DRAFT') {
                     const edit = document.createElement('button'); edit.type = 'button';
                     edit.className = 'btn btn-outline-primary btn-sm me-1'; edit.textContent = 'Edit';

@@ -24,7 +24,7 @@
         <div class="mb-3"><label class="cbt-form-label" for="bankMapel">Mata Pelajaran</label><select class="form-select" id="bankMapel" required></select></div>
         <div class="mb-3"><label class="cbt-form-label" for="bankTingkat">Tingkat</label><select class="form-select" id="bankTingkat" required><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
         <div class="mb-3"><label class="cbt-form-label" for="bankNama">Nama Bank Soal</label><input class="form-control" id="bankNama" maxlength="180" required placeholder="Contoh: Matematika Kelas 7 — Paket Utama"></div>
-        <p class="small text-secondary">Bank baru berstatus DRAFT. Pengaturan tipe soal dan editor soal disiapkan pada tahap berikutnya.</p>
+        <p class="small text-secondary">Bank baru berstatus DRAFT. Setelah disimpan, atur Komposisi lalu tambahkan Soal PG.</p>
         <div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button><button class="btn btn-cbt-primary" id="bankSubmit" type="submit">Simpan</button></div>
         <div class="cbt-inline-feedback mt-2" id="bankFormFeedback" role="alert"></div>
     </form></div>
