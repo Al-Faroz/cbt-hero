@@ -97,12 +97,7 @@ $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta'], true);
             </button>
 
             <div class="collapse manager-subnav<?= $examOpen ? ' show' : '' ?>" id="navMasterUjian">
-                <a class="manager-subnav-link<?= $active('exam-kegiatan') ?>" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kegiatan Ujian</a>
-                <?php if ($activeMenu === 'exam-peserta'): ?>
-                    <span class="manager-subnav-link active" aria-current="page">Peserta Ujian</span>
-                <?php else: ?>
-                    <span class="manager-subnav-link is-unavailable">Peserta Ujian</span>
-                <?php endif; ?>
+                <a class="manager-subnav-link<?= $examOpen ? ' active' : '' ?>" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kegiatan Ujian</a>
                 <span class="manager-subnav-link is-unavailable">Ruang</span>
                 <span class="manager-subnav-link is-unavailable">Bank Soal</span>
                 <span class="manager-subnav-link is-unavailable">Instrumen Psikologis</span>

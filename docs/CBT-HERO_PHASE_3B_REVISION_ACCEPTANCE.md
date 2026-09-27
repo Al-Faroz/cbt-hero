@@ -19,7 +19,10 @@ Keanggotaan lama berlabel **Asal belum tercatat**. Sistem tidak bisa menyimpulka
 | R04 | Jalankan **Semua Peserta**. | Peserta baru dari cakupan ini masuk kategori Semua; jumlah kategori sama dengan Total. |
 | R05 | Centang satu anggota, beberapa anggota, lalu **Pilih Semua**. | Checkbox header mengikuti pilihan, dan hanya baris pada halaman aktif yang dipilih. Tombol Hapus Terpilih menampilkan jumlah pilihan. |
 | R06 | Klik Hapus Terpilih lalu batalkan; ulangi dan setujui. | Pembatalan tidak mengubah data; persetujuan menghapus semua anggota terpilih secara atomik. Total dan ringkasan langsung berkurang; Master Peserta tetap ada. |
-| R07 | Cari/filter atau pindah halaman setelah memilih anggota. | Pilihan dibersihkan agar anggota tersembunyi dari halaman lain tidak ikut terhapus. |
-| R08 | Buka Kegiatan yang sudah BERJALAN ketika lifecycle tersedia. | Checkbox dan hapus massal tidak tersedia; API menolak perubahan server-side. |
+| R07 | Cari anggota atau pindah halaman setelah memilih anggota. | Pilihan dibersihkan agar anggota tersembunyi dari halaman lain tidak ikut terhapus. |
+| R08 | Buka halaman Peserta Ujian dari Kegiatan Ujian dan periksa sidebar. | Kegiatan Ujian tetap ditandai aktif; tidak ada menu Peserta Ujian yang berdiri sendiri. |
+| R09 | Buka Dashboard, Master Data, Kegiatan, Peserta Ujian, Settings (Admin), dan login Manager sambil melihat Console. | Tidak ada `Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')`. Fungsi halaman tetap berjalan. |
 
-R08 ditunda sampai transisi Kegiatan BERJALAN diimplementasikan. Penolakan bulk bila salah satu anggota sudah dipakai Jadwal/Attempt juga diuji ketika modul itu tersedia.
+Pengujian kunci Kegiatan BERJALAN dan relasi Jadwal/Attempt akan ditulis pada acceptance modul yang mengimplementasikan lifecycle dan Jadwal tersebut.
+
+Debug Toolbar CodeIgniter tidak dimuat otomatis karena skrip vendor toolbar memanggil `addEventListener` tanpa memastikan tombol internalnya ada. Error PHP tetap dapat diperiksa lewat log di `writable/logs`. Bila R09 masih menunjukkan pesan yang sama, catat **nama file dan nomor baris** yang muncul di sisi kanan pesan Console agar sumber skrip dapat diperbaiki secara tepat.

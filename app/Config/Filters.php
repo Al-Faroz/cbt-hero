@@ -43,7 +43,6 @@ class Filters extends BaseFilters
         'after' => [
             'pagecache',
             'performance',
-            'toolbar',
         ],
     ];
 
