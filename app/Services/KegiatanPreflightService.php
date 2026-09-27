@@ -40,6 +40,8 @@ class KegiatanPreflightService
         foreach (self::ISSUES as $key => $issue) {
             $select .= ', COALESCE(SUM(CASE WHEN (' . $issue['condition'] . ') THEN 1 ELSE 0 END), 0) AS ' . $key;
         }
+        $anyIssue = implode(' OR ', array_map(static fn ($issue) => '(' . $issue['condition'] . ')', self::ISSUES));
+        $select .= ', COALESCE(SUM(CASE WHEN (' . $anyIssue . ') THEN 1 ELSE 0 END), 0) AS affected';
         $counts = $db->query($select . $joins, [$kegiatanId])->getRowArray();
         $identity = (new CardIdentitySettingsService())->read();
         $identityComplete = trim($identity['institution_name']) !== ''
@@ -58,11 +60,13 @@ class KegiatanPreflightService
             $issues[$key] = ['label' => $issue['label'], 'count' => $count, 'samples' => $samples];
         }
         $total = (int) $counts['total'];
+        $affected = (int) $counts['affected'];
+        $findings = array_sum(array_column($issues, 'count'));
         return [
             'kegiatan' => $kegiatan, 'total' => $total, 'issues' => $issues,
+            'affected' => $affected, 'findings' => $findings,
             'identityComplete' => $identityComplete,
-            'administrativeReady' => $total > 0 && $identityComplete
-                && array_sum(array_map(static fn ($issue) => $issue['count'], $issues)) === 0,
+            'administrativeReady' => $total > 0 && $identityComplete && $affected === 0,
         ];
     }
 }

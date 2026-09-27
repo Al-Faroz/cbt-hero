@@ -18,10 +18,12 @@
             <?= $administrativeReady ? 'Data administratif yang diperiksa sudah lengkap.' : 'Masih ada data administratif yang perlu dilengkapi.' ?>
         </div>
         <div class="row g-2">
-            <div class="col-md-4"><div class="border rounded p-3 h-100"><span class="text-secondary">Anggota Kegiatan</span><div class="fs-4 fw-bold"><?= esc((string) $total) ?></div></div></div>
-            <div class="col-md-4"><div class="border rounded p-3 h-100"><span class="text-secondary">Identitas Kartu</span><div class="fw-bold"><?= $identityComplete ? 'Lengkap' : 'Belum lengkap' ?></div><?php if (! $identityComplete): ?><small>ADMIN: Sistem → Pengaturan</small><?php endif ?></div></div>
-            <div class="col-md-4"><div class="border rounded p-3 h-100"><span class="text-secondary">Data perlu diperbaiki</span><div class="fs-4 fw-bold"><?= esc((string) array_sum(array_column($issues, 'count'))) ?></div><small>Satu anggota dapat muncul di beberapa kategori.</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-3 h-100"><span class="text-secondary">Anggota Kegiatan</span><div class="fs-4 fw-bold"><?= esc((string) $total) ?></div></div></div>
+            <div class="col-md-3"><div class="border rounded p-3 h-100"><span class="text-secondary">Peserta perlu diperbaiki</span><div class="fs-4 fw-bold"><?= esc((string) $affected) ?></div><small>Jumlah peserta berbeda yang memiliki kekurangan.</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-3 h-100"><span class="text-secondary">Total temuan</span><div class="fs-4 fw-bold"><?= esc((string) $findings) ?></div><small>Jumlah kekurangan pada data peserta.</small></div></div>
+            <div class="col-md-3"><div class="border rounded p-3 h-100"><span class="text-secondary">Identitas Kartu</span><div class="fw-bold"><?= $identityComplete ? 'Lengkap' : 'Belum lengkap' ?></div><?php if (! $identityComplete): ?><small>ADMIN: Sistem → Pengaturan</small><?php endif ?></div></div>
         </div>
+        <?php if ($findings > $affected): ?><p class="small text-secondary mt-2 mb-0">Satu peserta bisa memiliki beberapa temuan, misalnya belum punya nomor peserta dan ruang.</p><?php endif ?>
         <?php if ($total === 0): ?><p class="mt-3 mb-0">Tambahkan anggota melalui halaman Peserta Ujian.</p><?php endif ?>
         <p class="small text-secondary mb-0 mt-3">Pemeriksaan ini mencakup data peserta, nomor, ruang, credential cetak, dan identitas kartu. Kesiapan Bank Soal dan Jadwal baru dapat diperiksa setelah modul tersebut tersedia. Status Kegiatan tidak diubah oleh halaman ini.</p>
     </div>

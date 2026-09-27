@@ -6,7 +6,7 @@ Tidak ada migrasi SQL. Buka **Master Ujian → Kegiatan Ujian → Kesiapan**, at
 | --- | --- | --- |
 | P01 | Buka Kegiatan DRAFT tanpa anggota. | Jumlah anggota 0 dan status administratif belum lengkap. Tidak ada perubahan data. |
 | P02 | Tambahkan anggota dengan nomor, ruang aktif, username dan password cetak yang siap; isi identitas kartu. Muat ulang halaman. | Setiap hitungan kekurangan 0 dan pemeriksaan administratif lengkap. |
-| P03 | Kosongkan nomor sebagian anggota, lepaskan ruang, atau buat anggota yang belum punya credential. | Hitungan kategori terkait naik. Nama/rombel/nomor maksimal 20 contoh tampil; password dan key rahasia tidak ditampilkan. Satu orang dapat dihitung di lebih dari satu kategori. |
+| P03 | Kosongkan nomor dan lepaskan ruang pada satu anggota yang sama. | “Peserta perlu diperbaiki” naik 1, “Total temuan” naik 2, masing-masing kategori naik 1. Nama/rombel/nomor maksimal 20 contoh tampil; password dan key rahasia tidak ditampilkan. |
 | P04 | Pada Kegiatan DRAFT, nonaktifkan satu akun Peserta yang sudah menjadi anggota, lalu buka Kesiapan. Sesudahnya aktifkan kembali. | Kategori status akun/keanggotaan bertambah satu, lalu kembali turun setelah akun diaktifkan. |
 | P05 | Perbaiki masalah melalui halaman Peserta Ujian/Master Data, lalu muat ulang Kesiapan. | Hitungan mengikuti data terbaru. Tidak ada tombol yang mengubah lifecycle Kegiatan. |
 | P06 | Logout lalu buka URL Kesiapan secara langsung. | Akses ditolak oleh filter Manager; respons saat login memakai `Cache-Control: no-store, private`. |
