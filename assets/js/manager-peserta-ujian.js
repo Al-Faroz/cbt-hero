@@ -4,7 +4,7 @@
     if (!app) return;
     const $ = (id) => document.getElementById(id);
     const base = app.dataset.api;
-    const state = {draft: false, members: {page: 1, pages: 1, seq: 0},
+    const state = {draft: false, members: {page: 1, pages: 1, seq: 0, ids: new Set()},
         candidates: {page: 1, pages: 1, seq: 0, ids: new Set()}};
     let memberDebounce, candidateDebounce;
     const feedback = (id, message, error = false) => {
@@ -35,6 +35,52 @@
         $('pesertaUjianSelectAll').checked = boxes.length > 0 && boxes.every((node) => node.checked);
         $('pesertaUjianSelectAll').indeterminate = boxes.some((node) => node.checked) && !boxes.every((node) => node.checked);
     };
+    const updateMemberSelection = () => {
+        const boxes = [...$('pesertaUjianRows').querySelectorAll('input[type="checkbox"]')];
+        const all = $('pesertaUjianMemberSelectAll');
+        all.checked = boxes.length > 0 && boxes.every((node) => node.checked);
+        all.indeterminate = boxes.some((node) => node.checked) && !boxes.every((node) => node.checked);
+        const count = state.members.ids.size;
+        $('pesertaUjianBulkRemove').textContent = 'Hapus Terpilih (' + count + ')';
+        $('pesertaUjianBulkRemove').disabled = !state.draft || count === 0;
+    };
+    const sourceLabel = (item) => {
+        const source = item.assignment_source;
+        if (source === 'IDS') return 'Individu';
+        if (source === 'ROMBEL') return 'Rombel ' + (item.assignment_scope || item.rombel_snapshot);
+        if (source === 'TINGKAT') return 'Tingkat ' + (item.assignment_scope || '?');
+        if (source === 'ALL') return 'Semua';
+        return 'Asal belum tercatat';
+    };
+    const renderSummary = (data) => {
+        $('pesertaUjianSummaryTotal').textContent = 'Total: ' + data.pagination.total + ' peserta';
+        const groups = {IDS: [], ROMBEL: [], TINGKAT: [], ALL: [], UNKNOWN: []};
+        for (const row of data.summary) {
+            const key = Object.hasOwn(groups, row.assignment_source) ? row.assignment_source : 'UNKNOWN';
+            groups[key].push(row);
+        }
+        const specs = [
+            ['IDS', 'Individu'], ['ROMBEL', 'Rombel'], ['TINGKAT', 'Tingkat'],
+            ['ALL', 'Semua Peserta'], ['UNKNOWN', 'Asal belum tercatat'],
+        ];
+        const target = $('pesertaUjianSummary'); target.replaceChildren();
+        for (const [key, label] of specs) {
+            const count = groups[key].reduce((sum, row) => sum + Number(row.jumlah), 0);
+            if (key === 'UNKNOWN' && count === 0) continue;
+            const box = document.createElement('div'); box.className = 'col-sm-6 col-xl-4';
+            const inner = document.createElement('div'); inner.className = 'border rounded p-3 h-100';
+            const title = document.createElement('div'); title.className = 'fw-semibold';
+            title.textContent = label + ': ' + count; inner.append(title);
+            for (const row of groups[key]) {
+                if (key !== 'ROMBEL' && key !== 'TINGKAT') continue;
+                const detail = document.createElement('div'); detail.className = 'small text-secondary';
+                detail.textContent = (key === 'ROMBEL' ? 'Rombel ' : 'Tingkat ') +
+                    (row.assignment_scope || '?') + ': ' + row.jumlah;
+                inner.append(detail);
+            }
+            box.append(inner); target.append(box);
+        }
+    };
     const loadMembers = async () => {
         const s = state.members, seq = ++s.seq;
         feedback('pesertaUjianFeedback', 'Memuat anggota...');
@@ -48,11 +94,30 @@
                 ' · ' + data.kegiatan.tahun_pelajaran + ' / ' + data.kegiatan.semester +
                 ' · ' + data.kegiatan.status;
             $('pesertaUjianAssignCard').hidden = !state.draft;
+            $('pesertaUjianBulkRemove').hidden = !state.draft;
+            $('pesertaUjianMemberSelectAll').hidden = !state.draft;
+            s.ids.clear(); $('pesertaUjianMemberSelectAll').checked = false;
+            $('pesertaUjianMemberSelectAll').indeterminate = false;
+            renderSummary(data);
             const body = $('pesertaUjianRows'); body.replaceChildren();
             for (const item of data.items) {
                 const row = document.createElement('tr');
-                row.append(cell(item.nisn_snapshot), cell(item.nama_snapshot),
+                row.dataset.id = item.id;
+                const select = document.createElement('td');
+                if (state.draft) {
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox'; checkbox.className = 'form-check-input';
+                    checkbox.setAttribute('aria-label', 'Pilih ' + item.nama_snapshot);
+                    checkbox.addEventListener('change', () => {
+                        if (checkbox.checked) s.ids.add(Number(item.id));
+                        else s.ids.delete(Number(item.id));
+                        updateMemberSelection();
+                    });
+                    select.append(checkbox);
+                }
+                row.append(select, cell(item.nisn_snapshot), cell(item.nama_snapshot),
                     cell(item.jenis_kelamin_snapshot), cell(item.rombel_snapshot),
+                    cell(sourceLabel(item)),
                     cell(item.nomor_peserta), cell(item.ruang_id));
                 const actions = document.createElement('td');
                 if (state.draft) {
@@ -73,7 +138,8 @@
                 } else actions.textContent = 'Terkunci';
                 row.append(actions); body.append(row);
             }
-            if (!data.items.length) empty(body, 7, 'Belum ada Peserta dalam Kegiatan ini.');
+            if (!data.items.length) empty(body, 9, 'Belum ada Peserta dalam Kegiatan ini.');
+            updateMemberSelection();
             s.page = Number(data.pagination.page); s.pages = Number(data.pagination.pages);
             $('pesertaUjianCount').textContent = data.pagination.filtered + ' dari ' + data.pagination.total + ' anggota';
             $('pesertaUjianPageInfo').textContent = s.page + ' / ' + s.pages;
@@ -127,6 +193,26 @@
         if (selector === 'IDS') {state.candidates.page = 1; loadCandidates();}
     };
     $('pesertaUjianSelector').addEventListener('change', selectorChanged);
+    $('pesertaUjianMemberSelectAll').addEventListener('change', (event) => {
+        const s = state.members; s.ids.clear();
+        for (const checkbox of $('pesertaUjianRows').querySelectorAll('input[type="checkbox"]')) {
+            checkbox.checked = event.target.checked;
+            if (checkbox.checked) s.ids.add(Number(checkbox.closest('tr').dataset.id));
+        }
+        updateMemberSelection();
+    });
+    $('pesertaUjianBulkRemove').addEventListener('click', async () => {
+        const ids = [...state.members.ids];
+        if (!ids.length) return;
+        if (!window.confirm('Hapus ' + ids.length + ' anggota terpilih dari Kegiatan ini? Data Master Peserta tetap tersimpan.')) return;
+        const button = $('pesertaUjianBulkRemove'); button.disabled = true;
+        try {
+            const result = await api(base + '/bulk-remove', 'POST', {ids});
+            await loadMembers();
+            if ($('pesertaUjianSelector').value === 'IDS') await loadCandidates();
+            feedback('pesertaUjianFeedback', result.removed + ' anggota berhasil dihapus.');
+        } catch (error) {feedback('pesertaUjianFeedback', error.message, true); updateMemberSelection();}
+    });
     $('pesertaUjianSelectAll').addEventListener('change', (event) => {
         const s = state.candidates; s.ids.clear();
         for (const checkbox of $('pesertaUjianCandidateRows').querySelectorAll('input[type="checkbox"]')) {

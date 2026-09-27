@@ -1341,6 +1341,18 @@ DELETE /manager/api/kegiatan/{kegiatanId}/peserta/{pesertaKegiatanId}
 
 Hanya ketika lifecycle mengizinkan.
 
+Bulk hapus anggota terpilih (maksimal 100 ID, hanya Kegiatan DRAFT, atomik):
+
+```text
+POST /manager/api/kegiatan/{kegiatanId}/peserta/bulk-remove
+{ "ids": [12, 13] }
+```
+
+Daftar anggota mengembalikan `summary` berdasarkan `assignment_source` dan
+`assignment_scope`. Nilai sumber: `IDS`, `ROMBEL`, `TINGKAT`, `ALL`, dan
+`UNKNOWN` untuk keanggotaan lama sebelum asal penugasan dicatat. Anggota yang
+sudah ada tidak berubah sumber ketika selector lain dijalankan ulang.
+
 ## 27.4 Assign Ruang
 
 Individual:

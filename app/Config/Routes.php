@@ -208,6 +208,7 @@ $routes->group(
         $routes->get('kegiatan/(:num)/peserta', $pesertaUjian . 'index/$1', $examFilter);
         $routes->get('kegiatan/(:num)/peserta/candidates', $pesertaUjian . 'candidates/$1', $examFilter);
         $routes->post('kegiatan/(:num)/peserta', $pesertaUjian . 'assign/$1', $examFilter);
+        $routes->post('kegiatan/(:num)/peserta/bulk-remove', $pesertaUjian . 'bulkRemove/$1', $examFilter);
         $routes->delete('kegiatan/(:num)/peserta/(:num)', $pesertaUjian . 'remove/$1/$2', $examFilter);
 
         $routes->get(

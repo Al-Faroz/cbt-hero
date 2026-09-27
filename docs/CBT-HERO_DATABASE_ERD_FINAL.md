@@ -412,6 +412,8 @@ nisn_snapshot
 nama_snapshot
 jenis_kelamin_snapshot
 rombel_snapshot
+assignment_source       IDS / ROMBEL / TINGKAT / ALL / UNKNOWN
+assignment_scope nullable  nama Rombel atau angka Tingkat saat penugasan
 created_at
 updated_at
 ```
@@ -424,6 +426,7 @@ Unique:
 ```
 
 Snapshot membership mempertahankan identitas historis. Membership/ruang/no peserta dikunci ketika Kegiatan BERJALAN, kecuali workflow khusus yang memang diizinkan requirement.
+`UNKNOWN` hanya dipakai untuk row lama yang dibuat sebelum asal penugasan dicatat; selector asalnya tidak dapat direkonstruksi secara pasti.
 
 ---
 
@@ -1349,6 +1352,7 @@ auth_login_attempts(ip_address, attempted_at)
 peserta_kegiatan(kegiatan_id, peserta_id) UNIQUE
 peserta_kegiatan(kegiatan_id, nomor_peserta) UNIQUE
 peserta_kegiatan(kegiatan_id, ruang_id)
+peserta_kegiatan(kegiatan_id, assignment_source, assignment_scope)
 jadwal(kegiatan_id, mulai_at)
 jadwal(parent_jadwal_id)
 jadwal_peserta_target(jadwal_id, peserta_kegiatan_id) UNIQUE

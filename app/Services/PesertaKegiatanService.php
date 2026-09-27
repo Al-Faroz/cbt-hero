@@ -25,11 +25,17 @@ class PesertaKegiatanService
         $filtered = (int) $builder->countAllResults(false);
         $pages = max(1, (int) ceil($filtered / $perPage));
         $page = min($page, $pages);
-        $items = $builder->select('pk.id, pk.peserta_id, pk.nisn_snapshot, pk.nama_snapshot, pk.jenis_kelamin_snapshot, pk.rombel_snapshot, pk.nomor_peserta, pk.ruang_id, pk.status, pk.created_at')
+        $items = $builder->select('pk.id, pk.peserta_id, pk.nisn_snapshot, pk.nama_snapshot, pk.jenis_kelamin_snapshot, pk.rombel_snapshot, pk.assignment_source, pk.assignment_scope, pk.nomor_peserta, pk.ruang_id, pk.status, pk.created_at')
             ->orderBy('pk.rombel_snapshot', 'ASC')->orderBy('pk.nama_snapshot', 'ASC')
             ->orderBy('pk.id', 'ASC')->limit($perPage, ($page - 1) * $perPage)
             ->get()->getResultArray();
+        $summaryRows = $db->table('peserta_kegiatan')->select('assignment_source, assignment_scope, COUNT(*) AS jumlah', false)
+            ->where('kegiatan_id', $kegiatanId)
+            ->groupBy(['assignment_source', 'assignment_scope'])
+            ->orderBy('assignment_source', 'ASC')->orderBy('assignment_scope', 'ASC')
+            ->get()->getResultArray();
         return ['ok' => true, 'status' => 200, 'kegiatan' => $kegiatan, 'items' => $items,
+            'summary' => $summaryRows,
             'pagination' => $this->pagination($page, $perPage, $pages, $total, $filtered)];
     }
 
@@ -120,6 +126,9 @@ class PesertaKegiatanService
                     $already[(int) $member['peserta_id']] = true;
                 }
             }
+            $scope = null;
+            if ($selector === 'TINGKAT') $scope = (string) $value;
+            if ($selector === 'ROMBEL') $scope = $rows[0]['display_name'];
             $inserts = [];
             foreach ($rows as $row) {
                 if (isset($already[(int) $row['id']])) continue;
@@ -128,6 +137,7 @@ class PesertaKegiatanService
                     'status' => 'ACTIVE', 'nisn_snapshot' => $row['nisn'],
                     'nama_snapshot' => $row['nama'], 'jenis_kelamin_snapshot' => $row['jenis_kelamin'],
                     'rombel_snapshot' => $row['display_name'],
+                    'assignment_source' => $selector, 'assignment_scope' => $scope,
                 ];
             }
             $added = count($inserts);
@@ -174,6 +184,51 @@ class PesertaKegiatanService
             $db->transRollback();
             log_message('error', 'Hapus Peserta Kegiatan gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'DEPENDENCY_EXISTS', 'Keanggotaan tidak dapat dihapus karena sudah digunakan.');
+        }
+    }
+
+    public function bulkRemove(int $kegiatanId, array $payload, array $actor): array
+    {
+        $rawIds = $payload['ids'] ?? null;
+        if (! is_array($rawIds) || count($rawIds) < 1 || count($rawIds) > 100) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Pilih 1–100 anggota pada halaman aktif.');
+        }
+        $ids = [];
+        foreach ($rawIds as $raw) {
+            $id = filter_var($raw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if (! is_int($id) || in_array($id, $ids, true)) {
+                return $this->error(422, 'VALIDATION_FAILED', 'Pilihan anggota tidak valid atau duplikat.');
+            }
+            $ids[] = $id;
+        }
+        sort($ids, SORT_NUMERIC);
+        $db = Database::connect();
+        $db->transBegin();
+        try {
+            $kegiatan = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
+            if ($kegiatan === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+            }
+            if ($kegiatan['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan sudah terkunci.');
+            }
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $rows = $db->query('SELECT id FROM peserta_kegiatan WHERE kegiatan_id = ? AND id IN (' . $placeholders . ') ORDER BY id FOR UPDATE',
+                array_merge([$kegiatanId], $ids))->getResultArray();
+            if (count($rows) !== count($ids)) {
+                $db->transRollback();
+                return $this->error(409, 'STATE_CONFLICT', 'Ada anggota yang sudah tidak tersedia pada Kegiatan ini. Muat ulang daftar.');
+            }
+            $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->whereIn('id', $ids)->delete();
+            $this->audit($kegiatanId, 'BULK_REMOVE', count($ids), $actor);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit hapus massal gagal.');
+            }
+            return ['ok' => true, 'status' => 200, 'removed' => count($ids)];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Hapus massal Peserta Kegiatan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'DEPENDENCY_EXISTS', 'Hapus massal gagal; keanggotaan tidak berubah.');
         }
     }
 

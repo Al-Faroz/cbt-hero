@@ -33,6 +33,13 @@ class PesertaUjianController extends BaseController
             (int) $membershipId, $this->actor()));
     }
 
+    public function bulkRemove(string $id)
+    {
+        $json = $this->request->getJSON(true);
+        return $this->respond((new PesertaKegiatanService())->bulkRemove((int) $id,
+            is_array($json) ? $json : [], $this->actor()));
+    }
+
     private function actor(): array
     {
         return [
