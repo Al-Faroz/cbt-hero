@@ -35,10 +35,15 @@ class AdvancedQuestionService
             if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
             }
-            $config = $db->table('bank_type_config')->select('scoring_mode')->where('bank_soal_id', $bankId)
+            $config = $db->table('bank_type_config')->select('scoring_mode, option_count')->where('bank_soal_id', $bankId)
                 ->where('question_type', $data['question_type'])->get()->getRowArray();
             if ($config === null) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Aktifkan tipe soal pada Komposisi dahulu.');
+            }
+            if (in_array($data['question_type'], ['PG_KOMPLEKS', 'PG_BERTINGKAT'], true)
+                && count($data['options']) !== (int) $config['option_count']) {
+                $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED',
+                    'Jumlah pilihan harus sesuai Komposisi Bank (' . $config['option_count'] . ').');
             }
             if ($data['question_type'] === 'MATCHING' && $data['scoring_mode'] !== $config['scoring_mode']) {
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Mode Menjodohkan harus sama dengan Komposisi Bank.');

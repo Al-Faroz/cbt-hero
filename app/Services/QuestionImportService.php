@@ -106,9 +106,10 @@ class QuestionImportService
             if ($bank === null || $bank['status'] !== 'DRAFT' || $bank['kegiatan_status'] !== 'DRAFT') {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan terkunci.');
             }
-            $configRows = $db->table('bank_type_config')->select('question_type, scoring_mode')->where('bank_soal_id', $bankId)
+            $configRows = $db->table('bank_type_config')->select('question_type, scoring_mode, option_count')->where('bank_soal_id', $bankId)
                 ->get()->getResultArray();
             $configs = array_column($configRows, 'question_type');
+            $configByType = array_column($configRows, null, 'question_type');
             $matchingMode = null;
             foreach ($configRows as $config) if ($config['question_type'] === 'MATCHING') $matchingMode = $config['scoring_mode'];
             $rows = $db->table('import_staging_items')->where('import_job_id', $id)->orderBy('item_no')->get()->getResultArray();
@@ -122,6 +123,10 @@ class QuestionImportService
                 if (!$check['ok']) $errors[] = $check['message'];
                 if (($payload['question_type'] ?? '') === 'MATCHING' && ($payload['scoring_mode'] ?? '') !== $matchingMode)
                     $errors[] = 'Mode Menjodohkan harus sama dengan Komposisi Bank.';
+                if (in_array($payload['question_type'] ?? '', ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)
+                    && is_array($payload['options'] ?? null)
+                    && count($payload['options']) !== (int) ($configByType[$payload['question_type']]['option_count'] ?? 0))
+                    $errors[] = 'Jumlah pilihan harus sesuai Komposisi Bank.';
                 if (($payload['question_type'] ?? '') === 'PG' && (is_array($payload['options'] ?? null) && count($payload['options']) > 6 || !empty($payload['stimulus_text'])))
                     $errors[] = 'PG pada template memakai 2–6 opsi tanpa stimulus.';
                 $mediaIds = array_unique(array_column((new QuestionMediaService())->references($payload), 'media_asset_id'));

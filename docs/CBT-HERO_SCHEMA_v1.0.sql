@@ -269,7 +269,8 @@ CREATE TABLE bank_type_config (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   bank_soal_id BIGINT UNSIGNED NOT NULL,
   question_type VARCHAR(30) NOT NULL,
-  selection_count INT UNSIGNED NULL,
+  question_count INT UNSIGNED NULL,
+  option_count TINYINT UNSIGNED NULL,
   weight_percent DECIMAL(7,3) NOT NULL DEFAULT 0,
   shuffle_questions TINYINT(1) NOT NULL DEFAULT 0,
   shuffle_options TINYINT(1) NOT NULL DEFAULT 0,
@@ -512,6 +513,15 @@ CREATE TABLE jadwal (
   CONSTRAINT fk_jadwal_parent FOREIGN KEY (parent_jadwal_id) REFERENCES jadwal(id) ON DELETE RESTRICT,
   CONSTRAINT fk_jadwal_finalizer FOREIGN KEY (results_finalized_by) REFERENCES manager_users(id) ON DELETE SET NULL,
   CONSTRAINT fk_jadwal_creator FOREIGN KEY (created_by) REFERENCES manager_users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE jadwal_type_selection (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  jadwal_id BIGINT UNSIGNED NOT NULL,
+  question_type VARCHAR(30) NOT NULL,
+  selection_count INT UNSIGNED NOT NULL,
+  UNIQUE KEY uq_jadwal_type_selection (jadwal_id, question_type),
+  CONSTRAINT fk_jadwal_type_selection_jadwal FOREIGN KEY (jadwal_id) REFERENCES jadwal(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE jadwal_peserta_target (

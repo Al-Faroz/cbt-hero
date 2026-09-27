@@ -1469,7 +1469,7 @@ Validasi READY:
 
 ```text
 total weight tipe aktif = 100
-selection_count valid
+question_count valid untuk soal yang dibuat di Bank; option_count valid untuk tipe pilihan
 shuffle/scoring config valid
 ```
 
@@ -1627,7 +1627,12 @@ batas_mulai_at
 durasi_seconds
 access_state
 tampilkan_nilai_saat_selesai
+type_selection (akademik: daftar question_type + selection_count per tipe)
 ```
+
+Jumlah yang dipilih setiap tipe harus positif dan tidak melebihi soal aktif
+tipe tersebut di Bank. Susulan memakai komposisi Jadwal utama. Bobot tipe
+tidak disalin ke Jadwal karena berasal dari Bank.
 
 Structural edit hanya selama lifecycle mengizinkan.
 
@@ -2935,6 +2940,13 @@ tidak mengembalikan key rahasia atau berkas logo.
 ## Phase 4B — Komposisi Tipe Bank
 
 `GET /manager/master-ujian/bank-soal/{id}/komposisi` membuka form komposisi. `GET`/`PUT /manager/api/bank-soal/{id}/type-config` mengikuti bagian 29.2. PUT mengganti komposisi tipe terpilih secara atomik dan wajib membawa `expected_version`; jika versi Bank berubah, server menolak 409. Jumlah/bobot diperiksa pada DRAFT, sedangkan kelayakan READY menunggu soal dan validasi lengkap.
+
+`question_count` pada Komposisi adalah jumlah soal yang dibuat dalam Bank,
+`option_count` jumlah pilihan setiap soal PG/PG Kompleks/PG Bertingkat.
+Pengunduhan template Bank kelak memakai kedua angka ini. Pada Jadwal akademik,
+`type_selection` menyimpan `question_type` dan `selection_count` per tipe;
+validasi Jadwal menolak jumlah yang melebihi soal aktif di Bank. Susulan
+mengikuti pilihan Jadwal utama.
 
 ## Phase 4C1 — Editor Soal PG Teks Biasa
 

@@ -5,7 +5,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 ## Persiapan
 
 1. Buka **Master Ujian → Bank Soal**, buat Bank untuk Kegiatan DRAFT.
-2. Buka **Komposisi**. Aktifkan keenam tipe bila hendak menguji semuanya. Isi `selection_count = 1` masing-masing dan bobot yang berjumlah tepat 100%, misalnya `20, 20, 15, 15, 15, 15`.
+2. Buka **Komposisi**. Aktifkan keenam tipe bila hendak menguji semuanya. Isi `question_count = 1` masing-masing, `option_count = 4` untuk ketiga tipe pilihan, dan bobot yang berjumlah tepat 100%, misalnya `20, 20, 15, 15, 15, 15`. Pada database lama, jalankan `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql` sebelum menguji.
 3. Untuk Menjodohkan pilih mode **Per pasangan**. Simpan. Bank tetap DRAFT sampai semua syarat READY terpenuhi.
 
 | ID | Langkah | Hasil yang diharapkan |
@@ -25,7 +25,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A13 | Commit staging yang seluruh baris aktifnya valid; buka ulang riwayat job yang sama. | Soal masuk Bank sekali saja dan job berstatus COMMITTED; panggilan commit ulang tidak menggandakan soal. |
 | A14 | Dalam template Word, sisipkan gambar JPG/PNG/WebP ke sel pertanyaan lalu unggah. | Gambar menjadi referensi media pada staging dan terlihat saat pratinjau; ikut soal setelah commit. |
 | A15 | Dengan jumlah soal belum cukup atau bobot belum 100%, klik **Validasi / Status** di daftar Bank. | READY ditolak dengan rincian ketersediaan per tipe. |
-| A16 | Setelah tiap tipe memenuhi `selection_count` dan bobot 100%, klik **Validasi / Status**, ubah ke READY. | Bank berstatus READY dan editor/komposisi terkunci. Bila belum dipakai Jadwal dan Kegiatan masih DRAFT, Bank dapat dikembalikan ke DRAFT. |
+| A16 | Setelah jumlah soal aktif tiap tipe **tepat sama** dengan `question_count`, jumlah pilihan setiap soal sesuai `option_count`, dan bobot 100%, klik **Validasi / Status**, ubah ke READY. | Bank berstatus READY dan editor/komposisi terkunci. Bila belum dipakai Jadwal dan Kegiatan masih DRAFT, Bank dapat dikembalikan ke DRAFT. |
 | A17 | Klik **Cetak PDF**. Lihat semua soal, centang/lepaskan **Sertakan kunci dan rubrik**, lalu gunakan dialog **Cetak / Simpan PDF**. | Tampilan cetak sesuai pratinjau, dan kunci/rubrik hanya muncul bila dipilih. |
 | A18 | Dengan Bank READY, coba POST/PUT/DELETE soal melalui API Manager. | Server menolak perubahan dengan status terkunci, bukan sekadar menyembunyikan tombol. |
 | A19 | Akses API peserta yang sudah ada (`/api/ujian` dan konfirmasi ujian). | Tidak ada kunci jawaban, rubrik, atau daftar jawaban diterima pada respons peserta. |

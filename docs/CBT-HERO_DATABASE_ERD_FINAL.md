@@ -521,7 +521,8 @@ Satu row per tipe soal yang digunakan Bank.
 id
 bank_soal_id
 question_type
-selection_count nullable
+question_count
+option_count nullable
 weight_percent
 shuffle_questions
 shuffle_options
@@ -535,8 +536,14 @@ Unique `(bank_soal_id, question_type)`.
 Saat Bank menjadi READY:
 
 - total weight tipe aktif harus 100;
-- selection count harus dapat dipenuhi;
+- jumlah soal aktif pada setiap tipe harus sama dengan `question_count` Bank;
+- `option_count` wajib untuk PG, PG Kompleks, dan PG Bertingkat serta NULL untuk tipe lain;
 - randomization rule tervalidasi.
+
+`question_count` menyatakan banyaknya soal yang disiapkan dalam Bank, bukan
+jumlah yang dipilih untuk satu peserta. `option_count` menetapkan banyak pilihan
+setiap soal pada ketiga tipe pilihan. Unduhan template Bank membuat tabel/baris
+sesuai kedua nilai ini.
 
 ## 7.3 `soal`
 
@@ -801,6 +808,22 @@ Aturan:
 - setting `Tampilkan Nilai Saat Selesai` terkunci setelah Attempt pertama START;
 - selama BERJALAN hanya extension `batas_mulai_at` dan penambahan waktu yang diizinkan sesuai requirement;
 - `results_finalized_at` mengunci perubahan scoring normal untuk Jadwal tersebut, tanpa menghalangi histori/official result dari Susulan lain.
+
+## 9.1a `jadwal_type_selection`
+
+Satu row per tipe akademik yang diambil Jadwal utama dari Bank.
+
+```text
+id
+jadwal_id
+question_type
+selection_count
+```
+
+Unique `(jadwal_id, question_type)`. Jumlah positif dan tidak melebihi soal
+aktif tipe tersebut di Bank. Susulan mengikuti komposisi Jadwal utama; ketika
+replacement dibuat, preparation memilih assignment baru dengan jumlah yang sama.
+Bobot tipe tetap ditetapkan Bank.
 
 ## 9.2 `jadwal_peserta_target`
 

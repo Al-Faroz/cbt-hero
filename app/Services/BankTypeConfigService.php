@@ -24,7 +24,7 @@ class BankTypeConfigService
             ->join('mata_pelajaran AS m', 'm.id = b.mapel_id')
             ->where('b.id', $bankId)->get()->getRowArray() : null;
         if ($bank === null) return $this->error(404, 'NOT_FOUND', 'Bank Soal tidak ditemukan.');
-        $items = $db->table('bank_type_config')->select('question_type, selection_count, weight_percent, '
+        $items = $db->table('bank_type_config')->select('question_type, question_count, option_count, weight_percent, '
             . 'shuffle_questions, shuffle_options, scoring_mode')
             ->where('bank_soal_id', $bankId)->get()->getResultArray();
         return ['ok' => true, 'status' => 200, 'data' => [
@@ -44,15 +44,21 @@ class BankTypeConfigService
         $items = []; $totalWeight = 0;
         foreach ($raw as $input) {
             if (! is_array($input) || array_diff(array_keys($input), [
-                'question_type', 'selection_count', 'weight_percent',
+                'question_type', 'question_count', 'option_count', 'weight_percent',
                 'shuffle_questions', 'shuffle_options', 'scoring_mode',
             ]) !== []) return $this->error(422, 'VALIDATION_FAILED', 'Kolom konfigurasi tidak dikenal.');
             $type = $input['question_type'] ?? null;
             if (! is_string($type) || ! in_array($type, self::TYPES, true) || isset($items[$type]))
                 return $this->error(422, 'VALIDATION_FAILED', 'Tipe soal tidak valid atau duplikat.');
-            $rawCount = $input['selection_count'] ?? null;
+            $rawCount = $input['question_count'] ?? null;
             $count = is_scalar($rawCount) ? filter_var($rawCount, FILTER_VALIDATE_INT,
                 ['options' => ['min_range' => 1, 'max_range' => 1000]]) : false;
+            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true);
+            $rawOptions = $input['option_count'] ?? null;
+            $optionCount = is_scalar($rawOptions) ? filter_var($rawOptions, FILTER_VALIDATE_INT,
+                ['options' => ['min_range' => 2, 'max_range' => $type === 'PG' ? 6 : 8]]) : false;
+            if (($choiceType && ! is_int($optionCount)) || (! $choiceType && $rawOptions !== null))
+                return $this->error(422, 'VALIDATION_FAILED', 'Jumlah pilihan tidak valid untuk tipe soal.');
             $weight = $input['weight_percent'] ?? null;
             if (! is_int($count) || (! is_string($weight) && ! is_int($weight) && ! is_float($weight))
                 || ! preg_match('/^(?:100(?:\.0{1,3})?|[0-9]{1,2}(?:\.[0-9]{1,3})?)$/D', (string) $weight))
@@ -74,7 +80,8 @@ class BankTypeConfigService
                 return $this->error(422, 'VALIDATION_FAILED', 'Mode penilaian tingkat Bank hanya untuk Matching.');
             }
             $items[$type] = [
-                'question_type' => $type, 'selection_count' => $count,
+                'question_type' => $type, 'question_count' => $count,
+                'option_count' => $choiceType ? $optionCount : null,
                 'weight_percent' => number_format($millis / 1000, 3, '.', ''),
                 'shuffle_questions' => (int) $questions, 'shuffle_options' => (int) $options,
                 'scoring_mode' => $mode,

@@ -614,6 +614,14 @@ Tidak ada reuse/clone/copy sebagai workflow utama. Membuat Bank baru dibuat mura
 
 Komposisi, randomisasi, scoring, dan bobot berada dalam Bank.
 
+Komposisi Bank menetapkan **jumlah soal yang dibuat/tersedia** untuk setiap tipe.
+Untuk PG, PG Kompleks, dan PG Bertingkat, Komposisi juga menetapkan jumlah pilihan
+per soal. Template impor yang diunduh dari Bank mengikuti kedua angka ini.
+Jumlah soal yang benar-benar diambil untuk peserta ditetapkan **per tipe pada Jadwal**;
+jumlah tersebut tidak boleh melebihi soal aktif yang tersedia pada Bank. Dengan
+demikian Bank dapat berisi, misalnya, 40 soal dan Jadwal mengambil 20 soal.
+Pengacakan/pemilihan diselesaikan saat preparation, bukan saat peserta START.
+
 ## 12.2 Instrumen Psikologis
 
 Instrumen psikologis terpisah dari Bank Akademik pada sisi engine/scoring, tetapi memakai core pelaksanaan CBT yang sama.
@@ -850,6 +858,12 @@ Field utama Jadwal:
 - Durasi;
 - status akses `BUKA / TAHAN`;
 - `Tampilkan Nilai Saat Selesai` ON/OFF.
+
+Jadwal akademik mempunyai jumlah soal yang diambil **per tipe** dari Bank yang
+dipilih. Setiap tipe aktif yang digunakan Jadwal harus mempunyai jumlah positif
+dan tidak melebihi soal aktif pada Bank. Susulan menggunakan komposisi pengambilan
+Jadwal utama; replacement mendapat assignment baru sesuai komposisi yang sama.
+Bobot dan aturan penilaian tipe tetap berasal dari Bank.
 
 ## 18.1 Batas Mulai
 
@@ -1356,6 +1370,11 @@ Answer
 ```
 
 Setiap soal mempunyai `max_point`.
+
+Pada template impor yang dirancang untuk guru, PG dan PG Kompleks mendapat
+`max_point = 1` otomatis. PG Bertingkat mendapat `max_point` dari poin pilihan
+tertinggi. Nilai tetap disimpan dan tervalidasi pada setiap revisi soal;
+pengaturan poin khusus per soal dapat diberikan lewat editor bila diperlukan.
 
 Bank mempunyai bobot total akademik = 100.
 

@@ -27,7 +27,8 @@
     };
     const cell = (node) => {const td = document.createElement('td'); td.append(node); return td;};
     const current = () => [...$('typeRows').querySelectorAll('tr[data-type]')].filter((row) => row.enabled.checked).map((row) => ({
-        question_type: row.dataset.type, selection_count: Number(row.count.value),
+        question_type: row.dataset.type, question_count: Number(row.count.value),
+        option_count: row.choice ? Number(row.choice.value) : null,
         weight_percent: row.weight.value.trim(), shuffle_questions: row.questions.checked,
         shuffle_options: row.options.checked,
         scoring_mode: row.dataset.type === 'MATCHING' ? row.mode.value : null,
@@ -47,7 +48,7 @@
         const body = $('typeRows'); body.replaceChildren();
         const groupHeader = (label) => {
             const row = document.createElement('tr'); row.className = 'table-light';
-            const heading = document.createElement('th'); heading.colSpan = 7;
+            const heading = document.createElement('th'); heading.colSpan = 8;
             heading.scope = 'rowgroup'; heading.textContent = label;
             row.append(heading); body.append(row);
         };
@@ -58,8 +59,15 @@
             const enabled = input('checkbox', Boolean(config), 'form-check-input');
             enabled.setAttribute('aria-label', 'Gunakan ' + labels[type]); row.enabled = enabled;
             const name = document.createElement('strong'); name.textContent = labels[type];
-            const count = input('number', config?.selection_count ?? 1, 'form-control form-control-sm');
+            const count = input('number', config?.question_count ?? 1, 'form-control form-control-sm');
             count.min = '1'; count.max = '1000'; count.step = '1'; count.style.minWidth = '85px'; row.count = count;
+            const choiceType = ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'].includes(type);
+            const choice = choiceType ? input('number', config?.option_count ?? 4, 'form-control form-control-sm') : null;
+            if (choice) {
+                choice.min = '2'; choice.max = type === 'PG' ? '6' : '8'; choice.step = '1';
+                choice.style.minWidth = '75px'; choice.setAttribute('aria-label', 'Jumlah pilihan ' + labels[type]);
+            }
+            row.choice = choice;
             const weight = input('number', config?.weight_percent ?? 0, 'form-control form-control-sm');
             weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.style.minWidth = '85px'; row.weight = weight;
             const questions = input('checkbox', Number(config?.shuffle_questions) === 1, 'form-check-input'); row.questions = questions;
@@ -70,11 +78,14 @@
             mode.add(new Option('Per pasangan (parsial)', 'PARTIAL'));
             mode.add(new Option('Semua benar', 'ALL_OR_NOTHING'));
             mode.value = config?.scoring_mode || 'PARTIAL'; row.mode = mode;
-            row.append(cell(enabled), cell(name), cell(count), cell(weight), cell(questions), cell(options), cell(mode));
+            const choiceCell = document.createElement('td');
+            if (choice) choiceCell.append(choice); else choiceCell.textContent = '—';
+            row.append(cell(enabled), cell(name), cell(count), choiceCell, cell(weight), cell(questions), cell(options), cell(mode));
             const sync = () => {
                 const on = editable && enabled.checked;
                 enabled.disabled = !editable;
                 count.disabled = !on; weight.disabled = !on;
+                if (choice) choice.disabled = !on;
                 questions.disabled = !on || !objective.has(type);
                 options.disabled = !on || !objective.has(type);
                 mode.disabled = !on || type !== 'MATCHING';

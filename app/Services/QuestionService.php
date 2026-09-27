@@ -37,9 +37,10 @@ class QuestionService
             unset($item['question_html'], $item['metadata_json']);
         }
         unset($item);
-        $configured = $db->table('bank_type_config')->where('bank_soal_id', $bankId)
-            ->where('question_type', 'PG')->countAllResults() > 0;
-        return $this->success(['bank' => $bank, 'pg_configured' => $configured, 'items' => $items,
+        $pgConfig = $db->table('bank_type_config')->select('option_count')->where('bank_soal_id', $bankId)
+            ->where('question_type', 'PG')->get()->getRowArray();
+        return $this->success(['bank' => $bank, 'pg_configured' => $pgConfig !== null,
+            'pg_option_count' => $pgConfig === null ? null : (int) $pgConfig['option_count'], 'items' => $items,
             'pagination' => ['page' => $page, 'pages' => $pages, 'per_page' => $size, 'total' => $total]]);
     }
 
@@ -135,9 +136,14 @@ class QuestionService
             if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
             }
-            if ($db->table('bank_type_config')->where('bank_soal_id', $bankId)
-                ->where('question_type', 'PG')->countAllResults() === 0) {
+            $config = $db->table('bank_type_config')->select('option_count')->where('bank_soal_id', $bankId)
+                ->where('question_type', 'PG')->get()->getRowArray();
+            if ($config === null) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Aktifkan tipe PG pada Komposisi terlebih dahulu.');
+            }
+            if (count($options) !== (int) $config['option_count']) {
+                $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED',
+                    'Jumlah pilihan PG harus sesuai Komposisi Bank (' . $config['option_count'] . ').');
             }
             $old = $id === null ? null : $db->query('SELECT id, bank_soal_id, current_revision_no, status '
                 . 'FROM soal WHERE id = ? FOR UPDATE', [$id])->getRowArray();

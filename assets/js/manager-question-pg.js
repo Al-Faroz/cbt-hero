@@ -5,7 +5,7 @@
     const $ = (id) => document.getElementById(id);
     const base = app.dataset.api;
     const state = {page: 1, pages: 1, seq: 0, editable: false, configured: false,
-        editing: null, revision: null, options: [], correctIndex: -1};
+        editing: null, revision: null, options: [], correctIndex: -1, optionCount: 4};
     const feedback = (id, message, error = false) => {
         const node = $(id); node.textContent = message;
         node.className = 'cbt-inline-feedback' + (message ? (error ? ' is-error' : ' is-info') : '');
@@ -45,7 +45,7 @@
             input.addEventListener('input', () => {state.options[index] = input.value; preview();});
             const remove = document.createElement('button'); remove.type = 'button';
             remove.className = 'btn btn-outline-danger btn-sm mt-1'; remove.textContent = 'Hapus';
-            remove.disabled = !state.editable || state.options.length <= 2;
+            remove.disabled = !state.editable || state.options.length <= state.optionCount;
             remove.addEventListener('click', () => {
                 state.options.splice(index, 1);
                 if (state.correctIndex === index) state.correctIndex = -1;
@@ -54,13 +54,13 @@
             });
             row.append(radio, label, input, remove); target.append(row);
         });
-        $('questionAddOption').disabled = !state.editable || state.options.length >= 6;
+        $('questionAddOption').disabled = !state.editable || state.options.length >= state.optionCount;
         preview();
     };
     const openEditor = (item = null) => {
         state.editing = item ? Number(item.id) : null;
         state.revision = item ? Number(item.current_revision_no) : null;
-        state.options = item ? item.options.map((option) => option.content_text) : ['', '', '', ''];
+        state.options = item ? item.options.map((option) => option.content_text) : Array(state.optionCount).fill('');
         state.correctIndex = item ? item.options.findIndex((option) => Number(option.is_correct) === 1) : -1;
         state.media = item?.media || window.CbtMediaPreview || {};
         $('questionText').value = item?.question_text ?? '';
@@ -79,6 +79,8 @@
             if (seq !== state.seq) return;
             state.editable = data.bank.status === 'DRAFT' && data.bank.kegiatan_status === 'DRAFT';
             state.configured = Boolean(data.pg_configured);
+            state.optionCount = Number(data.pg_option_count) || 4;
+            $('questionOptionInfo').textContent = 'Opsi (' + state.optionCount + ' sesuai Komposisi Bank)';
             $('questionContext').textContent = data.bank.nama_bank + ' · ' + data.bank.kegiatan_nama + ' · ' +
                 data.bank.mapel_nama + ' · Tingkat ' + data.bank.tingkat + ' · ' + data.bank.status;
             $('questionAdd').disabled = !state.editable || !state.configured;
@@ -119,7 +121,9 @@
         } catch (error) {if (seq === state.seq) feedback('questionFeedback', error.message, true);}
     };
     $('questionAdd').addEventListener('click', () => openEditor());
-    $('questionAddOption').addEventListener('click', () => {if (state.options.length < 6) {state.options.push(''); renderOptions();}});
+    $('questionAddOption').addEventListener('click', () => {
+        if (state.options.length < state.optionCount) {state.options.push(''); renderOptions();}
+    });
     $('questionText').addEventListener('input', preview);
     $('questionCancel').addEventListener('click', () => {$('questionEditor').hidden = true;});
     $('questionForm').addEventListener('submit', async (event) => {

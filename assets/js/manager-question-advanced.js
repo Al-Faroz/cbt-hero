@@ -80,9 +80,11 @@
                     check.checked = Boolean(item.correct); check.disabled = !state.editable;
                     check.addEventListener('change',()=>{item.correct=check.checked; preview();}); label.append(check); row.append(label);
                 } else row.append(field('Poin',item.point_value ?? '0',value=>item.point_value=value,{kind:'number',width:'col-md-2',min:0,max:1000}));
-                row.append(rowRemove(()=>{state.options.splice(i,1); renderSpecific();},state.options.length<=2)); target.append(row);
+                const targetCount=Number(state.configMap.get(type)?.option_count)||2;
+                row.append(rowRemove(()=>{state.options.splice(i,1); renderSpecific();},state.options.length<=targetCount)); target.append(row);
             });
-            target.append(addButton('Tambah opsi',()=>{state.options.push({text:'',correct:false,point_value:'0'}); renderSpecific();},state.options.length>=8));
+            const targetCount=Number(state.configMap.get(type)?.option_count)||2;
+            target.append(addButton('Tambah opsi',()=>{state.options.push({text:'',correct:false,point_value:'0'}); renderSpecific();},state.options.length>=targetCount));
         } else if (type === 'MATCHING') {
             const label = el('label','Penilaian','cbt-form-label d-block'); const select = document.createElement('select');
             select.id='advancedMode'; select.className='form-select mb-3'; select.add(new Option('Per pasangan','PARTIAL'));
@@ -127,7 +129,8 @@
         $('advancedType').disabled=Boolean(item)||!state.editable;
         $('advancedQuestion').value=item?.question_text||''; $('advancedStimulus').value=item?.stimulus_text||'';
         $('advancedPoint').value=item?.max_point||'1';
-        state.options=(item?.options||[{},{},{},{}]).map(o=>({text:o.content_text||'',correct:Number(o.is_correct)===1,point_value:o.point_value||'0'}));
+        const optionCount=Number(state.configMap.get($('advancedType').value)?.option_count)||4;
+        state.options=(item?.options||Array.from({length:optionCount},()=>({}))).map(o=>({text:o.content_text||'',correct:Number(o.is_correct)===1,point_value:o.point_value||'0'}));
         state.pairs=(item?.pairs||[{},{}]).map(p=>({left:p.left_text||'',right:p.right_text||''}));
         state.answers=item?.accepted_values?.length ? [...item.accepted_values] : [''];
         state.mode=item?.short_answer_mode||item?.scoring_mode||($('advancedType').value==='MATCHING'
@@ -170,7 +173,7 @@
             feedback('advancedFeedback',state.configured.length?'':'Aktifkan tipe pada Komposisi Bank terlebih dahulu.',!state.configured.length);
         } catch(error) {if(seq===state.seq) feedback('advancedFeedback',error.message,true);}
     };
-    $('advancedType').addEventListener('change',()=>{state.options=[{text:'',correct:false,point_value:'0'},{text:'',correct:false,point_value:'0'}];state.pairs=[{left:'',right:''},{left:'',right:''}];state.answers=[''];state.mode=$('advancedType').value==='MATCHING'?state.configMap.get('MATCHING')?.scoring_mode||'PARTIAL':'TEXT';renderSpecific();});
+    $('advancedType').addEventListener('change',()=>{const count=Number(state.configMap.get($('advancedType').value)?.option_count)||2;state.options=Array.from({length:count},()=>({text:'',correct:false,point_value:'0'}));state.pairs=[{left:'',right:''},{left:'',right:''}];state.answers=[''];state.mode=$('advancedType').value==='MATCHING'?state.configMap.get('MATCHING')?.scoring_mode||'PARTIAL':'TEXT';renderSpecific();});
     for(const id of ['advancedQuestion','advancedStimulus','advancedPoint']) $(id).addEventListener('input',preview);
     $('advancedAdd').addEventListener('click',()=>open()); $('advancedCancel').addEventListener('click',()=>{$('advancedEditor').hidden=true;});
     $('advancedForm').addEventListener('submit',async event=>{

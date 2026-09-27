@@ -63,7 +63,7 @@ class BankReadinessService
 
     private function check($db, int $bankId): array
     {
-        $configs = $db->table('bank_type_config')->select('question_type, selection_count, weight_percent, scoring_mode')
+        $configs = $db->table('bank_type_config')->select('question_type, question_count, option_count, weight_percent, scoring_mode')
             ->where('bank_soal_id', $bankId)->orderBy('question_type')->get()->getResultArray();
         $questions = $db->table('soal AS s')->select('s.id, s.current_revision_no, sr.id AS revision_id, sr.question_type, sr.question_html, sr.max_point, sr.scoring_mode, sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance, sr.rubric_html')
             ->join('soal_revision AS sr', 'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no')
@@ -72,11 +72,15 @@ class BankReadinessService
         if (!$configs) $errors[] = 'Komposisi tipe belum diatur.';
         foreach ($configs as $config) {
             $type = $config['question_type']; $count = 0;
-            if (!in_array($type, QuestionValidationService::TYPES, true) || (int) $config['selection_count'] < 1)
+            if (!in_array($type, QuestionValidationService::TYPES, true) || (int) $config['question_count'] < 1)
                 $errors[] = 'Komposisi ' . $type . ' tidak valid.';
             foreach ($questions as $question) if ($question['question_type'] === $type) $count++;
-            $counts[$type] = ['available' => $count, 'required' => (int) $config['selection_count']];
-            if ($count < (int) $config['selection_count']) $errors[] = $type . ': tersedia ' . $count . ', dibutuhkan ' . $config['selection_count'] . '.';
+            $counts[$type] = ['available' => $count, 'planned' => (int) $config['question_count']];
+            if ($count !== (int) $config['question_count']) $errors[] = $type . ': tersedia ' . $count . ', rencana Bank ' . $config['question_count'] . '.';
+            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true);
+            if (($choiceType && ((int) $config['option_count'] < 2 || (int) $config['option_count'] > ($type === 'PG' ? 6 : 8)))
+                || (! $choiceType && $config['option_count'] !== null))
+                $errors[] = 'Jumlah pilihan komposisi ' . $type . ' tidak valid.';
             $weight += (int) round((float) $config['weight_percent'] * 1000);
         }
         if ($weight !== 100000) $errors[] = 'Total bobot komposisi harus 100%.';
@@ -90,7 +94,8 @@ class BankReadinessService
             if (in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)) {
                 $options = $db->table('soal_opsi')->select('is_correct, point_value, content_html')->where('soal_revision_id', $revisionId)->get()->getResultArray();
                 $correct = count(array_filter($options, fn($o) => (int) $o['is_correct'] === 1));
-                if (count($options) < 2 || count(array_filter($options, fn($o) => trim(strip_tags((string) $o['content_html'])) !== '')) !== count($options)
+                if (count($options) !== (int) ($configByType[$type]['option_count'] ?? 0)
+                    || count(array_filter($options, fn($o) => trim(strip_tags((string) $o['content_html'])) !== '')) !== count($options)
                     || ($type === 'PG' && $correct !== 1) || ($type === 'PG_KOMPLEKS' && ($correct < 1 || $correct === count($options)))
                     || ($type === 'PG_BERTINGKAT' && !array_filter($options, fn($o) => (float) $o['point_value'] > 0)))
                     $errors[] = 'Opsi/kunci Soal #' . $id . ' belum lengkap.';
