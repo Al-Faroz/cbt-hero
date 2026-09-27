@@ -19,5 +19,6 @@ Dashboard memakai empat aksen warna yang masing-masing tetap memiliki judul dan 
 | UI05 | Muat ulang halaman dan berpindah ke halaman Manager lain, lalu klik **Tema terang**. | Pilihan tema bertahan selama navigasi dan setelah muat ulang. |
 | UI06 | Periksa Dashboard pada lebar ponsel dan desktop; buka beberapa halaman Manager. | Kartu turun menjadi kolom sesuai lebar, tombol tema dapat dipakai, satu keluarga font Ubuntu digunakan pada teks dan kontrol. |
 | UI07 | Buka DevTools Console saat mengganti tema dan berpindah halaman Manager. | Tidak ada error JavaScript dari aplikasi. |
+| UI08 | Bandingkan jarak pada Dashboard, Kegiatan Ujian, Peserta Ujian, dan halaman dengan tabel pada desktop serta ponsel. | Ruang antar-panel lebih rapat; teks, tombol, tabel, dan formulir tetap terbaca tanpa elemen saling bertumpuk. |
 
 Catatan: tema hanya diterapkan di area Manager saat ini. Login dan halaman peserta menggunakan font Ubuntu yang sama. Tema awal mengikuti preferensi terang/gelap perangkat sampai tombol tema dipakai.

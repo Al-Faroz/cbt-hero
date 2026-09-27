@@ -1,7 +1,8 @@
 # CBT-HERO — UI STANDARD FINAL
 
-**Versi:** 1.1  
-**Tanggal:** 25 September 2026  
+**Versi:** 1.2
+
+**Tanggal:** 27 September 2026
 **Status:** FINAL IMPLEMENTATION STANDARD  
 **Fokus awal:** Manager / Admin / Operator  
 **Induk UI/UX:** `CBT-HERO_UIUX_ACUAN.md`
@@ -154,7 +155,7 @@ Aturan mobile `< 992px`:
 Baseline:
 
 ```text
-height: 64px
+height: 60px
 ```
 
 Berisi:
@@ -172,22 +173,26 @@ Jangan membuat topbar dua baris untuk informasi yang dapat masuk page header.
 Desktop:
 
 ```text
-padding-left/right: 24px
-padding-top:        22px
-padding-bottom:     38px
+padding-left/right: 18px
+padding-top:        16px
+padding-bottom:     30px
 ```
 
 Mobile:
 
 ```text
-padding-left/right: 12–14px
-padding-top:        14–16px
-padding-bottom:     24–28px
+padding-left/right: 10–12px
+padding-top:        12–14px
+padding-bottom:     20–24px
 ```
 
 ---
 
 # 5. TYPOGRAPHY MANAGER
+
+Seluruh teks dan kontrol memakai keluarga font Ubuntu lokal. Ikon memakai Bootstrap Icons. Tema Manager tersedia dalam mode terang dan gelap; mode awal mengikuti perangkat, pilihan manual disimpan di browser.
+
+Kepadatan Manager: gutter panel 12px, jarak setelah judul halaman 12–14px, padding header panel 11px × 14px, isi panel 13px × 14px. Jarak formulir dalam panel 12px; sel tabel 8–10px vertikal dengan padding horizontal 10px. Jangan mengurangi tinggi target tombol penting demi kepadatan. Pada dashboard, tinggi minimum kartu metrik 148px desktop dan 138px ponsel.
 
 | Elemen | Desktop | Mobile |
 |---|---:|---:|
