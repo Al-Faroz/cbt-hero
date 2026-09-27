@@ -221,6 +221,8 @@ $routes->group(
         $routes->delete('ruang/(:num)', $ruang . 'remove/$1', $examFilter);
         $routes->post('kegiatan/(:num)/peserta/assign-ruang', $ruang . 'assign/$1', $examFilter);
         $routes->patch('kegiatan/(:num)/peserta/(:num)/ruang', $ruang . 'assignIndividual/$1/$2', $examFilter);
+        $routes->post('kegiatan/(:num)/nomor-peserta/generate',
+            'Api\\Manager\\Exam\\NomorPesertaController::generate/$1', $examFilter);
 
         $routes->get(
             'users',

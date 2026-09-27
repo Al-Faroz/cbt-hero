@@ -8,7 +8,7 @@
     </div>
     <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kembali ke Kegiatan</a>
 </section>
-<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-rombel-api="<?= esc(base_url('manager/api/peserta/rombel-options'), 'attr') ?>" data-ruang-api="<?= esc(base_url('manager/api/ruang/options'), 'attr') ?>">
+<div id="pesertaUjianApp" data-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/peserta'), 'attr') ?>" data-rombel-api="<?= esc(base_url('manager/api/peserta/rombel-options'), 'attr') ?>" data-ruang-api="<?= esc(base_url('manager/api/ruang/options'), 'attr') ?>" data-nomor-api="<?= esc(base_url('manager/api/kegiatan/' . $kegiatanId . '/nomor-peserta/generate'), 'attr') ?>">
     <section class="manager-section-card mb-3" id="pesertaUjianAssignCard" hidden>
         <div class="card-header"><div class="fw-bold">Tambahkan Peserta</div></div>
         <div class="card-body">
@@ -57,6 +57,22 @@
                 <div class="col-md-2"><button class="btn btn-cbt-primary" type="button" id="pesertaUjianRuangAssign">Terapkan Ruang</button></div>
             </div>
             <div id="pesertaUjianRuangFeedback" class="cbt-inline-feedback mt-2" role="status" aria-live="polite"></div>
+        </div>
+    </section>
+    <section class="manager-section-card mb-3" id="pesertaUjianNomorCard" hidden>
+        <div class="card-header"><div class="fw-bold">Nomor Peserta</div><span class="small text-secondary" id="pesertaUjianNomorCount"></span></div>
+        <div class="card-body">
+            <p class="small text-secondary">Nomor berlaku untuk Kegiatan ini, bukan username login. Urutan tetap berdasarkan rombel, nama, lalu ID anggota. Contoh: <strong>UJIAN26-0001</strong>.</p>
+            <div class="row g-2 align-items-end">
+                <div class="col-sm-6 col-lg-2"><label class="cbt-form-label" for="pesertaUjianNomorPrefix">Prefix</label><input class="form-control text-uppercase" id="pesertaUjianNomorPrefix" maxlength="20" pattern="[A-Za-z0-9]([A-Za-z0-9-]{0,18}[A-Za-z0-9])?" placeholder="UJIAN26" autocomplete="off"></div>
+                <div class="col-6 col-lg-2"><label class="cbt-form-label" for="pesertaUjianNomorStart">Nomor awal</label><input class="form-control" type="number" id="pesertaUjianNomorStart" min="1" max="99999999" value="1"></div>
+                <div class="col-6 col-lg-2"><label class="cbt-form-label" for="pesertaUjianNomorMode">Tindakan</label><select class="form-select" id="pesertaUjianNomorMode"><option value="FILL_EMPTY">Isi yang kosong</option><option value="REGENERATE">Regenerate cakupan</option></select></div>
+                <div class="col-sm-6 col-lg-2"><label class="cbt-form-label" for="pesertaUjianNomorScope">Cakupan</label><select class="form-select" id="pesertaUjianNomorScope"><option value="ALL">Semua anggota</option><option value="ROMBEL">Rombel</option><option value="TINGKAT">Tingkat</option><option value="IDS">Anggota terpilih</option></select></div>
+                <div class="col-6 col-lg-2" id="pesertaUjianNomorRombelWrap" hidden><label class="cbt-form-label" for="pesertaUjianNomorRombel">Rombel</label><select class="form-select" id="pesertaUjianNomorRombel"></select></div>
+                <div class="col-6 col-lg-2" id="pesertaUjianNomorTingkatWrap" hidden><label class="cbt-form-label" for="pesertaUjianNomorTingkat">Tingkat</label><select class="form-select" id="pesertaUjianNomorTingkat"><option>7</option><option>8</option><option>9</option></select></div>
+                <div class="col-12 col-lg-2"><button class="btn btn-cbt-primary w-100" type="button" id="pesertaUjianNomorGenerate">Jalankan</button></div>
+            </div>
+            <div id="pesertaUjianNomorFeedback" class="cbt-inline-feedback mt-2" role="status" aria-live="polite"></div>
         </div>
     </section>
     <section class="manager-section-card">

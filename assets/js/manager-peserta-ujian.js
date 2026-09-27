@@ -89,11 +89,12 @@
         for (const room of state.rooms) select.add(new Option(room.kode + ' · ' + room.nama, room.id));
     };
     const renderRombelScopes = (options) => {
-        const select = $('pesertaUjianRuangRombel');
-        const previous = select.value;
-        select.replaceChildren();
-        for (const name of options) select.add(new Option(name, name));
-        if (options.includes(previous)) select.value = previous;
+        for (const id of ['pesertaUjianRuangRombel', 'pesertaUjianNomorRombel']) {
+            const select = $(id), previous = select.value;
+            select.replaceChildren();
+            for (const name of options) select.add(new Option(name, name));
+            if (options.includes(previous)) select.value = previous;
+        }
     };
     const roomCell = (item) => {
         const td = document.createElement('td');
@@ -142,6 +143,7 @@
                 ' · ' + data.kegiatan.status;
             $('pesertaUjianAssignCard').hidden = !state.draft;
             $('pesertaUjianRuangCard').hidden = !state.draft;
+            $('pesertaUjianNomorCard').hidden = !state.draft;
             $('pesertaUjianBulkRemove').hidden = !state.draft;
             $('pesertaUjianMemberSelectAll').hidden = !state.draft;
             s.ids.clear(); $('pesertaUjianMemberSelectAll').checked = false;
@@ -149,6 +151,7 @@
             renderSummary(data);
             renderRombelScopes(data.rombel_options);
             $('pesertaUjianRuangCount').textContent = data.unassigned_room + ' dari ' + data.pagination.total + ' anggota belum ditempatkan';
+            $('pesertaUjianNomorCount').textContent = data.without_number + ' dari ' + data.pagination.total + ' anggota belum memiliki nomor';
             const body = $('pesertaUjianRows'); body.replaceChildren();
             for (const item of data.items) {
                 const row = document.createElement('tr');
@@ -290,6 +293,43 @@
             await loadMembers();
             feedback('pesertaUjianRuangFeedback', result.selected + ' anggota diproses, ' + result.updated + ' berubah.');
         } catch (error) {feedback('pesertaUjianRuangFeedback', error.message, true);}
+        finally {button.disabled = false;}
+    });
+    $('pesertaUjianNomorScope').addEventListener('change', () => {
+        const scope = $('pesertaUjianNomorScope').value;
+        $('pesertaUjianNomorRombelWrap').hidden = scope !== 'ROMBEL';
+        $('pesertaUjianNomorTingkatWrap').hidden = scope !== 'TINGKAT';
+    });
+    $('pesertaUjianNomorGenerate').addEventListener('click', async () => {
+        const prefix = $('pesertaUjianNomorPrefix').value.trim().toUpperCase();
+        const start = Number($('pesertaUjianNomorStart').value);
+        const mode = $('pesertaUjianNomorMode').value;
+        const scope = $('pesertaUjianNomorScope').value;
+        let value = null;
+        if (scope === 'IDS') value = [...state.members.ids];
+        if (scope === 'ROMBEL') value = $('pesertaUjianNomorRombel').value;
+        if (scope === 'TINGKAT') value = $('pesertaUjianNomorTingkat').value;
+        if (!/^[A-Z0-9](?:[A-Z0-9-]{0,18}[A-Z0-9])?$/.test(prefix) ||
+            !Number.isInteger(start) || start < 1 || start > 99999999 ||
+            (scope === 'IDS' && !value.length) || (scope === 'ROMBEL' && !value)) {
+            feedback('pesertaUjianNomorFeedback', 'Periksa prefix, nomor awal, dan cakupan anggota.', true); return;
+        }
+        const label = scope === 'ALL' ? 'SEMUA anggota Kegiatan' :
+            scope === 'IDS' ? value.length + ' anggota terpilih di halaman ini' :
+            scope === 'ROMBEL' ? 'Rombel ' + value : 'Tingkat ' + value;
+        const action = mode === 'REGENERATE' ?
+            'REGENERATE nomor untuk ' + label + '? Nomor sebelumnya dalam cakupan akan diganti; kartu yang sudah dicetak perlu diperbarui.' :
+            'Isi nomor yang masih kosong untuk ' + label + '? Nomor yang sudah ada akan dipertahankan.';
+        if (!window.confirm(action)) return;
+        const button = $('pesertaUjianNomorGenerate'); button.disabled = true;
+        feedback('pesertaUjianNomorFeedback', 'Membuat Nomor Peserta...');
+        try {
+            const result = await api(app.dataset.nomorApi, 'POST',
+                {prefix, start_sequence: start, mode, scope, value});
+            await loadMembers();
+            feedback('pesertaUjianNomorFeedback', result.generated + ' nomor dibuat (' +
+                result.first + ' s.d. ' + result.last + '), ' + result.skipped_existing + ' nomor lama dipertahankan.');
+        } catch (error) {feedback('pesertaUjianNomorFeedback', error.message, true);}
         finally {button.disabled = false;}
     });
     $('pesertaUjianSelectAll').addEventListener('change', (event) => {

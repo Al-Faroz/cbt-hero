@@ -1384,17 +1384,31 @@ dinonaktifkan atau dihapus.
 
 ```text
 POST /manager/api/kegiatan/{kegiatanId}/nomor-peserta/generate
+{
+  "prefix": "UJIAN26",
+  "start_sequence": 1,
+  "mode": "FILL_EMPTY",
+  "scope": "ALL",
+  "value": null
+}
 ```
 
 Request minimum:
 
 ```text
-prefix
-start_sequence
-scope/filter
+prefix             1–20 huruf kapital/angka/strip di tengah
+start_sequence     1–99999999
+mode               FILL_EMPTY / REGENERATE
+scope              ALL / TINGKAT / ROMBEL / IDS
+value              null / "7" / "7-A" / [id_keanggotaan, ...]
 ```
 
-Nomor Peserta bukan login identity.
+Format `PREFIX-0001`; padding empat digit minimum, dengan urutan rombel,
+nama, lalu ID anggota. `FILL_EMPTY` mempertahankan nomor lama dan melewati
+nomor yang sudah terpakai. `REGENERATE` mengganti nomor dalam cakupan secara
+atomik dan mempertahankan nomor di luar cakupan. `IDS` maksimal 100 ID pada
+halaman aktif. Response: `generated`, `skipped_existing`, `first`, `last`.
+Nomor Peserta bukan login identity. Mutation hanya saat Kegiatan DRAFT.
 
 Data peserta/membership/ruang/no peserta tidak boleh berubah setelah Kegiatan BERJALAN, kecuali Susulan operational target yang secara eksplisit diizinkan requirement.
 

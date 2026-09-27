@@ -19,6 +19,9 @@ class PesertaKegiatanService
         $total = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->countAllResults();
         $unassigned = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)
             ->where('ruang_id IS NULL', null, false)->countAllResults();
+        $withoutNumber = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)
+            ->groupStart()->where('nomor_peserta IS NULL', null, false)
+            ->orWhere('nomor_peserta', '')->groupEnd()->countAllResults();
         $builder = $db->table('peserta_kegiatan AS pk')->join('ruang AS r', 'r.id = pk.ruang_id', 'left')
             ->where('pk.kegiatan_id', $kegiatanId);
         if ($q !== '') {
@@ -42,6 +45,7 @@ class PesertaKegiatanService
         return ['ok' => true, 'status' => 200, 'kegiatan' => $kegiatan, 'items' => $items,
             'summary' => $summaryRows, 'rombel_options' => array_column($rombelOptions, 'rombel_snapshot'),
             'unassigned_room' => $unassigned,
+            'without_number' => $withoutNumber,
             'pagination' => $this->pagination($page, $perPage, $pages, $total, $filtered)];
     }
 
