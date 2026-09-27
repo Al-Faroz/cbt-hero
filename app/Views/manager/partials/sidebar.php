@@ -9,7 +9,7 @@ $active = static function (string $key) use ($activeMenu): string {
 
 $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
-$examOpen = $activeMenu === 'exam-kegiatan';
+$examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -98,7 +98,11 @@ $examOpen = $activeMenu === 'exam-kegiatan';
 
             <div class="collapse manager-subnav<?= $examOpen ? ' show' : '' ?>" id="navMasterUjian">
                 <a class="manager-subnav-link<?= $active('exam-kegiatan') ?>" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kegiatan Ujian</a>
-                <span class="manager-subnav-link is-unavailable">Peserta Ujian</span>
+                <?php if ($activeMenu === 'exam-peserta'): ?>
+                    <span class="manager-subnav-link active" aria-current="page">Peserta Ujian</span>
+                <?php else: ?>
+                    <span class="manager-subnav-link is-unavailable">Peserta Ujian</span>
+                <?php endif; ?>
                 <span class="manager-subnav-link is-unavailable">Ruang</span>
                 <span class="manager-subnav-link is-unavailable">Bank Soal</span>
                 <span class="manager-subnav-link is-unavailable">Instrumen Psikologis</span>

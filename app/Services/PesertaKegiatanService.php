@@ -1,0 +1,222 @@
+<?php
+
+namespace App\Services;
+
+use Config\Database;
+use RuntimeException;
+use Throwable;
+
+class PesertaKegiatanService
+{
+    public function list(int $kegiatanId, array $query): array
+    {
+        $kegiatan = $this->kegiatan($kegiatanId);
+        if ($kegiatan === null) return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+        $page = min($this->positiveInt($query['page'] ?? null, 1), 100000);
+        $perPage = $this->perPage($query['per_page'] ?? null);
+        $q = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
+        $db = Database::connect();
+        $total = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->countAllResults();
+        $builder = $db->table('peserta_kegiatan AS pk')->where('pk.kegiatan_id', $kegiatanId);
+        if ($q !== '') {
+            $builder->groupStart()->like('pk.nisn_snapshot', $q)
+                ->orLike('pk.nama_snapshot', $q)->orLike('pk.rombel_snapshot', $q)->groupEnd();
+        }
+        $filtered = (int) $builder->countAllResults(false);
+        $pages = max(1, (int) ceil($filtered / $perPage));
+        $page = min($page, $pages);
+        $items = $builder->select('pk.id, pk.peserta_id, pk.nisn_snapshot, pk.nama_snapshot, pk.jenis_kelamin_snapshot, pk.rombel_snapshot, pk.nomor_peserta, pk.ruang_id, pk.status, pk.created_at')
+            ->orderBy('pk.rombel_snapshot', 'ASC')->orderBy('pk.nama_snapshot', 'ASC')
+            ->orderBy('pk.id', 'ASC')->limit($perPage, ($page - 1) * $perPage)
+            ->get()->getResultArray();
+        return ['ok' => true, 'status' => 200, 'kegiatan' => $kegiatan, 'items' => $items,
+            'pagination' => $this->pagination($page, $perPage, $pages, $total, $filtered)];
+    }
+
+    public function candidates(int $kegiatanId, array $query): array
+    {
+        $kegiatan = $this->kegiatan($kegiatanId);
+        if ($kegiatan === null) return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+        $page = min($this->positiveInt($query['page'] ?? null, 1), 100000);
+        $perPage = $this->perPage($query['per_page'] ?? null);
+        $q = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
+        $rombelId = $this->positiveInt($query['rombel_id'] ?? null, 0);
+        $db = Database::connect();
+        $builder = $db->table('peserta AS p')->join('rombel AS r', 'r.id = p.rombel_id')
+            ->join('peserta_kegiatan AS pk', 'pk.peserta_id = p.id AND pk.kegiatan_id = ' . (int) $kegiatanId, 'left')
+            ->where('p.status', 'ACTIVE')->where('r.status', 'ACTIVE')->where('pk.id IS NULL', null, false);
+        if ($rombelId > 0) $builder->where('p.rombel_id', $rombelId);
+        if ($q !== '') $builder->groupStart()->like('p.nisn', $q)->orLike('p.nama', $q)->groupEnd();
+        $filtered = (int) $builder->countAllResults(false);
+        $pages = max(1, (int) ceil($filtered / $perPage));
+        $page = min($page, $pages);
+        $items = $builder->select('p.id, p.nisn, p.nama, p.jenis_kelamin, r.display_name AS rombel')
+            ->orderBy('r.tingkat', 'ASC')->orderBy('r.kode_rombel', 'ASC')
+            ->orderBy('p.nama', 'ASC')->orderBy('p.id', 'ASC')
+            ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
+        return ['ok' => true, 'status' => 200, 'items' => $items,
+            'pagination' => $this->pagination($page, $perPage, $pages, $filtered, $filtered)];
+    }
+
+    public function assign(int $kegiatanId, array $payload, array $actor): array
+    {
+        $selector = strtoupper($this->scalar($payload['selector'] ?? null));
+        $value = $payload['value'] ?? null;
+        if (! in_array($selector, ['ALL', 'TINGKAT', 'ROMBEL', 'IDS'], true)) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Pilih cakupan Peserta.');
+        }
+        if ($selector === 'TINGKAT' && (! is_scalar($value)
+            || ! in_array((string) $value, ['7', '8', '9'], true))) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Tingkat harus 7, 8, atau 9.');
+        }
+        if ($selector === 'ROMBEL' && $this->positiveInt($value, 0) === 0) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Pilih Rombel.');
+        }
+        $ids = [];
+        if ($selector === 'IDS') {
+            if (! is_array($value) || count($value) < 1 || count($value) > 100) {
+                return $this->error(422, 'VALIDATION_FAILED', 'Pilih 1–100 Peserta pada halaman aktif.');
+            }
+            foreach ($value as $raw) {
+                $id = filter_var($raw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                if (! is_int($id) || in_array($id, $ids, true)) {
+                    return $this->error(422, 'VALIDATION_FAILED', 'Pilihan Peserta tidak valid atau duplikat.');
+                }
+                $ids[] = $id;
+            }
+        }
+        $db = Database::connect();
+        $db->transBegin();
+        try {
+            $kegiatan = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
+            if ($kegiatan === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+            }
+            if ($kegiatan['status'] !== 'DRAFT') {
+                $db->transRollback();
+                return $this->error(423, 'DATA_LOCKED', 'Keanggotaan hanya dapat diubah ketika Kegiatan DRAFT.');
+            }
+            $builder = $db->table('peserta AS p')->join('rombel AS r', 'r.id = p.rombel_id')
+                ->select('p.id, p.nisn, p.nama, p.jenis_kelamin, r.display_name')
+                ->where('p.status', 'ACTIVE')->where('r.status', 'ACTIVE');
+            if ($selector === 'TINGKAT') $builder->where('r.tingkat', (int) $value);
+            if ($selector === 'ROMBEL') $builder->where('r.id', (int) $value);
+            if ($selector === 'IDS') $builder->whereIn('p.id', $ids);
+            $rows = $builder->orderBy('p.id', 'ASC')->get()->getResultArray();
+            if ($selector === 'IDS' && count($rows) !== count($ids)) {
+                $db->transRollback();
+                return $this->error(422, 'VALIDATION_FAILED', 'Ada Peserta yang tidak aktif atau Rombelnya tidak aktif.');
+            }
+            if ($rows === []) {
+                $db->transRollback();
+                return $this->error(409, 'STATE_CONFLICT', 'Tidak ada Peserta aktif dalam cakupan ini.');
+            }
+            $already = [];
+            foreach (array_chunk(array_column($rows, 'id'), 500) as $chunk) {
+                foreach ($db->table('peserta_kegiatan')->select('peserta_id')
+                    ->where('kegiatan_id', $kegiatanId)->whereIn('peserta_id', $chunk)
+                    ->get()->getResultArray() as $member) {
+                    $already[(int) $member['peserta_id']] = true;
+                }
+            }
+            $inserts = [];
+            foreach ($rows as $row) {
+                if (isset($already[(int) $row['id']])) continue;
+                $inserts[] = [
+                    'kegiatan_id' => $kegiatanId, 'peserta_id' => (int) $row['id'],
+                    'status' => 'ACTIVE', 'nisn_snapshot' => $row['nisn'],
+                    'nama_snapshot' => $row['nama'], 'jenis_kelamin_snapshot' => $row['jenis_kelamin'],
+                    'rombel_snapshot' => $row['display_name'],
+                ];
+            }
+            $added = count($inserts);
+            foreach (array_chunk($inserts, 200) as $chunk) {
+                $db->table('peserta_kegiatan')->insertBatch($chunk);
+            }
+            if ($added > 0) $this->audit($kegiatanId, 'ASSIGN', $added, $actor);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit keanggotaan gagal.');
+            }
+            return ['ok' => true, 'status' => 200, 'added' => $added,
+                'skipped' => count($rows) - $added, 'selected' => count($rows)];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Assign Peserta Kegiatan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Penugasan gagal; tidak ada keanggotaan baru yang disimpan.');
+        }
+    }
+
+    public function remove(int $kegiatanId, int $membershipId, array $actor): array
+    {
+        $db = Database::connect();
+        $db->transBegin();
+        try {
+            $kegiatan = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
+            if ($kegiatan === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+            }
+            if ($kegiatan['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan sudah terkunci.');
+            }
+            $row = $db->query('SELECT id FROM peserta_kegiatan WHERE id = ? AND kegiatan_id = ? FOR UPDATE',
+                [$membershipId, $kegiatanId])->getRowArray();
+            if ($row === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Keanggotaan tidak ditemukan.');
+            }
+            $db->table('peserta_kegiatan')->where('id', $membershipId)->delete();
+            $this->audit($kegiatanId, 'REMOVE', 1, $actor);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit hapus keanggotaan gagal.');
+            }
+            return ['ok' => true, 'status' => 200, 'removed' => $membershipId];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Hapus Peserta Kegiatan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'DEPENDENCY_EXISTS', 'Keanggotaan tidak dapat dihapus karena sudah digunakan.');
+        }
+    }
+
+    private function kegiatan(int $id): ?array
+    {
+        return $id > 0 ? Database::connect()->table('kegiatan')->select('id, nama, jenis, tahun_pelajaran, semester, status')
+            ->where('id', $id)->get()->getRowArray() : null;
+    }
+
+    private function audit(int $kegiatanId, string $action, int $count, array $actor): void
+    {
+        (new AuditService())->log('MANAGER', (int) ($actor['user_id'] ?? 0),
+            $action . '_PESERTA_KEGIATAN', 'MASTER_UJIAN',
+            $action . ' ' . $count . ' keanggotaan Kegiatan #' . $kegiatanId,
+            (string) ($actor['ip'] ?? ''), (string) ($actor['agent'] ?? ''),
+            'kegiatan', $kegiatanId);
+    }
+
+    private function pagination(int $page, int $perPage, int $pages, int $total, int $filtered): array
+    {
+        return ['page' => $page, 'per_page' => $perPage, 'pages' => $pages,
+            'total' => $total, 'filtered' => $filtered];
+    }
+
+    private function perPage(mixed $raw): int
+    {
+        $value = $this->positiveInt($raw, 25);
+        return in_array($value, [25, 50, 100], true) ? $value : 25;
+    }
+
+    private function positiveInt(mixed $raw, int $default): int
+    {
+        $parsed = filter_var($raw, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        return is_int($parsed) ? $parsed : $default;
+    }
+
+    private function scalar(mixed $raw): string
+    {
+        return is_scalar($raw) ? (string) $raw : '';
+    }
+
+    private function error(int $status, string $code, string $message): array
+    {
+        return compact('status', 'code', 'message') + ['ok' => false];
+    }
+}

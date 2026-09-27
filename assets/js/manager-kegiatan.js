@@ -60,6 +60,10 @@
                     cell(Number(item.exam_browser_required) === 1 ? 'Wajib' : 'Tidak'),
                     cell(item.status));
                 const actions = document.createElement('td'); actions.className = 'text-nowrap';
+                const members = document.createElement('a');
+                members.className = 'btn btn-outline-primary btn-sm me-1';
+                members.href = app.dataset.uiBase + '/' + item.id + '/peserta';
+                members.textContent = 'Peserta'; actions.append(members);
                 if (item.status === 'DRAFT') {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);

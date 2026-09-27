@@ -128,6 +128,8 @@ $routes->group(
             ['filter' => 'manager-role:master.data.manage']);
         $routes->get('master-ujian/kegiatan', 'Manager\\Exam\\KegiatanController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/kegiatan/(:num)/peserta', 'Manager\\Exam\\PesertaUjianController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('import-template/peserta.xlsx', 'Api\\Manager\\Master\\PesertaImportController::template',
             ['filter' => 'manager-role:master.data.manage']);
 
@@ -202,6 +204,11 @@ $routes->group(
         $routes->get('kegiatan/(:num)', $kegiatan . 'show/$1', $examFilter);
         $routes->put('kegiatan/(:num)', $kegiatan . 'update/$1', $examFilter);
         $routes->delete('kegiatan/(:num)', $kegiatan . 'remove/$1', $examFilter);
+        $pesertaUjian = 'Api\\Manager\\Exam\\PesertaUjianController::';
+        $routes->get('kegiatan/(:num)/peserta', $pesertaUjian . 'index/$1', $examFilter);
+        $routes->get('kegiatan/(:num)/peserta/candidates', $pesertaUjian . 'candidates/$1', $examFilter);
+        $routes->post('kegiatan/(:num)/peserta', $pesertaUjian . 'assign/$1', $examFilter);
+        $routes->delete('kegiatan/(:num)/peserta/(:num)', $pesertaUjian . 'remove/$1/$2', $examFilter);
 
         $routes->get(
             'users',
