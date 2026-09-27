@@ -68,6 +68,10 @@
                 cards.className = 'btn btn-outline-primary btn-sm me-1';
                 cards.href = app.dataset.uiBase + '/' + item.id + '/kartu';
                 cards.textContent = 'Kartu'; actions.append(cards);
+                const preflight = document.createElement('a');
+                preflight.className = 'btn btn-outline-primary btn-sm me-1';
+                preflight.href = app.dataset.uiBase + '/' + item.id + '/preflight';
+                preflight.textContent = 'Kesiapan'; actions.append(preflight);
                 if (item.status === 'DRAFT') {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);

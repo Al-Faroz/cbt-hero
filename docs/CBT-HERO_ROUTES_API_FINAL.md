@@ -2923,3 +2923,7 @@ tidak mengembalikan key rahasia atau berkas logo.
 # Phase 3E2 — Halaman cetak kartu
 
 `GET /manager/master-ujian/kegiatan/{id}/kartu?scope=ALL|ROMBEL|RUANG&value=...&page=1` adalah halaman HTML khusus cetak untuk Manager dengan izin Master Ujian. Maksimal 100 kartu per batch, 10 kartu per lembar A4. Data credential tidak dikirim melalui API daftar peserta, dan respons halaman ini memakai `no-store, private`.
+
+## Phase 3F — Kesiapan Kegiatan
+
+`GET /manager/master-ujian/kegiatan/{id}/preflight` menyajikan pemeriksaan administratif baca saja untuk Manager berizin Master Ujian. Jumlah anggota dan kekurangan nomor, ruang, credential, status akun, serta identitas kartu diperiksa tanpa mengirim password atau key rahasia. Lifecycle tidak berubah.

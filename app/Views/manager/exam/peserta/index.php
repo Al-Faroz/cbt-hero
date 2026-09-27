@@ -7,6 +7,7 @@
         <p class="manager-page-description" id="pesertaUjianContext">Memuat Kegiatan...</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-primary" href="<?= base_url('manager/master-ujian/kegiatan/' . $kegiatanId . '/preflight') ?>">Periksa Kesiapan</a>
         <a class="btn btn-outline-primary" href="<?= base_url('manager/master-ujian/kegiatan/' . $kegiatanId . '/kartu') ?>">Cetak Kartu Ujian</a>
         <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Kembali ke Kegiatan</a>
     </div>
