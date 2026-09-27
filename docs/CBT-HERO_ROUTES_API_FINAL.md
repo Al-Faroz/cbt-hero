@@ -2910,3 +2910,13 @@ Setelah dokumen ini FINAL, route baru tidak boleh ditambahkan hanya karena kenya
 1. implementasi langsung requirement yang sudah ada;
 2. kebutuhan teknis internal yang tidak mengubah business contract;
 3. revisi eksplisit Dokumen Acuan bila benar-benar ada requirement baru.
+
+## Pengaturan Identitas Kartu
+
+ADMIN: `GET /manager/api/settings/card-identity` dan
+`POST /manager/api/settings/card-identity` (multipart: `institution_name`,
+`institution_address`, `cbt_url`, logo PNG/JPG opsional maksimal 1 MB,
+`use_default_logo=1` bila ingin kembali ke logo bawaan).
+`GET /manager/system/card-logo` menyajikan logo kustom untuk sesi Manager,
+dari direktori `writable` yang tidak dapat diakses langsung. API identitas
+tidak mengembalikan key rahasia atau berkas logo.

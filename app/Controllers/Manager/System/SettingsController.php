@@ -11,7 +11,7 @@ class SettingsController extends BaseController
         return view('manager/system/settings/index', [
             'auth' => session()->get('manager_auth'),
             'pageTitle' => 'Pengaturan',
-            'pageSubtitle' => 'Default akademik',
+            'pageSubtitle' => 'Default akademik dan identitas kartu',
             'activeMenu' => 'system-settings',
         ]);
     }

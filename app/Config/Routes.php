@@ -142,6 +142,7 @@ $routes->group(
         );
         $routes->get('system/settings', 'Manager\\System\\SettingsController::index',
             ['filter' => 'manager-role:system.settings.manage']);
+        $routes->get('system/card-logo', 'Manager\\System\\CardLogoController::show');
     }
 );
 
@@ -239,5 +240,8 @@ $routes->group(
         $settingsFilter = ['filter' => 'manager-role:system.settings.manage,api'];
         $routes->get('settings/academic', $settings . 'index', $settingsFilter);
         $routes->put('settings/academic', $settings . 'update', $settingsFilter);
+        $cardIdentity = 'Api\\Manager\\System\\CardIdentityController::';
+        $routes->get('settings/card-identity', $cardIdentity . 'index', $settingsFilter);
+        $routes->post('settings/card-identity', $cardIdentity . 'update', $settingsFilter);
     }
 );
