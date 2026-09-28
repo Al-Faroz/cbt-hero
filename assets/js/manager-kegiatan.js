@@ -77,6 +77,10 @@
                     banks.className = 'btn btn-outline-primary btn-sm me-1';
                     banks.href = app.dataset.bankBase + '?kegiatan_id=' + item.id;
                     banks.textContent = 'Bank Soal'; actions.append(banks);
+                    const schedules = document.createElement('a');
+                    schedules.className = 'btn btn-outline-primary btn-sm me-1';
+                    schedules.href = app.dataset.jadwalBase + '?kegiatan_id=' + item.id;
+                    schedules.textContent = 'Jadwal'; actions.append(schedules);
                 }
                 if (item.status === 'DRAFT') {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {

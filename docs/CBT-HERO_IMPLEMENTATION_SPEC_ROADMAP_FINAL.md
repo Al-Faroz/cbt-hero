@@ -818,6 +818,12 @@ Susulan N kali
 Preparation / Prepared Assignment
 ```
 
+Urutan implementasi operasional:
+
+- **Phase 5A:** Jadwal MAIN akademik + `selection_count` per tipe + gate BUKA/TAHAN;
+- **Phase 5B:** Susulan N kali + target peserta + command perubahan waktu operasional;
+- **Phase 5C:** Preparation/Prepared Assignment + fingerprint + selective rebuild.
+
 ## 9.2 Dependency
 
 Phase 4.

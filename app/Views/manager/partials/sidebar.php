@@ -9,7 +9,7 @@ $active = static function (string $key) use ($activeMenu): string {
 
 $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
-$examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang', 'exam-bank'], true);
+$examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang', 'exam-bank', 'exam-jadwal'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -101,7 +101,7 @@ $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang'
                 <a class="manager-subnav-link<?= $active('exam-ruang') ?>" href="<?= base_url('manager/master-ujian/ruang') ?>">Ruang</a>
                 <a class="manager-subnav-link<?= $active('exam-bank') ?>" href="<?= base_url('manager/master-ujian/bank-soal') ?>">Bank Soal</a>
                 <span class="manager-subnav-link is-unavailable">Instrumen Psikologis</span>
-                <span class="manager-subnav-link is-unavailable">Jadwal Ujian</span>
+                <a class="manager-subnav-link<?= $active('exam-jadwal') ?>" href="<?= base_url('manager/master-ujian/jadwal') ?>">Jadwal Ujian</a>
             </div>
 
             <div class="manager-nav-section">Pelaksanaan</div>

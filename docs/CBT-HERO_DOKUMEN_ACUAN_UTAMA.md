@@ -2890,6 +2890,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-28 | 1.1 | Media Bank Soal | Audio dan video dikunci ke Google Drive link only; link ditulis langsung dengan awalan Audio:/Video: tanpa kolom khusus; upload audio dan provider YouTube/Vimeo dihapus | Menyederhanakan workflow operator dan menghindari beban streaming hosting CBT-HERO | Media service/parser/renderer/template/import |
 | 2026-09-28 | 1.2 | Daftar Soal / Rich Content | Soal PG dan Tipe Lain digabung menjadi Daftar Soal bertab; editor manual memakai rich-content sederhana, gambar per-field, fx Rumus visual, tabel server-side + bulk hard-delete; Word Equation/OMML menjadi input rumus utama template | Menyamakan workflow manual/import dan mengurangi kebutuhan user memahami sintaks teknis | UI/API/parser/renderer |
 | 2026-09-28 | 1.3 | Template Excel Bank Soal | Excel dibuat dinamis dari Komposisi dengan sheet per tipe aktif, tanpa JSON; gambar dibaca berdasarkan posisi sel dan Audio/Video tetap memakai link Google Drive langsung pada isi | Menyamakan kemudahan Word dan Excel untuk import massal | Generator XLSX/parser/import staging |
+| 2026-09-28 | 1.4 | Jadwal Ujian Phase 5A | Jadwal MAIN akademik, BUKA/TAHAN, waktu, durasi, tampilkan nilai, dan selection_count per tipe Bank mulai diimplementasikan; structural edit hanya pada Kegiatan DRAFT | Memisahkan komposisi Bank dari jumlah soal yang benar-benar diberikan ke peserta | UI/API/JadwalService/jadwal_type_selection |
 
 ---
 

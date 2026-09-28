@@ -1612,6 +1612,7 @@ Psikologis memakai revision model, tetapi perubahan saat pelaksanaan lebih ketat
 
 ```text
 GET    /manager/api/jadwal
+GET    /manager/api/jadwal/options
 POST   /manager/api/jadwal
 GET    /manager/api/jadwal/{jadwalId}
 PUT    /manager/api/jadwal/{jadwalId}
@@ -1635,7 +1636,10 @@ Jumlah yang dipilih setiap tipe harus positif dan tidak melebihi soal aktif
 tipe tersebut di Bank. Susulan memakai komposisi Jadwal utama. Bobot tipe
 tidak disalin ke Jadwal karena berasal dari Bank.
 
-Structural edit hanya selama lifecycle mengizinkan.
+Structural edit hanya selama lifecycle mengizinkan. Pada Phase 5A, MAIN akademik
+hanya dapat dibuat/diubah saat Kegiatan DRAFT; Bank wajib READY dan berasal dari
+Kegiatan yang sama. Endpoint `/jadwal/options` menyediakan pilihan Kegiatan,
+Bank READY, dan ringkasan tipe/soal tersedia untuk form Manager.
 
 ## 32.2 BUKA / TAHAN
 

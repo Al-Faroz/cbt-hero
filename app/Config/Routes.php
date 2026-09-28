@@ -138,6 +138,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal', 'Manager\\Bank\\BankSoalController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/jadwal', 'Manager\\Schedule\\JadwalController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
@@ -276,6 +278,15 @@ $routes->group(
         $routes->post('bank-soal/(:num)/imports/(:num)/commit', $import . 'commit/$1/$2', $examFilter);
         $routes->post('question-media', 'Api\\Manager\\Bank\\MediaController::upload', $examFilter);
         $routes->get('question-media/(:num)', 'Api\\Manager\\Bank\\MediaController::show/$1', $examFilter);
+
+        $jadwal = 'Api\\Manager\\Schedule\\JadwalController::';
+        $routes->get('jadwal', $jadwal . 'index', $examFilter);
+        $routes->get('jadwal/options', $jadwal . 'options', $examFilter);
+        $routes->post('jadwal', $jadwal . 'create', $examFilter);
+        $routes->get('jadwal/(:num)', $jadwal . 'show/$1', $examFilter);
+        $routes->put('jadwal/(:num)', $jadwal . 'update/$1', $examFilter);
+        $routes->patch('jadwal/(:num)/access', $jadwal . 'access/$1', $examFilter);
+        $routes->delete('jadwal/(:num)', $jadwal . 'remove/$1', $examFilter);
 
         $routes->get(
             'users',

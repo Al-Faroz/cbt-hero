@@ -24,12 +24,14 @@ Halaman Komposisi, kontrak API Bank, skema dan pemeriksaan READY memakai
 jumlah pilihan terhadap Komposisi. Migrasi SQL untuk database yang sudah ada
 terdapat pada `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql`.
 
-Generator Word dinamis dan parser Word manusiawi `CBT-HERO-WORD-V2` sudah
-diimplementasikan pada Phase 4D1. Template Word mengikuti `question_count` dan
-`option_count` Komposisi serta dapat round-trip melalui staging tanpa kolom JSON.
-Template/parser Excel masih memakai format teknis 13 kolom dan dikerjakan pada
-Phase 4D2. Modul Jadwal belum diimplementasikan; tabel `jadwal_type_selection`
-sudah disiapkan agar pengambilan soal per tipe tetap mengikuti keputusan ini.
+Generator Word dinamis/parser `CBT-HERO-WORD-V2` dan Excel dinamis/parser
+`CBT-HERO-EXCEL-V2` sudah mengikuti `question_count` dan `option_count`
+Komposisi serta round-trip melalui staging tanpa kolom JSON.
+
+Phase 5A mengaktifkan Jadwal MAIN akademik dan tabel `jadwal_type_selection`.
+Setiap tipe aktif pada Bank READY wajib mempunyai `selection_count` positif dan
+tidak boleh melebihi soal ACTIVE yang tersedia. Susulan dan Preparation dilanjutkan
+pada subphase Phase 5 berikutnya.
 
 ## Pemeriksaan Revisi Komposisi
 
@@ -41,10 +43,9 @@ sudah disiapkan agar pengambilan soal per tipe tetap mengikuti keputusan ini.
 | K04 | Coba READY saat salah satu tipe memiliki jumlah soal lebih sedikit atau lebih banyak daripada `question_count`, atau jumlah pilihan/pasangan tidak sesuai `option_count`. | READY ditolak dengan rincian tipe. |
 | K05 | Ubah jumlah pilihan Komposisi saat soal sudah ada; coba edit soal mengikuti jumlah baru. | Editor mengikuti Komposisi; soal lama yang belum disesuaikan mencegah READY. |
 
-Pada tahap Jadwal, tambahkan pemeriksaan 40 soal Bank → 20 soal Jadwal serta
-penolakan `selection_count` yang melampaui jumlah tersedia. Pada tahap template,
-uji jumlah blok/baris yang diunduh dan round trip impor sebelum menyatakan fitur
-siap dipakai operator.
+Pada acceptance Phase 5A, uji kasus 40 soal Bank → 20 soal Jadwal serta
+penolakan `selection_count` yang melampaui jumlah tersedia. Acceptance template
+Word/Excel tetap dilakukan melalui dokumen Phase 4D1/4D2 sebelum dinyatakan PASS.
 
 Catatan UI lanjutan: audit dan rapikan tampilan DataTables pada mobile mengikuti
 `CBT-HERO_UI_STANDARD_FINAL.md`. Pekerjaan responsive DataTables tidak termasuk
