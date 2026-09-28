@@ -10,15 +10,15 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 
 | ID | Langkah | Hasil yang diharapkan |
 | --- | --- | --- |
-| A01 | Pada **Soal PG**, tambah satu pertanyaan dengan 2–6 opsi, satu kunci, poin positif. | Soal tersimpan dan pratinjau hanya menandai satu kunci. |
+| A01 | Buka **Daftar Soal → tab PG**, klik **Tambah Soal**, isi pertanyaan dengan Rich Content Editor, pilihan sesuai Komposisi, satu kunci, dan poin positif. | Soal tersimpan dan pratinjau hanya menandai satu kunci. |
 | A02 | Edit PG yang sama, ubah teks/kunci, simpan. | Nomor revisi naik; daftar dan pratinjau menampilkan revisi baru. |
-| A03 | Pada **Tipe Lain**, pilih PG Kompleks; centang minimal satu opsi benar dan sisakan satu salah. | Simpan berhasil, pratinjau menandai semua opsi benar. |
+| A03 | Pada **Daftar Soal → tab PG Kompleks**, centang minimal satu opsi benar dan sisakan satu salah. | Simpan berhasil, pratinjau menandai semua opsi benar. |
 | A04 | Buat PG Bertingkat dengan minimal satu opsi bernilai positif dan nilai tiap opsi tidak melebihi poin maksimal. | Simpan berhasil; pratinjau menampilkan nilai setiap opsi. |
 | A05 | Atur Menjodohkan 4 pasangan pada Komposisi lalu buat soal dengan tepat empat pasangan unik. | Jumlah pasangan dan mode penilaian mengikuti Komposisi; pratinjau dan simpan berhasil. |
 | A06 | Buat Isian Singkat mode TEXT dengan dua jawaban berbeda, lalu satu soal mode NUMERIC dengan angka harapan dan toleransi. | Jawaban dan angka tersimpan; input duplikat atau toleransi negatif ditolak. |
 | A07 | Buat Uraian beserta rubrik. Pada template Word, biarkan Poin maksimum default 1 atau ubah sesuai skala rubrik. | Pertanyaan tersimpan; rubrik muncul pada pratinjau Manager dan max point mengikuti nilai template. |
 | A08 | Coba menyimpan soal tanpa pertanyaan, tanpa kunci PG, opsi kosong, atau poin negatif. | API menolak dengan pesan validasi; tidak menambah soal. |
-| A09 | Sisipkan `**tebal**`, `*miring*`, `$x^2$`, teks Arab, serta tabel dengan baris `| Kolom A | Kolom B |` pada pertanyaan. | Pratinjau dan halaman cetak menampilkan format, rumus, arah teks, dan tabel. Teks `<script>` tampil sebagai teks, tidak dieksekusi. |
+| A09 | Gunakan toolbar **B**, **I**, **fx Rumus**, **Gambar**, dan **Tabel** pada Rich Content Editor. Ketik Arab dan aksara Jawa; coba pula shortcut `$x^2$` / `$$...$$`. | Pratinjau menampilkan format, rumus inline/blok, gambar, tabel, Unicode, dan arah Arab dengan benar. HTML/script clipboard yang tidak diizinkan tidak dieksekusi. |
 | A10 | Unggah gambar JPG/PNG/WebP dari editor. Untuk audio/video, ketik langsung `Audio: <link Google Drive>` atau `Video: <link Google Drive>` pada pertanyaan/opsi/pasangan; file Drive harus berakses **Siapa saja yang memiliki link / Viewer**. Coba pula URL YouTube/Vimeo atau Google Drive yang formatnya tidak valid. | Gambar tampil normal; audio/video Google Drive menjadi player inline pada Pratinjau. URL selain file Google Drive ditolak. Tidak ada upload audio/video lokal. |
 | A11 | Dari **Impor**, unduh **Template Word sesuai Komposisi**. Pastikan jumlah blok/row mengikuti `question_count` dan jumlah pilihan/pasangan mengikuti `option_count`; isi lalu unggah DOCX yang sama. | Parser Word V2 membuat staging tanpa JSON; status valid/invalid muncul per soal dan Bank belum bertambah sebelum commit. |
 | A12 | Pada staging, buka **Pratinjau** dan periksa kunci. Perbaiki satu baris invalid lewat JSON, keluarkan baris lain, lalu **Validasi ulang**. | Jumlah valid/invalid diperbarui; baris yang dikeluarkan tidak ikut commit. |
@@ -29,10 +29,13 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A17 | Klik **Cetak PDF** saat DRAFT maupun READY. Lihat semua soal, centang/lepaskan **Sertakan kunci dan rubrik**, lalu gunakan dialog **Cetak / Simpan PDF**. | Tampilan cetak sesuai pratinjau; kunci/rubrik hanya muncul bila dipilih; angka poin ditampilkan ringkas tanpa nol desimal semu (contoh `4`, bukan `4.000`). |
 | A18 | Dengan Bank READY, coba POST/PUT/DELETE soal melalui API Manager. | Server menolak perubahan dengan status terkunci, bukan sekadar menyembunyikan tombol. |
 | A19 | Akses API peserta yang sudah ada (`/api/ujian` dan konfirmasi ujian). | Tidak ada kunci jawaban, rubrik, atau daftar jawaban diterima pada respons peserta. |
+| A20 | Pada salah satu tab Daftar Soal, pilih beberapa checkbox dan **Hapus Terpilih**. | Konfirmasi menampilkan jumlah soal; seluruh soal terpilih terhapus permanen dalam satu aksi dan selection dibersihkan. |
+| A21 | Klik **Informasi** pada setiap tab. | Modal menjelaskan aturan tipe aktif, Rich Content, gambar per-field, Equation, Unicode, serta Audio/Video Google Drive. |
+| A22 | Klik tombol gambar pada salah satu opsi/pasangan/rubrik, bukan hanya pada Pertanyaan. | Gambar masuk ke field yang dipilih, tampil di Preview, tersimpan, dan muncul kembali saat Edit/Tinjau. |
 
 ## Batas data yang perlu diperhatikan
 
 - Template Word V2 tidak memakai kolom JSON dan dibuat dinamis dari Komposisi Bank. Template Excel masih memakai format teknis `options_json`, `pairs_json`, dan `accepted_values_json` sampai Phase 4D2.
-- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, dan gambar JPG/PNG/WebP pada sel isi. Audio/video tidak di-embed ke dokumen: tulis langsung `Audio: <link Google Drive>` atau `Video: <link Google Drive>` di sel isi yang membutuhkan media. Formatting bold/italic pada field kontrol (kunci, mode, poin, toleransi) dinormalisasi sebelum validasi. Formula ditulis dalam sintaks KaTeX `$...$`. File `.doc` lama tidak diterima.
+- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, gambar JPG/PNG/WebP, Unicode termasuk Arab/Jawa, dan **Insert → Equation** Word/OMML pada sel isi. Equation yang didukung dikonversi ke format rumus internal; shortcut KaTeX `$...$` / `$$...$$` tetap boleh tetapi bukan kewajiban pengguna. Audio/video tidak di-embed ke dokumen: tulis langsung `Audio: <link Google Drive>` atau `Video: <link Google Drive>`. Formatting bold/italic pada field kontrol dinormalisasi sebelum validasi. File `.doc` lama tidak diterima.
 - Cetak PDF menggunakan dialog cetak browser, sehingga operator memilih **Save as PDF** pada tujuan cetak.
 - Pengujian runtime PHP/database dilakukan setelah perubahan ditarik ke lingkungan lokal yang memiliki PHP dan MySQL.

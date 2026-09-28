@@ -1046,18 +1046,35 @@ COMMIT:
 
 # 32. QUESTION BANK / EDITOR
 
-Bank list memakai table/list biasa.
+Bank list memakai table/list biasa. Dari setiap Bank hanya ada satu entry **Daftar Soal**.
 
-Question editor bukan DataTables generik.
+Daftar Soal memakai tab sesuai tipe yang aktif di Komposisi. Masing-masing tab memakai
+DataTables server-side/lazy dengan checkbox halaman, row action **Edit/Tinjau** dan
+**Hapus**, serta bulk hard-delete terkontrol. Jangan membuat enam DataTables aktif
+sekaligus; instance aktif mengikuti tab yang sedang dibuka.
+
+Editor soal tetap specialized dan **bukan form di dalam DataTables**.
 
 Pola:
 
 ```text
-Question list/navigation
+Tab tipe soal
+→ [Informasi] [+ Tambah Soal]
+→ DataTable
 → selected question editor
 → preview
 → validation
 ```
+
+Editor rich-content V1:
+
+```text
+[B] [I] [fx Rumus] [Gambar] [Tabel]
+```
+
+Toolbar dipakai pada Stimulus, Pertanyaan, Pilihan, sisi Menjodohkan, dan Rubrik.
+Jawaban Isian Singkat tetap input terstruktur. Rich editor menyimpan hanya format
+normalized yang didukung; HTML bebas dari clipboard tidak menjadi sumber kebenaran.
 
 Jika reorder diperlukan:
 
@@ -1067,7 +1084,8 @@ SortableJS
 
 Preview memakai renderer yang sama secara konseptual dengan client/print.
 
-Media/formula/table harus diuji pada container responsive.
+Media/formula/table, Arab/RTL, aksara Jawa/Unicode, paste Word, dan mobile editor
+harus diuji pada container responsive.
 
 ---
 

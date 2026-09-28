@@ -43,7 +43,7 @@
         wrapper.append(label, frame); element.append(wrapper);
     };
     const appendInline = (element, source, media) => {
-        const tokens = /(?:\*{1,2})?(?:Audio|Video)\s*:(?:\*{1,2})?\s*https:\/\/(?:www\.)?drive\.google\.com\/[^\s<]+|\[\[media:([1-9][0-9]*)\]\]|\$([^$\n]{1,500})\$|\*\*([^*\n]+)\*\*|(?<!\*)\*([^*\n]+)\*(?!\*)/gi;
+        const tokens = /(?:\*{1,2})?(?:Audio|Video)\s*:(?:\*{1,2})?\s*https:\/\/(?:www\.)?drive\.google\.com\/[^\s<]+|\[\[media:([1-9][0-9]*)\]\]|\$\$([^$\n]{1,2000})\$\$|\$([^$\n]{1,1000})\$|\*\*([^*\n]+)\*\*|(?<!\*)\*([^*\n]+)\*(?!\*)/gi;
         let cursor = 0, match;
         while ((match = tokens.exec(source)) !== null) {
             element.append(document.createTextNode(source.slice(cursor, match.index)));
@@ -70,15 +70,17 @@
                         link.textContent = 'Buka video'; element.append(link);
                     }
                 }
-            } else if (match[2]) {
-                const math = document.createElement('span');
+            } else if (match[2] || match[3]) {
+                const block = Boolean(match[2]), latex = match[2] || match[3];
+                const math = document.createElement(block ? 'div' : 'span');
+                math.className = block ? 'my-2 text-center' : '';
                 if (window.katex) {
-                    try {window.katex.render(match[2], math, {throwOnError:true, trust:false, strict:'warn'});}
+                    try {window.katex.render(latex, math, {throwOnError:true, trust:false, strict:'warn', displayMode:block});}
                     catch (_) {math.textContent = match[0];}
                 } else math.textContent = match[0];
                 element.append(math);
-            } else if (match[3]) {const strong = document.createElement('strong'); strong.textContent = match[3]; element.append(strong);}
-            else {const italic = document.createElement('em'); italic.textContent = match[4]; element.append(italic);}
+            } else if (match[4]) {const strong = document.createElement('strong'); strong.textContent = match[4]; element.append(strong);}
+            else {const italic = document.createElement('em'); italic.textContent = match[5]; element.append(italic);}
             cursor = tokens.lastIndex;
         }
         element.append(document.createTextNode(source.slice(cursor)));

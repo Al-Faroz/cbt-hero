@@ -1,39 +1,160 @@
 <?= $this->extend('manager/layouts/main') ?>
 <?= $this->section('content') ?>
 <section class="manager-page-header">
-    <div><div class="manager-page-kicker">Master Ujian / Bank Soal</div><h1 class="manager-page-title">Soal Pilihan Ganda</h1>
-        <p class="manager-page-description" id="questionContext">Memuat Bank Soal...</p></div>
-    <div class="d-flex gap-2 flex-wrap"><a class="btn btn-outline-primary" href="<?= base_url('manager/master-ujian/bank-soal/' . $bankId . '/soal-lanjutan') ?>">Tipe Soal Lain</a><a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/bank-soal/' . $bankId . '/komposisi') ?>">Komposisi</a>
-        <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/bank-soal') ?>">Kembali ke Bank</a></div>
+    <div>
+        <div class="manager-page-kicker">Master Ujian / Bank Soal</div>
+        <h1 class="manager-page-title">Daftar Soal</h1>
+        <p class="manager-page-description" id="questionContext">Memuat Bank Soal...</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-primary" href="<?= base_url('manager/master-ujian/bank-soal/' . $bankId . '/komposisi') ?>">Komposisi</a>
+        <a class="btn btn-outline-primary" id="questionImportLink" href="<?= base_url('manager/master-ujian/bank-soal/' . $bankId . '/impor') ?>">Impor Soal</a>
+        <a class="btn btn-outline-secondary" href="<?= base_url('manager/master-ujian/bank-soal') ?>">Kembali ke Bank</a>
+    </div>
 </section>
-<div id="questionApp" data-api="<?= esc(base_url('manager/api/bank-soal/' . $bankId . '/soal'), 'attr') ?>">
+
+<div id="questionListApp"
+     data-api="<?= esc(base_url('manager/api/bank-soal/' . $bankId . '/soal'), 'attr') ?>"
+     data-config="<?= esc(base_url('manager/api/bank-soal/' . $bankId . '/type-config'), 'attr') ?>"
+     data-preflight="<?= esc(base_url('manager/api/bank-soal/' . $bankId . '/preflight'), 'attr') ?>"
+     data-media-api="<?= esc(base_url('manager/api/question-media'), 'attr') ?>">
+
     <section class="manager-section-card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>Daftar Soal PG</strong><button class="btn btn-cbt-primary btn-sm" id="questionAdd" type="button" disabled>Tambah Soal PG</button></div>
-        <div class="card-body"><p class="small text-secondary mb-0">Teks, **tebal**, rumus $...$, Arab/RTL, dan gambar dapat dipakai pada pertanyaan atau opsi. Audio/video hanya memakai link Google Drive yang diketik langsung sebagai <code>Audio: https://drive.google.com/...</code> atau <code>Video: https://drive.google.com/...</code>.</p>
-            <div class="cbt-inline-feedback mt-2" id="questionFeedback" role="status" aria-live="polite"></div></div>
-        <div class="table-responsive"><table class="table manager-table mb-0"><thead><tr><th>Urutan</th><th>Pertanyaan</th><th>Poin</th><th>Revisi</th><th>Aksi</th></tr></thead><tbody id="questionRows"></tbody></table></div>
-        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2"><span id="questionCount" class="small text-secondary"></span><div class="d-flex align-items-center gap-2"><select id="questionPageSize" class="form-select form-select-sm" aria-label="Soal per halaman"><option>25</option><option>50</option><option>100</option></select><button id="questionPrevious" type="button" class="btn btn-outline-secondary btn-sm">Sebelumnya</button><span id="questionPageInfo"></span><button id="questionNext" type="button" class="btn btn-outline-secondary btn-sm">Berikutnya</button></div></div>
+        <div class="card-body pb-0">
+            <div class="question-type-tabs-wrap">
+                <ul class="nav nav-tabs question-type-tabs" id="questionTypeTabs" role="tablist"></ul>
+            </div>
+        </div>
+        <div class="card-body pt-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button class="btn btn-outline-info btn-sm" id="questionInfo" type="button">
+                        <i class="bi bi-info-circle me-1"></i>Informasi
+                    </button>
+                    <button class="btn btn-cbt-primary btn-sm" id="questionAdd" type="button" disabled>
+                        <i class="bi bi-plus-lg me-1"></i>Tambah Soal
+                    </button>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="small text-secondary" id="questionSelectedCount">0 soal dipilih</span>
+                    <button class="btn btn-outline-danger btn-sm" id="questionBulkDelete" type="button" disabled>
+                        Hapus Terpilih
+                    </button>
+                </div>
+            </div>
+            <div class="cbt-inline-feedback mb-2" id="questionFeedback" role="status" aria-live="polite"></div>
+        </div>
+        <div class="table-responsive">
+            <table class="table manager-table align-middle mb-0" id="questionTable">
+                <thead>
+                <tr>
+                    <th class="text-center question-check-col"><input class="form-check-input" type="checkbox" id="questionCheckAll" aria-label="Pilih semua pada halaman ini"></th>
+                    <th>No</th>
+                    <th>Pertanyaan</th>
+                    <th>Poin</th>
+                    <th>Revisi</th>
+                    <th>Aksi</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </section>
-    <section class="manager-section-card" id="questionEditor" hidden>
-        <div class="card-header fw-bold" id="questionEditorTitle">Tambah Soal PG</div>
-        <div class="card-body"><form id="questionForm">
-            <div class="mb-3"><label class="cbt-form-label" for="questionText">Pertanyaan</label><textarea id="questionText" class="form-control" rows="5" maxlength="10000" required></textarea></div>
-            <div class="mb-3" data-media-insert="questionText" data-api="<?= esc(base_url('manager/api/question-media'), 'attr') ?>"><label class="cbt-form-label">Sisipkan gambar pada pertanyaan</label><div class="d-flex gap-2 flex-wrap"><input type="file" class="form-control" accept="image/jpeg,image/png,image/webp" style="max-width:320px"><button type="button" class="btn btn-outline-primary">Unggah dan sisipkan gambar</button></div><small role="status"></small></div>
-            <div class="mb-3"><div class="d-flex justify-content-between align-items-center gap-2"><strong id="questionOptionInfo">Opsi sesuai Komposisi Bank</strong><button id="questionAddOption" class="btn btn-outline-primary btn-sm" type="button">Tambah Opsi</button></div>
-                <div class="small text-secondary mb-2">Tandai tepat satu opsi sebagai kunci jawaban.</div><div id="questionOptions" class="d-grid gap-2"></div></div>
-            <div class="mb-3" style="max-width:180px"><label class="cbt-form-label" for="questionPoint">Poin maksimal</label><input id="questionPoint" class="form-control" type="number" min="0.0001" max="1000" step="0.0001" value="1" required></div>
-            <div class="d-flex gap-2"><button class="btn btn-cbt-primary" id="questionSave" type="submit">Simpan Soal</button><button class="btn btn-outline-secondary" id="questionCancel" type="button">Batal</button></div>
-            <div class="cbt-inline-feedback mt-2" id="questionFormFeedback" role="alert"></div>
-        </form>
-        <div class="border-top mt-4 pt-3"><strong>Pratinjau Soal PG</strong><div id="questionPreview" class="mt-2 p-3 border rounded"></div></div>
+
+    <section class="manager-section-card mb-3" id="questionEditor" hidden>
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <div class="manager-page-kicker mb-1" id="questionEditorKicker">Daftar Soal</div>
+                <strong id="questionEditorTitle">Tambah Soal</strong>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" id="questionEditorClose" type="button">Tutup</button>
+        </div>
+        <div class="card-body">
+            <form id="questionForm">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label class="cbt-form-label" for="questionTypeLabel">Tipe Soal</label>
+                        <input class="form-control" id="questionTypeLabel" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="cbt-form-label" for="questionPoint">Poin Maksimum</label>
+                        <input class="form-control" id="questionPoint" type="number" min="0.0001" max="1000" step="0.0001" value="1" required>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="questionStimulusGroup">
+                    <label class="cbt-form-label" for="questionStimulus">Stimulus (opsional)</label>
+                    <textarea class="form-control" id="questionStimulus" rows="3" maxlength="20000"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="cbt-form-label" for="questionText">Pertanyaan</label>
+                    <textarea class="form-control" id="questionText" rows="5" maxlength="10000" required></textarea>
+                </div>
+
+                <div id="questionSpecific"></div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-cbt-primary" id="questionSave" type="submit">Simpan Soal</button>
+                    <button class="btn btn-outline-secondary" id="questionCancel" type="button">Batal</button>
+                </div>
+                <div class="cbt-inline-feedback mt-2" id="questionFormFeedback" role="alert"></div>
+            </form>
+
+            <div class="border-top mt-4 pt-3">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <strong>Pratinjau Soal</strong>
+                    <span class="small text-secondary">Renderer sama dengan Bank/Exam Client</span>
+                </div>
+                <div id="questionPreview" class="cbt-question-preview border rounded p-3"></div>
+            </div>
         </div>
     </section>
 </div>
+
+<div class="modal fade" id="questionInfoModal" tabindex="-1" aria-labelledby="questionInfoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="manager-page-kicker mb-1">Panduan Pembuatan Soal</div>
+                    <h2 class="modal-title fs-5" id="questionInfoTitle">Informasi</h2>
+                </div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body" id="questionInfoBody"></div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Tutup</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="questionDeleteModal" tabindex="-1" aria-labelledby="questionDeleteTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="questionDeleteTitle">Hapus Soal</h2>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2" id="questionDeleteMessage"></p>
+                <div class="alert alert-warning mb-0">Penghapusan bersifat permanen dan menghapus seluruh revisi soal. Aksi hanya tersedia saat Bank dan Kegiatan masih DRAFT serta Bank belum dipakai Jadwal.</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-danger" type="button" id="questionDeleteConfirm">Hapus Permanen</button>
+            </div>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
+
 <?= $this->section('pageScripts') ?>
+<link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/dataTables.bootstrap5.min.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/vendor/katex/katex.min.css') ?>">
+<script src="<?= base_url('assets/vendor/datatables/js/dataTables.min.js') ?>" defer></script>
+<script src="<?= base_url('assets/vendor/datatables/js/dataTables.bootstrap5.min.js') ?>" defer></script>
 <script src="<?= base_url('assets/vendor/katex/katex.min.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/question-renderer.js') ?>" defer></script>
-<script src="<?= base_url('assets/js/question-media-upload.js') ?>" defer></script>
-<script src="<?= base_url('assets/js/manager-question-pg.js') ?>" defer></script>
+<script src="<?= base_url('assets/js/question-rich-editor.js') ?>" defer></script>
+<script src="<?= base_url('assets/js/manager-question-list.js') ?>" defer></script>
 <?= $this->endSection() ?>

@@ -263,6 +263,7 @@ $routes->group(
         $routes->post('bank-soal/(:num)/soal', $question . 'create/$1', $examFilter);
         $routes->get('bank-soal/(:num)/soal/(:num)', $question . 'show/$1/$2', $examFilter);
         $routes->put('bank-soal/(:num)/soal/(:num)', $question . 'update/$1/$2', $examFilter);
+        $routes->post('bank-soal/(:num)/soal/bulk-delete', $question . 'bulkDelete/$1', $examFilter);
         $routes->delete('bank-soal/(:num)/soal/(:num)', $question . 'remove/$1/$2', $examFilter);
         $import = 'Api\\Manager\\Bank\\ImportSoalController::';
         $routes->get('bank-soal/template/(:segment)', $import . 'template/$1', $examFilter);

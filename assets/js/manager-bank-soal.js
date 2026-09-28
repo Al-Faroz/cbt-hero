@@ -126,14 +126,12 @@
                     composition.href = app.dataset.uiBase + '/' + item.id + '/komposisi';
                     composition.className = 'btn btn-outline-primary btn-sm me-1';
                     composition.textContent = 'Komposisi'; actions.append(composition);
-                    const questions = document.createElement('a');
-                    questions.href = app.dataset.uiBase + '/' + item.id + '/soal';
-                    questions.className = 'btn btn-outline-primary btn-sm me-1';
-                    questions.textContent = 'Soal PG'; actions.append(questions);
-                    const advanced = document.createElement('a');
-                    advanced.href = app.dataset.uiBase + '/' + item.id + '/soal-lanjutan';
-                    advanced.className = 'btn btn-outline-primary btn-sm me-1';
-                    advanced.textContent = 'Tipe Lain'; actions.append(advanced);
+                }
+                const questions = document.createElement('a');
+                questions.href = app.dataset.uiBase + '/' + item.id + '/soal';
+                questions.className = 'btn btn-outline-primary btn-sm me-1';
+                questions.textContent = 'Daftar Soal'; actions.append(questions);
+                if (editable) {
                     const importer = document.createElement('a');
                     importer.href = app.dataset.uiBase + '/' + item.id + '/impor';
                     importer.className = 'btn btn-outline-primary btn-sm me-1';

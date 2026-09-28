@@ -1,0 +1,428 @@
+(() => {
+    'use strict';
+    const app = document.getElementById('questionListApp'); if (!app) return;
+    const $ = id => document.getElementById(id);
+    const base = app.dataset.api, configApi = app.dataset.config, preflightApi = app.dataset.preflight, mediaApi = app.dataset.mediaApi;
+    const labels = {
+        PG:'Pilihan Ganda', PG_KOMPLEKS:'PG Kompleks', PG_BERTINGKAT:'PG Bertingkat',
+        MATCHING:'Menjodohkan', ISIAN_SINGKAT:'Isian Singkat', URAIAN:'Uraian',
+    };
+    const order = ['PG','PG_KOMPLEKS','PG_BERTINGKAT','MATCHING','ISIAN_SINGKAT','URAIAN'];
+    const state = {
+        configMap:new Map(), configured:[], activeType:null, bank:null, editable:false,
+        editing:null, revision:null, options:[], pairs:[], answers:[], mode:'TEXT',
+        expected:'', tolerance:'0', rubric:'', media:{}, selected:new Set(), deleteIds:[],
+        table:null, richQuestion:null, richStimulus:null, dynamicEditors:[],
+    };
+
+    const info = {
+        PG:[
+            'Jumlah pilihan mengikuti Komposisi Bank dan hanya satu jawaban boleh menjadi kunci.',
+            'Poin maksimum otomatis/normalnya 1. Gunakan gambar, rumus, Arab/Jawa, atau Audio/Video Google Drive langsung pada pertanyaan maupun pilihan.',
+        ],
+        PG_KOMPLEKS:[
+            'Centang semua pilihan yang benar. Harus ada minimal satu pilihan benar dan satu pilihan salah.',
+            'Jumlah pilihan mengikuti Komposisi Bank. Poin maksimum normalnya 1.',
+        ],
+        PG_BERTINGKAT:[
+            'Setiap pilihan mempunyai nilai poin. Poin maksimum soal harus sama atau lebih besar dari poin pilihan tertinggi.',
+            'Cocok untuk soal bertingkat/bergradasi nilai; tidak memakai kunci benar tunggal.',
+        ],
+        MATCHING:[
+            'Jumlah pasangan kiri-kanan mengikuti Komposisi Bank. Kedua sisi setiap pasangan wajib unik.',
+            'Mode penilaian dikunci dari Komposisi Bank: Per pasangan atau Semua benar.',
+        ],
+        ISIAN_SINGKAT:[
+            'Mode TEKS menerima satu atau lebih jawaban yang dianggap benar. Mode ANGKA memakai angka harapan dan toleransi absolut.',
+            'Contoh: angka harapan 10 dan toleransi 0,5 menerima nilai 9,5 sampai 10,5.',
+        ],
+        URAIAN:[
+            'Isi pertanyaan dan rubrik/pedoman penilaian. Poin maksimum menentukan rentang skor manual 0 sampai poin maksimum.',
+            'Rubrik dapat memakai rich content bila diperlukan.',
+        ],
+    };
+
+    const feedback = (id,message,error=false) => {
+        const el=$(id); el.textContent=message;
+        el.className='cbt-inline-feedback'+(message?(error?' is-error':' is-info'):'');
+    };
+    const api = async (url,method='GET',payload=null) => {
+        const headers={Accept:'application/json'};
+        if(method!=='GET') headers['X-CSRF-TOKEN']=document.querySelector('meta[name="csrf-token"]').content;
+        if(payload!==null) headers['Content-Type']='application/json';
+        const response=await fetch(url,{method,credentials:'same-origin',headers,...(payload===null?{}:{body:JSON.stringify(payload)})});
+        const result=await response.json().catch(()=>null);
+        if(!response.ok||result?.ok!==true) throw new Error(result?.error?.message||'Permintaan gagal.');
+        return result.data;
+    };
+    const esc = value => String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    const numberLabel = value => {
+        const n=Number(value); return Number.isFinite(n)?n.toFixed(4).replace(/\.?0+$/,''):String(value??'');
+    };
+    const summaryText = value => String(value??'')
+        .replace(/\[\[media:[^\]]+\]\]/g,'[Gambar]')
+        .replace(/\$\$[^$]+\$\$/g,'[Rumus]')
+        .replace(/\$[^$]+\$/g,'[Rumus]')
+        .replace(/\*\*/g,'').replace(/(?<!\*)\*(?!\*)/g,'')
+        .replace(/\bAudio\s*:\s*https?:\/\/\S+/gi,'[Audio]')
+        .replace(/\bVideo\s*:\s*https?:\/\/\S+/gi,'[Video]')
+        .replace(/\s+/g,' ').trim();
+
+    const clearDynamicEditors = () => {
+        for(const editor of state.dynamicEditors) editor.destroy?.();
+        state.dynamicEditors=[];
+    };
+
+    const makeRichField = (label,value,onChange,{width='col-12',rows=3}={}) => {
+        const col=document.createElement('div'); col.className=width;
+        const lab=document.createElement('label'); lab.className='cbt-form-label'; lab.textContent=label;
+        const area=document.createElement('textarea'); area.className='form-control'; area.rows=rows; area.value=value??'';
+        col.append(lab,area);
+        const editor=window.CbtRichEditor.mount(area,{api:mediaApi,media:state.media,onChange});
+        editor.setDisabled(!state.editable); state.dynamicEditors.push(editor);
+        return col;
+    };
+
+    const preview = () => {
+        if(!$('questionEditor') || $('questionEditor').hidden) return;
+        try {
+            const type=state.activeType;
+            const data={
+                question_type:type, question_text:state.richQuestion?.getValue()||'',
+                stimulus_text:type==='PG'?'':state.richStimulus?.getValue()||'',
+                max_point:$('questionPoint').value,
+                media:{...state.media,...(window.CbtMediaPreview||{})},
+            };
+            if(type==='PG') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,is_correct:o.correct?1:0}));
+            if(type==='PG_KOMPLEKS') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,is_correct:o.correct?1:0}));
+            if(type==='PG_BERTINGKAT') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,point_value:o.point_value}));
+            if(type==='MATCHING') data.pairs=state.pairs.map((p,i)=>({left_key:String(i+1),left_text:p.left,right_text:p.right}));
+            if(type==='ISIAN_SINGKAT') {
+                data.short_answer_mode=state.mode; data.accepted_values=state.answers;
+                data.expected_numeric=state.expected; data.numeric_tolerance=state.tolerance;
+            }
+            if(type==='URAIAN') data.rubric_text=state.rubric;
+            $('questionPreview').replaceChildren(window.CbtQuestionRenderer.render(data,{showAnswer:true}));
+        } catch(_) {}
+    };
+
+    const renderSpecific = () => {
+        clearDynamicEditors();
+        const type=state.activeType, target=$('questionSpecific'); target.replaceChildren();
+        const config=state.configMap.get(type)||{}, count=Number(config.option_count)||0;
+
+        if(['PG','PG_KOMPLEKS','PG_BERTINGKAT'].includes(type)){
+            const note=document.createElement('p'); note.className='small text-secondary mb-2';
+            note.textContent=type==='PG'?'Pilih tepat satu kunci jawaban.':
+                type==='PG_KOMPLEKS'?'Centang semua pilihan yang benar.':'Isi poin untuk setiap pilihan.';
+            target.append(note);
+            const grid=document.createElement('div'); grid.className='d-grid gap-3';
+            state.options.forEach((item,i)=>{
+                const card=document.createElement('div'); card.className='border rounded p-3';
+                const row=document.createElement('div'); row.className='row g-2 align-items-start';
+                row.append(makeRichField('Pilihan '+String.fromCharCode(65+i),item.text,v=>{item.text=v;preview();},{width:'col-md-8'}));
+                const side=document.createElement('div'); side.className='col-md-4';
+                if(type==='PG'){
+                    const lab=document.createElement('label'); lab.className='form-check mt-4';
+                    const input=document.createElement('input'); input.type='radio'; input.name='pgCorrect'; input.className='form-check-input';
+                    input.checked=Boolean(item.correct); input.disabled=!state.editable;
+                    input.addEventListener('change',()=>{state.options.forEach(o=>o.correct=false);item.correct=true;preview();});
+                    const text=document.createElement('span'); text.className='form-check-label ms-1'; text.textContent='Kunci jawaban';
+                    lab.append(input,text); side.append(lab);
+                } else if(type==='PG_KOMPLEKS'){
+                    const lab=document.createElement('label'); lab.className='form-check mt-4';
+                    const input=document.createElement('input'); input.type='checkbox'; input.className='form-check-input';
+                    input.checked=Boolean(item.correct); input.disabled=!state.editable;
+                    input.addEventListener('change',()=>{item.correct=input.checked;preview();});
+                    const text=document.createElement('span'); text.className='form-check-label ms-1'; text.textContent='Jawaban benar';
+                    lab.append(input,text); side.append(lab);
+                } else {
+                    const lab=document.createElement('label'); lab.className='cbt-form-label'; lab.textContent='Poin pilihan';
+                    const input=document.createElement('input'); input.className='form-control'; input.type='number'; input.min='0'; input.max='1000'; input.step='0.0001';
+                    input.value=item.point_value??'0'; input.disabled=!state.editable;
+                    input.addEventListener('input',()=>{item.point_value=input.value;preview();});
+                    lab.append(input); side.append(lab);
+                }
+                row.append(side); card.append(row); grid.append(card);
+            });
+            target.append(grid);
+        } else if(type==='MATCHING'){
+            const note=document.createElement('div'); note.className='alert alert-light border small';
+            note.textContent='Mode penilaian: '+(config.scoring_mode==='ALL_OR_NOTHING'?'Semua benar':'Per pasangan')+'. Jumlah pasangan: '+count+'.';
+            target.append(note);
+            const grid=document.createElement('div'); grid.className='d-grid gap-3';
+            state.pairs.forEach((item,i)=>{
+                const row=document.createElement('div'); row.className='row g-2 border rounded p-2';
+                row.append(makeRichField('Sisi kiri '+(i+1),item.left,v=>{item.left=v;preview();},{width:'col-md-6'}),
+                    makeRichField('Pasangan kanan '+(i+1),item.right,v=>{item.right=v;preview();},{width:'col-md-6'}));
+                grid.append(row);
+            });
+            target.append(grid);
+        } else if(type==='ISIAN_SINGKAT'){
+            const modeWrap=document.createElement('div'); modeWrap.className='mb-3';
+            const lab=document.createElement('label'); lab.className='cbt-form-label'; lab.textContent='Mode jawaban';
+            const select=document.createElement('select'); select.className='form-select'; select.disabled=!state.editable;
+            select.add(new Option('Teks','TEXT')); select.add(new Option('Angka','NUMERIC')); select.value=state.mode||'TEXT';
+            select.addEventListener('change',()=>{state.mode=select.value;renderSpecific();preview();});
+            lab.append(select); modeWrap.append(lab); target.append(modeWrap);
+            if(state.mode==='TEXT'){
+                const grid=document.createElement('div'); grid.className='row g-2';
+                state.answers.forEach((value,i)=>{
+                    const col=document.createElement('div'); col.className='col-md-6';
+                    const label=document.createElement('label'); label.className='cbt-form-label'; label.textContent='Jawaban diterima '+(i+1);
+                    const input=document.createElement('input'); input.className='form-control'; input.value=value; input.disabled=!state.editable;
+                    input.addEventListener('input',()=>{state.answers[i]=input.value;preview();}); label.append(input); col.append(label); grid.append(col);
+                });
+                target.append(grid);
+                if(state.editable){
+                    const add=document.createElement('button'); add.type='button'; add.className='btn btn-outline-primary btn-sm mt-2'; add.textContent='Tambah jawaban diterima';
+                    add.disabled=state.answers.length>=20; add.addEventListener('click',()=>{state.answers.push('');renderSpecific();});
+                    target.append(add);
+                }
+            } else {
+                const row=document.createElement('div'); row.className='row g-2';
+                for(const spec of [['Angka harapan','expected'],['Toleransi absolut','tolerance']]){
+                    const col=document.createElement('div'); col.className='col-md-4';
+                    const label=document.createElement('label'); label.className='cbt-form-label'; label.textContent=spec[0];
+                    const input=document.createElement('input'); input.className='form-control'; input.type='number'; input.step='0.00000001';
+                    input.value=state[spec[1]]|| (spec[1]==='tolerance'?'0':''); input.disabled=!state.editable;
+                    input.addEventListener('input',()=>{state[spec[1]]=input.value;preview();}); label.append(input); col.append(label); row.append(col);
+                }
+                target.append(row);
+            }
+        } else if(type==='URAIAN'){
+            target.append(makeRichField('Rubrik / Pedoman Penilaian',state.rubric,v=>{state.rubric=v;preview();},{rows:5}));
+        }
+        preview();
+    };
+
+    const openEditor = item => {
+        const type=state.activeType, config=state.configMap.get(type)||{};
+        state.editing=item?Number(item.id):null; state.revision=item?Number(item.current_revision_no):null; state.media=item?.media||{};
+        window.CbtMediaPreview={...(item?.media||{})};
+        $('questionTypeLabel').value=labels[type]||type;
+        $('questionStimulusGroup').hidden=type==='PG';
+        $('questionPoint').disabled=!state.editable;
+        $('questionPoint').value=item?.max_point??'1';
+        if(['PG','PG_KOMPLEKS'].includes(type) && !item) $('questionPoint').value='1';
+
+        state.richQuestion.setValue(item?.question_text||'',state.media);
+        state.richQuestion.setDisabled(!state.editable);
+        state.richStimulus.setValue(item?.stimulus_text||'',state.media);
+        state.richStimulus.setDisabled(!state.editable);
+
+        const count=Number(config.option_count)||4;
+        state.options=(item?.options||Array.from({length:count},()=>({}))).map((o,i)=>({
+            text:o.content_text||'', correct:type==='PG'?Number(o.is_correct)===1:Boolean(Number(o.is_correct)),
+            point_value:o.point_value??'0'
+        }));
+        state.pairs=(item?.pairs||Array.from({length:count},()=>({}))).map(p=>({left:p.left_text||'',right:p.right_text||''}));
+        state.answers=item?.accepted_values?.length?[...item.accepted_values]:[''];
+        state.mode=item?.short_answer_mode||item?.scoring_mode||(type==='MATCHING'?config.scoring_mode||'PARTIAL':'TEXT');
+        state.expected=item?.expected_numeric??''; state.tolerance=item?.numeric_tolerance??'0'; state.rubric=item?.rubric_text??'';
+
+        $('questionEditorKicker').textContent=labels[type]||type;
+        $('questionEditorTitle').textContent=item?(state.editable?'Edit / Tinjau Soal · Revisi ':'Tinjau Soal · Revisi ')+state.revision:'Tambah Soal';
+        $('questionSave').hidden=!state.editable; $('questionCancel').textContent=state.editable?'Batal':'Tutup';
+        feedback('questionFormFeedback',''); renderSpecific(); $('questionEditor').hidden=false;
+        $('questionEditor').scrollIntoView({behavior:'smooth',block:'start'});
+    };
+
+    const currentPayload = () => {
+        const type=state.activeType;
+        const data={question_text:state.richQuestion.getValue(),max_point:$('questionPoint').value};
+        if(type!=='PG'){data.question_type=type;data.stimulus_text=state.richStimulus.getValue();}
+        if(type==='PG'){
+            data.correct_key=String.fromCharCode(65+Math.max(0,state.options.findIndex(o=>o.correct)));
+            data.options=state.options.map(o=>({text:o.text}));
+        } else if(type==='PG_KOMPLEKS') data.options=state.options.map(o=>({text:o.text,correct:Boolean(o.correct)}));
+        else if(type==='PG_BERTINGKAT') data.options=state.options.map(o=>({text:o.text,point_value:o.point_value}));
+        else if(type==='MATCHING'){data.pairs=state.pairs.map(p=>({left:p.left,right:p.right}));data.scoring_mode=state.configMap.get(type)?.scoring_mode||'PARTIAL';}
+        else if(type==='ISIAN_SINGKAT'){
+            data.short_answer_mode=state.mode;
+            if(state.mode==='TEXT') data.accepted_values=state.answers;
+            else {data.expected_numeric=state.expected;data.numeric_tolerance=state.tolerance||'0';}
+        } else if(type==='URAIAN') data.rubric_text=state.rubric;
+        if(state.editing!==null) data.expected_revision=state.revision;
+        return data;
+    };
+
+    const refreshCounts = async () => {
+        try {
+            const check=await api(preflightApi);
+            state.bank={...(state.bank||{}),...(check.bank||{})};
+            const counts=check.counts||{};
+            for(const button of document.querySelectorAll('[data-question-type]')){
+                const type=button.dataset.questionType, count=counts[type]||{};
+                const badge=button.querySelector('.question-tab-count');
+                if(badge) badge.textContent=String(Number(count.available||0))+'/'+String(Number(count.planned??state.configMap.get(type)?.question_count??0));
+            }
+        } catch(_) {}
+    };
+
+    const updateSelectionUi = () => {
+        $('questionSelectedCount').textContent=state.selected.size+' soal dipilih';
+        $('questionBulkDelete').disabled=!state.editable||state.selected.size===0;
+        const boxes=[...document.querySelectorAll('.question-row-check')];
+        $('questionCheckAll').checked=boxes.length>0&&boxes.every(box=>box.checked);
+        $('questionCheckAll').indeterminate=boxes.some(box=>box.checked)&&!$('questionCheckAll').checked;
+    };
+
+    const clearSelection = () => {state.selected.clear(); $('questionCheckAll').checked=false; $('questionCheckAll').indeterminate=false; updateSelectionUi();};
+
+    const openDelete = ids => {
+        state.deleteIds=[...ids];
+        $('questionDeleteTitle').textContent=ids.length>1?'Hapus Soal Terpilih':'Hapus Soal';
+        $('questionDeleteMessage').textContent=ids.length>1
+            ? 'Hapus permanen '+ids.length+' soal terpilih beserta seluruh revisinya?'
+            : 'Hapus permanen soal ini beserta seluruh revisinya?';
+        bootstrap.Modal.getOrCreateInstance($('questionDeleteModal')).show();
+    };
+
+    const infoModal = () => {
+        const type=state.activeType, body=$('questionInfoBody'); body.replaceChildren();
+        $('questionInfoTitle').textContent='Informasi — '+(labels[type]||type);
+        const lead=document.createElement('p'); lead.textContent='Panduan ini berlaku untuk pembuatan manual dan menjadi acuan saat memeriksa hasil import.';
+        body.append(lead);
+        const list=document.createElement('ul');
+        for(const line of info[type]||[]) {const li=document.createElement('li');li.textContent=line;list.append(li);}
+        body.append(list);
+        const common=document.createElement('div'); common.className='border rounded p-3 bg-body-tertiary';
+        const title=document.createElement('strong'); title.textContent='Rich Content yang didukung';
+        const commonList=document.createElement('ul'); commonList.className='mb-0 mt-2';
+        for(const line of [
+            'Tebal dan miring melalui toolbar editor.',
+            'Gambar JPG/PNG/WebP melalui tombol gambar pada field Pertanyaan, Stimulus, Pilihan, pasangan Menjodohkan, atau Rubrik.',
+            'Rumus melalui tombol fx. Guru tidak wajib menulis sintaks KaTeX; shortcut $...$ / $$...$$ tetap diterima untuk pengguna mahir.',
+            'Pada template Word, gunakan Insert → Equation; persamaan Word yang didukung akan dikonversi ke format rumus CBT-HERO saat import.',
+            'Arab, aksara Jawa, dan Unicode lain dapat diketik atau ditempel langsung. Arah teks menggunakan deteksi otomatis.',
+            'Audio/video: ketik Audio: <link Google Drive> atau Video: <link Google Drive> langsung pada bagian konten yang membutuhkan media.',
+            'Paste dari Word dibersihkan dari HTML/style yang tidak perlu; tebal, miring, tabel, teks Unicode, gambar clipboard, dan MathML yang dikenali dipertahankan.',
+        ]) {const li=document.createElement('li');li.textContent=line;commonList.append(li);}
+        common.append(title,commonList); body.append(common);
+        bootstrap.Modal.getOrCreateInstance($('questionInfoModal')).show();
+    };
+
+    const initTable = () => {
+        state.table=new DataTable('#questionTable',{
+            processing:true,serverSide:true,searching:true,ordering:false,pageLength:25,
+            lengthMenu:[25,50,100],
+            ajax:async(request,callback)=>{
+                try{
+                    const params=new URLSearchParams({
+                        type:state.activeType,page:String(Math.floor(request.start/request.length)+1),
+                        per_page:String(request.length),q:request.search.value||''
+                    });
+                    const data=await api(base+'?'+params);
+                    state.bank=data.bank; state.editable=data.bank.status==='DRAFT'&&data.bank.kegiatan_status==='DRAFT';
+                    $('questionContext').textContent=data.bank.nama_bank+' · '+data.bank.kegiatan_nama+' · '+data.bank.mapel_nama+' · Tingkat '+data.bank.tingkat+' · '+data.bank.status;
+                    $('questionAdd').disabled=!state.editable;
+                    $('questionImportLink').hidden=!state.editable;
+                    callback({draw:request.draw,recordsTotal:Number(data.pagination.total||0),
+                        recordsFiltered:Number(data.pagination.filtered??data.pagination.total??0),data:data.items||[]});
+                    feedback('questionFeedback','');
+                }catch(error){feedback('questionFeedback',error.message,true);callback({draw:request.draw,recordsTotal:0,recordsFiltered:0,data:[]});}
+            },
+            columns:[
+                {data:'id',className:'text-center question-check-col',searchable:false,render:id=>'<input class="form-check-input question-row-check" type="checkbox" data-id="'+Number(id)+'" aria-label="Pilih soal">'},
+                {data:'sort_order',className:'text-nowrap'},
+                {data:'question_text',render:value=>esc((summaryText(value)||'[Konten media]').slice(0,180))},
+                {data:'max_point',className:'text-nowrap',render:numberLabel},
+                {data:'current_revision_no',className:'text-nowrap'},
+                {data:'id',className:'text-nowrap',searchable:false,render:id=>'<button type="button" class="btn btn-outline-primary btn-sm me-1" data-action="edit" data-id="'+Number(id)+'">Edit / Tinjau</button><button type="button" class="btn btn-outline-danger btn-sm" data-action="delete" data-id="'+Number(id)+'">Hapus</button>'},
+            ],
+            drawCallback:()=>{
+                for(const box of document.querySelectorAll('.question-row-check')) box.checked=state.selected.has(Number(box.dataset.id));
+                document.querySelectorAll('[data-action="delete"]').forEach(b=>b.disabled=!state.editable);
+                updateSelectionUi();
+            },
+            language:{search:'Cari soal:',lengthMenu:'Tampilkan _MENU_',info:'_START_–_END_ dari _TOTAL_ soal',infoEmpty:'Belum ada soal',zeroRecords:'Tidak ada soal yang cocok',processing:'Memuat...',paginate:{previous:'Sebelumnya',next:'Berikutnya'}}
+        });
+        $('#questionTable').addEventListener('change',event=>{
+            const box=event.target.closest('.question-row-check'); if(!box)return;
+            const id=Number(box.dataset.id); if(box.checked)state.selected.add(id);else state.selected.delete(id);updateSelectionUi();
+        });
+        $('#questionTable').addEventListener('click',async event=>{
+            const button=event.target.closest('[data-action]'); if(!button)return;
+            const id=Number(button.dataset.id);
+            if(button.dataset.action==='delete'){if(state.editable)openDelete([id]);return;}
+            button.disabled=true;
+            try{const data=await api(base+'/'+id);openEditor(data.item);}
+            catch(error){feedback('questionFeedback',error.message,true);}
+            finally{button.disabled=false;}
+        });
+        state.table.on('search',clearSelection);
+    };
+
+    const activateType = type => {
+        if(!state.configured.includes(type))return;
+        state.activeType=type; clearSelection(); $('questionEditor').hidden=true;
+        for(const button of document.querySelectorAll('[data-question-type]')){
+            const active=button.dataset.questionType===type; button.classList.toggle('active',active); button.setAttribute('aria-selected',active?'true':'false');
+        }
+        if(state.table) state.table.ajax.reload();
+    };
+
+    const buildTabs = () => {
+        const tabs=$('questionTypeTabs'); tabs.replaceChildren();
+        for(const type of state.configured){
+            const li=document.createElement('li');li.className='nav-item';li.role='presentation';
+            const button=document.createElement('button');button.type='button';button.className='nav-link';button.dataset.questionType=type;button.role='tab';
+            const label=document.createElement('span');label.textContent=labels[type]||type;
+            const badge=document.createElement('span');badge.className='badge rounded-pill text-bg-light question-tab-count ms-2';badge.textContent='0/'+Number(state.configMap.get(type)?.question_count||0);
+            button.append(label,badge);button.addEventListener('click',()=>activateType(type));li.append(button);tabs.append(li);
+        }
+    };
+
+    $('questionInfo').addEventListener('click',infoModal);
+    $('questionAdd').addEventListener('click',()=>openEditor(null));
+    $('questionPoint').addEventListener('input',preview);
+    $('questionEditorClose').addEventListener('click',()=>{$('questionEditor').hidden=true;});
+    $('questionCancel').addEventListener('click',()=>{$('questionEditor').hidden=true;});
+    $('questionCheckAll').addEventListener('change',()=>{
+        for(const box of document.querySelectorAll('.question-row-check')){
+            box.checked=$('questionCheckAll').checked;const id=Number(box.dataset.id);
+            if(box.checked)state.selected.add(id);else state.selected.delete(id);
+        } updateSelectionUi();
+    });
+    $('questionBulkDelete').addEventListener('click',()=>{if(state.selected.size)openDelete([...state.selected]);});
+    $('questionDeleteConfirm').addEventListener('click',async()=>{
+        const ids=[...state.deleteIds]; if(!ids.length)return;
+        const button=$('questionDeleteConfirm');button.disabled=true;
+        try{
+            if(ids.length===1) await api(base+'/'+ids[0],'DELETE');
+            else await api(base+'/bulk-delete','POST',{ids});
+            bootstrap.Modal.getOrCreateInstance($('questionDeleteModal')).hide();
+            clearSelection();$('questionEditor').hidden=true;state.table.ajax.reload(null,false);await refreshCounts();
+            feedback('questionFeedback',ids.length+' soal berhasil dihapus permanen.');
+        }catch(error){feedback('questionFeedback',error.message,true);}
+        finally{button.disabled=false;state.deleteIds=[];}
+    });
+    $('questionForm').addEventListener('submit',async event=>{
+        event.preventDefault(); if(!state.editable)return;
+        if(state.activeType==='PG'&&!state.options.some(o=>o.correct)){feedback('questionFormFeedback','Pilih tepat satu kunci jawaban.',true);return;}
+        const payload=currentPayload(), button=$('questionSave');button.disabled=true;
+        try{
+            const data=await api(state.editing===null?base:base+'/'+state.editing,state.editing===null?'POST':'PUT',payload);
+            $('questionEditor').hidden=true;state.table.ajax.reload(null,false);await refreshCounts();
+            feedback('questionFeedback','Soal tersimpan pada revisi '+data.item.current_revision_no+'.');
+        }catch(error){feedback('questionFormFeedback',error.message,true);}
+        finally{button.disabled=false;}
+    });
+
+    Promise.all([api(configApi),api(preflightApi)]).then(([config,check])=>{
+        state.bank=config.bank;state.editable=Boolean(config.editable);
+        $('questionImportLink').hidden=!state.editable;
+        state.configMap=new Map(config.items.map(item=>[item.question_type,item]));
+        state.configured=order.filter(type=>state.configMap.has(type));
+        buildTabs();
+        if(!state.configured.length){
+            feedback('questionFeedback','Belum ada tipe soal aktif. Atur Komposisi Bank terlebih dahulu.',true);
+            $('questionAdd').disabled=true;$('questionInfo').disabled=true;return;
+        }
+        state.activeType=state.configured[0];
+        state.richStimulus=window.CbtRichEditor.mount($('questionStimulus'),{api:mediaApi,onChange:preview});
+        state.richQuestion=window.CbtRichEditor.mount($('questionText'),{api:mediaApi,onChange:preview});
+        initTable();activateType(state.activeType);refreshCounts();
+    }).catch(error=>feedback('questionFeedback',error.message,true));
+})();

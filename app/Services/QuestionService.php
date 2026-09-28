@@ -27,7 +27,13 @@ class QuestionService
         if ($type === 'ADVANCED') $builder->whereIn('sr.question_type', array_slice(QuestionValidationService::TYPES, 1));
         elseif ($type !== 'ALL') $builder->where('sr.question_type', $type);
         $total = (int) $builder->countAllResults(false);
-        $pages = max(1, (int) ceil($total / $size)); $page = min($page, $pages);
+        $search = is_string($query['q'] ?? null) ? trim($query['q']) : '';
+        if ($search !== '') {
+            $search = mb_substr($search, 0, 120);
+            $builder->groupStart()->like('sr.question_html', $search)->orLike('sr.stimulus_html', $search)->groupEnd();
+        }
+        $filtered = (int) $builder->countAllResults(false);
+        $pages = max(1, (int) ceil($filtered / $size)); $page = min($page, $pages);
         $items = $builder->select('s.id, s.sort_order, s.current_revision_no, sr.question_type, sr.question_html, sr.max_point, sr.metadata_json')
             ->orderBy('s.sort_order', 'ASC')->orderBy('s.id', 'ASC')
             ->limit($size, ($page - 1) * $size)->get()->getResultArray();
@@ -41,7 +47,8 @@ class QuestionService
             ->where('question_type', 'PG')->get()->getRowArray();
         return $this->success(['bank' => $bank, 'pg_configured' => $pgConfig !== null,
             'pg_option_count' => $pgConfig === null ? null : (int) $pgConfig['option_count'], 'items' => $items,
-            'pagination' => ['page' => $page, 'pages' => $pages, 'per_page' => $size, 'total' => $total]]);
+            'pagination' => ['page' => $page, 'pages' => $pages, 'per_page' => $size,
+                'total' => $total, 'filtered' => $filtered]]);
     }
 
     public function show(int $bankId, int $id): array
@@ -78,12 +85,14 @@ class QuestionService
         $row['accepted_values'] = array_column($db->table('soal_short_answer_text')
             ->select('accepted_value')->where('soal_revision_id', $row['revision_id'])
             ->orderBy('sort_order')->get()->getResultArray(), 'accepted_value');
-        $media = $db->table('soal_revision_media AS link')->select('link.media_asset_id, asset.media_kind, asset.external_url, asset.status')
+        $media = $db->table('soal_revision_media AS link')
+            ->select('link.media_asset_id, asset.storage_type, asset.media_kind, asset.provider, asset.external_url, asset.status')
             ->join('media_assets AS asset', 'asset.id = link.media_asset_id')
             ->where('link.soal_revision_id', $row['revision_id'])->get()->getResultArray();
         $row['media'] = [];
         foreach ($media as $asset) if ($asset['status'] === 'ACTIVE') $row['media'][(string) $asset['media_asset_id']] = [
-            'kind' => $asset['media_kind'], 'url' => $asset['media_kind'] === 'VIDEO' ? $asset['external_url']
+            'kind' => $asset['media_kind'], 'provider' => $asset['provider'],
+            'url' => $asset['storage_type'] === 'EXTERNAL' ? $asset['external_url']
                 : base_url('manager/api/question-media/' . $asset['media_asset_id'])];
         return $this->success(['item' => $row]);
     }
@@ -176,7 +185,7 @@ class QuestionService
                 'created_by' => (int) ($actor['user_id'] ?? 0)]);
             $revisionId = (int) $db->insertID();
             foreach ($options as $option) $db->table('soal_opsi')->insert(['soal_revision_id' => $revisionId] + $option);
-            (new QuestionMediaService())->attach($db, $revisionId, $payload);
+            (new QuestionMediaService())->attach($db, $revisionId, $payload, $actor);
             if ($old !== null) $db->table('soal')->where('id', $id)->update(['current_revision_no' => $next]);
             $db->table('bank_soal')->where('id', $bankId)->set('version_no', 'version_no + 1', false)
                 ->update(['fingerprint' => null, 'updated_by' => (int) ($actor['user_id'] ?? 0)]);
@@ -212,9 +221,6 @@ class QuestionService
                 . 'WHERE s.id = ? AND s.bank_soal_id = ? AND s.status = ? FOR UPDATE',
                 [$id, $bankId, 'ACTIVE'])->getRowArray();
             if ($question === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Soal tidak ditemukan.'); }
-            if (($this->metadata($question['metadata_json'])['source'] ?? '') !== self::SOURCE) {
-                $db->transRollback(); return $this->error(409, 'UNSUPPORTED_CONTENT', 'Soal ini memerlukan editor lain.');
-            }
             if ($db->table('jadwal')->where('bank_soal_id', $bankId)->countAllResults() > 0) {
                 $db->transRollback(); return $this->error(409, 'DEPENDENCY_EXISTS', 'Bank telah dipakai Jadwal.');
             }
@@ -228,6 +234,59 @@ class QuestionService
             $db->transRollback();
             log_message('error', 'Hapus Soal gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'DEPENDENCY_EXISTS', 'Soal tidak dapat dihapus.');
+        }
+    }
+
+    public function bulkDelete(int $bankId, array $ids, array $actor): array
+    {
+        $normalized = [];
+        foreach ($ids as $value) {
+            $id = is_scalar($value) ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
+            if (!is_int($id)) return $this->error(422, 'VALIDATION_FAILED', 'Daftar soal terpilih tidak valid.');
+            $normalized[$id] = $id;
+        }
+        $ids = array_values($normalized);
+        if (!$ids || count($ids) > 100)
+            return $this->error(422, 'VALIDATION_FAILED', 'Pilih 1–100 soal untuk dihapus.');
+
+        $db = Database::connect(); $db->transBegin();
+        try {
+            $lookup = $this->bank($bankId);
+            if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
+            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
+                [$lookup['kegiatan_id']])->getRowArray();
+            $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
+            if ($bank === null || $kegiatan === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
+            }
+            if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
+            }
+            if ($db->table('jadwal')->where('bank_soal_id', $bankId)->countAllResults() > 0) {
+                $db->transRollback(); return $this->error(409, 'DEPENDENCY_EXISTS', 'Bank telah dipakai Jadwal.');
+            }
+
+            $found = $db->table('soal')->select('id')->where('bank_soal_id', $bankId)
+                ->where('status', 'ACTIVE')->whereIn('id', $ids)->get()->getResultArray();
+            $foundIds = array_map('intval', array_column($found, 'id'));
+            sort($foundIds); $expected = $ids; sort($expected);
+            if ($foundIds !== $expected) {
+                $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Sebagian soal sudah berubah atau tidak ditemukan. Muat ulang daftar.');
+            }
+
+            $db->table('soal')->where('bank_soal_id', $bankId)->whereIn('id', $ids)->delete();
+            $db->table('bank_soal')->where('id', $bankId)->set('version_no', 'version_no + 1', false)
+                ->update(['fingerprint' => null, 'updated_by' => (int) ($actor['user_id'] ?? 0)]);
+            (new AuditService())->log('MANAGER', (int) ($actor['user_id'] ?? 0), 'BULK_DELETE_SOAL',
+                'MASTER_UJIAN', 'Hard delete ' . count($ids) . ' Soal Bank #' . $bankId,
+                (string) ($actor['ip'] ?? ''), (string) ($actor['agent'] ?? ''), 'bank_soal', $bankId);
+            if ($db->transStatus() === false || $db->transCommit() === false)
+                throw new RuntimeException('Commit hapus massal soal gagal.');
+            return $this->success(['removed' => $ids, 'count' => count($ids)]);
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Hapus massal Soal gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Soal terpilih tidak dapat dihapus.');
         }
     }
 

@@ -40,6 +40,13 @@ class SoalController extends BaseController
         return $this->respond((new QuestionService())->delete((int) $bankId, (int) $id, $this->actor()));
     }
 
+    public function bulkDelete(string $bankId)
+    {
+        $payload = $this->payload();
+        return $this->respond((new QuestionService())->bulkDelete((int) $bankId,
+            is_array($payload['ids'] ?? null) ? $payload['ids'] : [], $this->actor()));
+    }
+
     private function payload(): array
     {
         $json = $this->request->getJSON(true);

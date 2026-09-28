@@ -1480,6 +1480,7 @@ GET    /manager/api/bank-soal/{bankId}/soal
 POST   /manager/api/bank-soal/{bankId}/soal
 GET    /manager/api/bank-soal/{bankId}/soal/{soalId}
 PUT    /manager/api/bank-soal/{bankId}/soal/{soalId}
+POST   /manager/api/bank-soal/{bankId}/soal/bulk-delete
 DELETE /manager/api/bank-soal/{bankId}/soal/{soalId}
 ```
 
@@ -2961,7 +2962,10 @@ mengikuti pilihan Jadwal utama.
 
 Enam tipe di editor memakai CRUD soal bagian 29.3. `question_type` wajib untuk PG Kompleks, PG Bertingkat, Menjodohkan, Isian Singkat, dan Uraian; PG biasa tetap menerima payload lama. `expected_revision` wajib saat edit. Pembacaan soal dan kunci hanya tersedia di realm Manager dengan izin `master.exam.manage`.
 
-Halaman Manager tersedia pada `/manager/master-ujian/bank-soal/{id}/soal-lanjutan`, `/impor`, `/preview`, dan `/cetak`. Halaman `/cetak` menggunakan dialog browser **Save as PDF**. Alih status mengikuti `POST /manager/api/bank-soal/{id}/ready` dan `/draft` dengan `expected_version`; `GET /manager/api/bank-soal/{id}/preflight` menampilkan hitungan dan kesalahan.
+Halaman Manager utama soal berada pada `/manager/master-ujian/bank-soal/{id}/soal`
+sebagai **Daftar Soal** bertab. Route lama `/soal-lanjutan` hanya menjadi redirect
+kompatibilitas ke Daftar Soal. Halaman `/impor`, `/preview`, dan `/cetak` tetap
+tersedia. Halaman `/cetak` menggunakan dialog browser **Save as PDF**. Alih status mengikuti `POST /manager/api/bank-soal/{id}/ready` dan `/draft` dengan `expected_version`; `GET /manager/api/bank-soal/{id}/preflight` menampilkan hitungan dan kesalahan.
 
 Template Excel legacy diunduh dari `/manager/import-template/bank-soal.xlsx`.
 Template Word V2 dibuat per Bank melalui

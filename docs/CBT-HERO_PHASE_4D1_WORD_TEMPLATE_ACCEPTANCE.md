@@ -131,6 +131,8 @@ buta.
 | W12 | Unduh template yang memuat Uraian. | Kolom Poin maksimum Uraian sudah berisi default 1 dan masih dapat diganti. |
 | W13 | Ketik `Audio: <link Google Drive>` atau `Video: <link Google Drive>` pada sel soal/pilihan/pasangan lalu import. | Staging VALID bila URL adalah file Google Drive; Preview menampilkan player inline tanpa kolom media khusus. |
 | W14 | Gunakan URL YouTube/Vimeo atau link Google Drive yang bukan link file valid. | Staging INVALID dengan pesan bahwa audio/video hanya mendukung file Google Drive. |
+| W15 | Pada sel isi Word gunakan **Insert → Equation** untuk pecahan, pangkat, akar, sigma/integral, dan matriks sederhana. | Parser membaca OMML dan Preview menampilkan rumus melalui renderer tanpa guru mengetik sintaks KaTeX. |
+| W16 | Ketik/paste teks Arab dan aksara Jawa pada soal/pilihan. | Unicode tetap utuh dari Word → staging → commit → Edit/Tinjau/Preview. |
 
 ## Belum termasuk
 

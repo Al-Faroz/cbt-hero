@@ -253,8 +253,17 @@ class QuestionDocumentService
         $paragraphs = [];
         foreach ($xp->query('./*[local-name()="p"]', $cell) as $paragraph) {
             $value = '';
-            foreach ($xp->query('.//*[local-name()="t"]|.//*[local-name()="br"]|.//*[local-name()="blip"]', $paragraph) as $piece) {
+            $parts = './/*[local-name()="oMath" and not(ancestor::*[local-name()="oMath"])]'
+                . '|.//*[local-name()="t" and not(ancestor::*[local-name()="oMath"])]'
+                . '|.//*[local-name()="br" and not(ancestor::*[local-name()="oMath"])]'
+                . '|.//*[local-name()="blip"]';
+            foreach ($xp->query($parts, $paragraph) as $piece) {
                 if ($piece->localName === 'br') { $value .= "\n"; continue; }
+                if ($piece->localName === 'oMath') {
+                    $latex = trim($this->ommlToLatex($xp, $piece));
+                    if ($latex !== '') $value .= '$' . $latex . '$';
+                    continue;
+                }
                 if ($piece->localName === 'blip') {
                     $relationship = $piece instanceof DOMElement
                         ? $piece->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed') : '';
@@ -288,6 +297,121 @@ class QuestionDocumentService
         $value = trim(implode("\n", $paragraphs));
         if (mb_strlen($value) > 20000) throw new RuntimeException('Sel Word terlalu panjang.');
         return $value;
+    }
+
+    private function ommlToLatex(DOMXPath $xp, DOMNode $node): string
+    {
+        if ($node->nodeType === XML_TEXT_NODE) return $node->nodeValue ?? '';
+        if (! $node instanceof DOMElement) return '';
+        $name = $node->localName;
+
+        $children = function (DOMNode $parent) use ($xp): string {
+            $result = '';
+            foreach ($parent->childNodes as $child) {
+                if ($child instanceof DOMElement && preg_match('/Pr$/D', $child->localName)) continue;
+                $result .= $this->ommlToLatex($xp, $child);
+            }
+            return $result;
+        };
+        $child = function (string $local) use ($xp, $node): ?DOMNode {
+            return $xp->query('./*[local-name()="' . $local . '"]', $node)->item(0);
+        };
+        $value = function (?DOMNode $item) use ($children): string {
+            return $item === null ? '' : trim($children($item));
+        };
+
+        if ($name === 't') return $this->mathText($node->textContent);
+        if (in_array($name, ['oMath', 'e', 'num', 'den', 'sup', 'sub', 'fName', 'lim', 'box', 'borderBox'], true))
+            return $children($node);
+        if ($name === 'r') {
+            $text = '';
+            foreach ($xp->query('.//*[local-name()="t"]', $node) as $part) $text .= $this->mathText($part->textContent);
+            return $text;
+        }
+        if ($name === 'f') return '\\frac{' . $value($child('num')) . '}{' . $value($child('den')) . '}';
+        if ($name === 'sSup') return '{' . $value($child('e')) . '}^{' . $value($child('sup')) . '}';
+        if ($name === 'sSub') return '{' . $value($child('e')) . '}_{' . $value($child('sub')) . '}';
+        if ($name === 'sSubSup') return '{' . $value($child('e')) . '}_{' . $value($child('sub'))
+            . '}^{' . $value($child('sup')) . '}';
+        if ($name === 'rad') {
+            $base = $value($child('e')); $degree = $value($child('deg'));
+            return $degree === '' ? '\\sqrt{' . $base . '}' : '\\sqrt[' . $degree . ']{' . $base . '}';
+        }
+        if ($name === 'nary') {
+            $symbol = '\\sum';
+            $chr = $xp->query('./*[local-name()="naryPr"]/*[local-name()="chr"]', $node)->item(0);
+            if ($chr instanceof DOMElement) {
+                $raw = $chr->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/math', 'val')
+                    ?: $chr->getAttribute('m:val') ?: $chr->getAttribute('val');
+                $symbol = match ($raw) {
+                    '∫' => '\\int', '∬' => '\\iint', '∭' => '\\iiint', '∏' => '\\prod', '∐' => '\\coprod',
+                    '∑', '' => '\\sum', default => $this->mathText($raw),
+                };
+            }
+            $sub = $value($child('sub')); $sup = $value($child('sup')); $body = $value($child('e'));
+            return $symbol . ($sub !== '' ? '_{' . $sub . '}' : '') . ($sup !== '' ? '^{' . $sup . '}' : '')
+                . ($body !== '' ? ' ' . $body : '');
+        }
+        if ($name === 'd') {
+            $begin = '('; $end = ')';
+            $beginNode = $xp->query('./*[local-name()="dPr"]/*[local-name()="begChr"]', $node)->item(0);
+            if ($beginNode instanceof DOMElement) $begin = $beginNode->getAttributeNS(
+                'http://schemas.openxmlformats.org/officeDocument/2006/math', 'val')
+                ?: $beginNode->getAttribute('m:val') ?: $beginNode->getAttribute('val') ?: $begin;
+            $endNode = $xp->query('./*[local-name()="dPr"]/*[local-name()="endChr"]', $node)->item(0);
+            if ($endNode instanceof DOMElement) $end = $endNode->getAttributeNS(
+                'http://schemas.openxmlformats.org/officeDocument/2006/math', 'val')
+                ?: $endNode->getAttribute('m:val') ?: $endNode->getAttribute('val') ?: $end;
+            $expressions = [];
+            foreach ($xp->query('./*[local-name()="e"]', $node) as $expression) $expressions[] = $value($expression);
+            return '\\left' . $this->mathDelimiter($begin) . implode(',', $expressions)
+                . '\\right' . $this->mathDelimiter($end);
+        }
+        if ($name === 'm') {
+            $rows = [];
+            foreach ($xp->query('./*[local-name()="mr"]', $node) as $row) {
+                $cells = [];
+                foreach ($xp->query('./*[local-name()="e"]', $row) as $cellNode) $cells[] = $value($cellNode);
+                $rows[] = implode(' & ', $cells);
+            }
+            return '\\begin{bmatrix}' . implode(' \\\\ ', $rows) . '\\end{bmatrix}';
+        }
+        if ($name === 'eqArr') {
+            $rows = [];
+            foreach ($xp->query('./*[local-name()="e"]', $node) as $row) $rows[] = $value($row);
+            return '\\begin{aligned}' . implode(' \\\\ ', $rows) . '\\end{aligned}';
+        }
+        if ($name === 'func') return $value($child('fName')) . '\\left(' . $value($child('e')) . '\\right)';
+        if ($name === 'limLow') return $value($child('e')) . '_{' . $value($child('lim')) . '}';
+        if ($name === 'limUpp') return $value($child('e')) . '^{' . $value($child('lim')) . '}';
+        if ($name === 'bar') return '\\overline{' . $value($child('e')) . '}';
+        if ($name === 'acc') {
+            $accent = $xp->query('./*[local-name()="accPr"]/*[local-name()="chr"]', $node)->item(0);
+            $raw = $accent instanceof DOMElement ? ($accent->getAttributeNS(
+                'http://schemas.openxmlformats.org/officeDocument/2006/math', 'val')
+                ?: $accent->getAttribute('m:val') ?: $accent->getAttribute('val')) : '';
+            $command = match ($raw) {'ˆ', '^' => '\\hat', '¯', '̅' => '\\bar', '→' => '\\vec', default => '\\hat'};
+            return $command . '{' . $value($child('e')) . '}';
+        }
+        return $children($node);
+    }
+
+    private function mathText(string $text): string
+    {
+        return strtr($text, [
+            '×' => '\\times ', '÷' => '\\div ', '≤' => '\\le ', '≥' => '\\ge ', '≠' => '\\ne ',
+            '≈' => '\\approx ', '∞' => '\\infty ', '±' => '\\pm ', '∓' => '\\mp ', '→' => '\\to ',
+            '∈' => '\\in ', '∉' => '\\notin ', '∪' => '\\cup ', '∩' => '\\cap ',
+        ]);
+    }
+
+    private function mathDelimiter(string $value): string
+    {
+        return match ($value) {
+            '{' => '\\{', '}' => '\\}', '[' => '[', ']' => ']', '|' => '|',
+            '⌈' => '\\lceil', '⌉' => '\\rceil', '⌊' => '\\lfloor', '⌋' => '\\rfloor',
+            default => $value === '' ? '.' : $value,
+        };
     }
 
     private function input(string $value): string

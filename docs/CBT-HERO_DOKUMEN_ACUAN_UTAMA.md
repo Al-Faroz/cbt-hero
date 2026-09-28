@@ -760,10 +760,12 @@ sehingga kolom JSON tidak digunakan pada Word V2.
 
 Mendukung:
 
-- rich text;
+- rich content sederhana;
 - gambar;
-- Arab/RTL;
-- formula KaTeX sebagai teks;
+- Arab/RTL dan Unicode lain termasuk aksara Jawa;
+- rumus melalui editor visual pada input manual;
+- Microsoft Word Insert → Equation / OMML pada template Word, dikonversi ke format rumus internal;
+- shortcut KaTeX `$...$` / `$$...$$` tetap didukung untuk pengguna mahir tetapi bukan workflow utama;
 - tabel dalam sel;
 - media reference yang diizinkan.
 
@@ -781,6 +783,22 @@ Cocok untuk:
 - PG Bertingkat;
 - psikologis;
 - data dengan scoring matrix.
+
+## 15.2A Daftar Soal + Rich Content Editor Manager
+
+Bank Soal memakai satu halaman **Daftar Soal**. Tipe yang aktif pada Komposisi
+ditampilkan sebagai tab: PG, PG Kompleks, PG Bertingkat, Menjodohkan, Isian Singkat,
+dan Uraian. Setiap tab memiliki tombol **Informasi** dan **Tambah Soal**, serta tabel
+server-side dengan **Edit/Tinjau**, **Hapus**, checkbox per baris, checkbox halaman,
+dan bulk hard-delete maksimal 100 soal dalam satu transaction.
+
+Editor manual memakai rich-content sederhana, bukan HTML bebas. Toolbar minimum:
+**Tebal, Miring, fx Rumus, Gambar, Tabel**. Toolbar tersedia pada field rich-content
+yang relevan: Stimulus, Pertanyaan, Pilihan, sisi kiri/kanan Menjodohkan, dan Rubrik.
+Jawaban Isian Singkat tetap field terstruktur.
+
+Paste dari Word dibersihkan ke subset yang didukung. Script, iframe sembarang, style
+Word, object, dan executable tidak disimpan. Preview tetap memakai shared renderer.
 
 ## 15.3 Manual Editor dan Psikologis
 
@@ -2847,6 +2865,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 |---|---|---|---|---|---|
 | 2026-09-24 | 1.0 | Seluruh dokumen | Baseline final hasil audit konsep CBT-HERO | Menjadi single source of truth sebelum implementasi | Baseline DB/API/UI |
 | 2026-09-28 | 1.1 | Media Bank Soal | Audio dan video dikunci ke Google Drive link only; link ditulis langsung dengan awalan Audio:/Video: tanpa kolom khusus; upload audio dan provider YouTube/Vimeo dihapus | Menyederhanakan workflow operator dan menghindari beban streaming hosting CBT-HERO | Media service/parser/renderer/template/import |
+| 2026-09-28 | 1.2 | Daftar Soal / Rich Content | Soal PG dan Tipe Lain digabung menjadi Daftar Soal bertab; editor manual memakai rich-content sederhana, gambar per-field, fx Rumus visual, DataTables + bulk hard-delete; Word Equation/OMML menjadi input rumus utama template | Menyamakan workflow manual/import dan mengurangi kebutuhan user memahami sintaks teknis | UI/API/parser/renderer |
 
 ---
 
