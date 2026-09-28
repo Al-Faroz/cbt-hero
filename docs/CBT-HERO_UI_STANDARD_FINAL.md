@@ -1076,6 +1076,11 @@ Toolbar dipakai pada Stimulus, Pertanyaan, Pilihan, sisi Menjodohkan, dan Rubrik
 Jawaban Isian Singkat tetap input terstruktur. Rich editor menyimpan hanya format
 normalized yang didukung; HTML bebas dari clipboard tidak menjadi sumber kebenaran.
 
+Modal **Informasi/Panduan** pada setiap tab wajib memakai bahasa pengguna sehari-hari:
+jelaskan kapan tipe soal digunakan, cara mengisi, cara memberi jawaban/nilai, contoh,
+dan hal yang perlu diperhatikan. Hindari istilah teknis internal seperti renderer,
+KaTeX, OMML, Unicode, payload, atau nama struktur database pada panduan pengguna.
+
 Jika reorder diperlukan:
 
 ```text

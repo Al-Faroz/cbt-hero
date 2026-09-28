@@ -17,31 +17,162 @@
     };
 
     const info = {
-        PG:[
-            'Jumlah pilihan mengikuti Komposisi Bank dan hanya satu jawaban boleh menjadi kunci.',
-            'Poin maksimum otomatis/normalnya 1. Gunakan gambar, rumus, Arab/Jawa, atau Audio/Video Google Drive langsung pada pertanyaan maupun pilihan.',
-        ],
-        PG_KOMPLEKS:[
-            'Centang semua pilihan yang benar. Harus ada minimal satu pilihan benar dan satu pilihan salah.',
-            'Jumlah pilihan mengikuti Komposisi Bank. Poin maksimum normalnya 1.',
-        ],
-        PG_BERTINGKAT:[
-            'Setiap pilihan mempunyai nilai poin. Poin maksimum soal harus sama atau lebih besar dari poin pilihan tertinggi.',
-            'Cocok untuk soal bertingkat/bergradasi nilai; tidak memakai kunci benar tunggal.',
-        ],
-        MATCHING:[
-            'Jumlah pasangan kiri-kanan mengikuti Komposisi Bank. Kedua sisi setiap pasangan wajib unik.',
-            'Mode penilaian dikunci dari Komposisi Bank: Per pasangan atau Semua benar.',
-        ],
-        ISIAN_SINGKAT:[
-            'Mode TEKS menerima satu atau lebih jawaban yang dianggap benar. Mode ANGKA memakai angka harapan dan toleransi absolut.',
-            'Contoh: angka harapan 10 dan toleransi 0,5 menerima nilai 9,5 sampai 10,5.',
-        ],
-        URAIAN:[
-            'Isi pertanyaan dan rubrik/pedoman penilaian. Poin maksimum menentukan rentang skor manual 0 sampai poin maksimum.',
-            'Rubrik dapat memakai rich content bila diperlukan.',
-        ],
+        PG:{
+            intro:'Gunakan Pilihan Ganda ketika peserta harus memilih satu jawaban yang paling tepat dari beberapa pilihan.',
+            sections:[
+                {title:'Cara mengisi',items:[
+                    'Tulis pertanyaan dengan jelas. Jika perlu, tambahkan gambar, rumus, tabel, audio, atau video.',
+                    'Isi semua pilihan jawaban yang tersedia. Jumlah pilihan mengikuti pengaturan Komposisi Bank.',
+                    'Tandai tepat satu pilihan sebagai jawaban benar.'
+                ]},
+                {title:'Nilai',items:[
+                    'Poin maksimum menentukan nilai penuh untuk soal ini.',
+                    'Peserta mendapat nilai penuh jika memilih jawaban yang benar.'
+                ]},
+                {title:'Contoh',items:[
+                    'Pertanyaan: Ibu kota Indonesia adalah ....',
+                    'Pilihan: Jakarta, Bandung, Surabaya, Medan. Tandai Jakarta sebagai jawaban benar.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Jangan memberi lebih dari satu jawaban benar.',
+                    'Pastikan semua pilihan sudah terisi sebelum menyimpan.'
+                ]}
+            ]
+        },
+        PG_KOMPLEKS:{
+            intro:'Gunakan PG Kompleks ketika satu pertanyaan dapat mempunyai lebih dari satu jawaban benar.',
+            sections:[
+                {title:'Cara mengisi',items:[
+                    'Tulis pertanyaan dan semua pilihan jawaban. Jumlah pilihan mengikuti Komposisi Bank.',
+                    'Centang setiap pilihan yang benar.',
+                    'Harus ada sedikitnya satu pilihan benar dan sedikitnya satu pilihan salah.'
+                ]},
+                {title:'Nilai',items:[
+                    'Poin maksimum menentukan nilai penuh untuk soal ini.',
+                    'Jawaban peserta dinilai berdasarkan aturan PG Kompleks yang digunakan pada ujian.'
+                ]},
+                {title:'Contoh',items:[
+                    'Pertanyaan: Manakah yang termasuk hewan mamalia?',
+                    'Pilihan: Kucing, Ayam, Sapi, Ikan. Tandai Kucing dan Sapi sebagai jawaban benar.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Jangan menandai semua pilihan sebagai benar.',
+                    'Jangan sampai tidak ada pilihan yang benar.'
+                ]}
+            ]
+        },
+        PG_BERTINGKAT:{
+            intro:'Gunakan PG Bertingkat ketika setiap pilihan dapat mempunyai nilai yang berbeda, misalnya jawaban paling tepat mendapat nilai tertinggi dan jawaban yang kurang tepat mendapat nilai lebih kecil.',
+            sections:[
+                {title:'Cara mengisi',items:[
+                    'Tulis pertanyaan dan semua pilihan jawaban. Jumlah pilihan mengikuti Komposisi Bank.',
+                    'Isi nilai untuk setiap pilihan, mulai dari 0 sampai Poin Maksimum.',
+                    'Sedikitnya harus ada satu pilihan yang mempunyai nilai lebih dari 0.'
+                ]},
+                {title:'Nilai',items:[
+                    'Nilai peserta mengikuti nilai pada pilihan yang dipilih.',
+                    'Nilai setiap pilihan tidak boleh lebih besar dari Poin Maksimum soal.'
+                ]},
+                {title:'Contoh',items:[
+                    'Poin Maksimum 4. Pilihan A bernilai 4, B bernilai 3, C bernilai 1, dan D bernilai 0.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Tipe ini tidak memakai satu kunci jawaban benar seperti Pilihan Ganda biasa.',
+                    'Periksa kembali nilai setiap pilihan sebelum menyimpan.'
+                ]}
+            ]
+        },
+        MATCHING:{
+            intro:'Gunakan Menjodohkan ketika peserta harus memasangkan bagian di sebelah kiri dengan pasangan yang tepat di sebelah kanan.',
+            sections:[
+                {title:'Cara mengisi',items:[
+                    'Isi setiap bagian kiri dan pasangan kanannya.',
+                    'Jumlah pasangan mengikuti Komposisi Bank.',
+                    'Isi pada sisi kiri tidak boleh sama satu sama lain. Isi pada sisi kanan juga tidak boleh sama satu sama lain.'
+                ]},
+                {title:'Nilai',items:[
+                    'Cara penilaian mengikuti Komposisi Bank.',
+                    'Jika menggunakan Per Pasangan, pasangan yang benar dapat memperoleh nilai walaupun pasangan lain salah.',
+                    'Jika menggunakan Semua Benar, nilai penuh diberikan jika seluruh pasangan benar.'
+                ]},
+                {title:'Contoh',items:[
+                    'Kiri: Indonesia, Jepang, Thailand. Kanan pasangannya: Jakarta, Tokyo, Bangkok.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Pastikan setiap bagian kiri mempunyai tepat satu pasangan kanan.',
+                    'Gambar juga dapat digunakan pada bagian kiri maupun kanan.'
+                ]}
+            ]
+        },
+        ISIAN_SINGKAT:{
+            intro:'Gunakan Isian Singkat ketika peserta harus mengetik jawaban pendek, berupa kata/kalimat singkat atau angka.',
+            sections:[
+                {title:'Jika jawabannya berupa teks',items:[
+                    'Pilih mode Teks.',
+                    'Masukkan satu atau lebih jawaban yang boleh dianggap benar.',
+                    'Contoh: untuk pertanyaan tentang ibu kota Indonesia, Anda dapat cukup memasukkan Jakarta sebagai jawaban yang diterima.'
+                ]},
+                {title:'Jika jawabannya berupa angka',items:[
+                    'Pilih mode Angka.',
+                    'Isi jawaban angka yang diharapkan.',
+                    'Isi toleransi jika jawaban boleh sedikit berbeda. Toleransi 0 berarti jawaban harus tepat.'
+                ]},
+                {title:'Contoh angka',items:[
+                    'Jawaban yang diharapkan 10 dengan toleransi 0,5 berarti jawaban dari 9,5 sampai 10,5 dapat diterima.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Jangan memasukkan jawaban teks yang sama berulang kali.',
+                    'Gunakan Uraian jika jawaban peserta membutuhkan penjelasan panjang.'
+                ]}
+            ]
+        },
+        URAIAN:{
+            intro:'Gunakan Uraian ketika peserta perlu menjawab dengan penjelasan, langkah pengerjaan, alasan, atau jawaban panjang yang dinilai oleh pemeriksa.',
+            sections:[
+                {title:'Cara mengisi',items:[
+                    'Tulis pertanyaan dengan jelas dan lengkap.',
+                    'Isi Pedoman Penilaian agar pemeriksa mempunyai acuan saat memberi nilai.',
+                    'Tentukan Poin Maksimum sesuai nilai tertinggi yang dapat diperoleh peserta.'
+                ]},
+                {title:'Pedoman Penilaian',items:[
+                    'Tuliskan unsur jawaban yang diharapkan, langkah penting, atau pembagian nilai.',
+                    'Pedoman dapat berisi teks, gambar, rumus, atau tabel jika diperlukan.'
+                ]},
+                {title:'Contoh',items:[
+                    'Poin Maksimum 5: ketepatan jawaban 2 poin, langkah pengerjaan 2 poin, dan kesimpulan 1 poin.'
+                ]},
+                {title:'Perhatikan',items:[
+                    'Soal Uraian tidak dinilai otomatis seperti Pilihan Ganda.',
+                    'Buat pedoman yang cukup jelas agar penilaian antar pemeriksa tetap konsisten.'
+                ]}
+            ]
+        }
     };
+
+    const commonInfo = [
+        {title:'Menulis isi soal',items:[
+            'Gunakan tombol B untuk tulisan tebal dan I untuk tulisan miring.',
+            'Gunakan tombol fx jika ingin menambahkan rumus. Pilih bentuk rumus lalu isi bagian yang diperlukan.',
+            'Gunakan tombol Gambar untuk menambahkan gambar pada bagian yang sedang diisi.',
+            'Gunakan tombol Tabel jika soal membutuhkan tabel sederhana.',
+            'Huruf Arab, aksara Jawa, dan huruf lainnya dapat diketik atau ditempel seperti teks biasa.'
+        ]},
+        {title:'Audio dan video',items:[
+            'Simpan file audio atau video di Google Drive dan atur agar siapa saja yang mempunyai link dapat melihat file tersebut.',
+            'Ketik Audio: lalu tempel link Google Drive jika ingin menambahkan audio.',
+            'Ketik Video: lalu tempel link Google Drive jika ingin menambahkan video.',
+            'Sebelum digunakan dalam ujian, lihat Pratinjau dan pastikan audio atau video dapat diputar.'
+        ]},
+        {title:'Jika soal dibuat dari Microsoft Word',items:[
+            'Teks dari Word dapat disalin lalu ditempel ke kotak soal.',
+            'Untuk rumus di Word, gunakan menu Insert → Equation seperti biasa.',
+            'Untuk banyak soal sekaligus, lebih nyaman menggunakan Template Word dari menu Impor Soal.'
+        ]},
+        {title:'Sebelum menyimpan',items:[
+            'Lihat Pratinjau untuk memastikan tulisan, gambar, rumus, audio, video, dan jawaban sudah benar.',
+            'Pastikan tidak ada bagian penting yang masih kosong.'
+        ]}
+    ];
 
     const feedback = (id,message,error=false) => {
         const el=$(id); el.textContent=message;
@@ -280,27 +411,31 @@
         bootstrap.Modal.getOrCreateInstance($('questionDeleteModal')).show();
     };
 
+    const appendInfoSection = (body, section, common=false) => {
+        const card=document.createElement('section');
+        card.className='border rounded p-3 '+(common?'bg-body-tertiary':'bg-body')+' mb-3';
+        const heading=document.createElement('h3'); heading.className='fs-6 mb-2'; heading.textContent=section.title;
+        const list=document.createElement('ul'); list.className='mb-0 ps-3';
+        for(const line of section.items||[]){
+            const item=document.createElement('li'); item.className='mb-1'; item.textContent=line; list.append(item);
+        }
+        card.append(heading,list); body.append(card);
+    };
+
     const infoModal = () => {
-        const type=state.activeType, body=$('questionInfoBody'); body.replaceChildren();
-        $('questionInfoTitle').textContent='Informasi — '+(labels[type]||type);
-        const lead=document.createElement('p'); lead.textContent='Panduan ini berlaku untuk pembuatan manual dan menjadi acuan saat memeriksa hasil import.';
-        body.append(lead);
-        const list=document.createElement('ul');
-        for(const line of info[type]||[]) {const li=document.createElement('li');li.textContent=line;list.append(li);}
-        body.append(list);
-        const common=document.createElement('div'); common.className='border rounded p-3 bg-body-tertiary';
-        const title=document.createElement('strong'); title.textContent='Rich Content yang didukung';
-        const commonList=document.createElement('ul'); commonList.className='mb-0 mt-2';
-        for(const line of [
-            'Tebal dan miring melalui toolbar editor.',
-            'Gambar JPG/PNG/WebP melalui tombol gambar pada field Pertanyaan, Stimulus, Pilihan, pasangan Menjodohkan, atau Rubrik.',
-            'Rumus melalui tombol fx. Guru tidak wajib menulis sintaks KaTeX; shortcut $...$ / $$...$$ tetap diterima untuk pengguna mahir.',
-            'Pada template Word, gunakan Insert → Equation; persamaan Word yang didukung akan dikonversi ke format rumus CBT-HERO saat import.',
-            'Arab, aksara Jawa, dan Unicode lain dapat diketik atau ditempel langsung. Arah teks menggunakan deteksi otomatis.',
-            'Audio/video: ketik Audio: <link Google Drive> atau Video: <link Google Drive> langsung pada bagian konten yang membutuhkan media.',
-            'Paste dari Word dibersihkan dari HTML/style yang tidak perlu; tebal, miring, tabel, teks Unicode, gambar clipboard, dan MathML yang dikenali dipertahankan.',
-        ]) {const li=document.createElement('li');li.textContent=line;commonList.append(li);}
-        common.append(title,commonList); body.append(common);
+        const type=state.activeType, guide=info[type], body=$('questionInfoBody'); body.replaceChildren();
+        $('questionInfoTitle').textContent='Panduan — '+(labels[type]||type);
+
+        if(guide?.intro){
+            const lead=document.createElement('p'); lead.className='mb-3'; lead.textContent=guide.intro; body.append(lead);
+        }
+        for(const section of guide?.sections||[]) appendInfoSection(body,section);
+
+        const divider=document.createElement('hr'); divider.className='my-4'; body.append(divider);
+        const commonTitle=document.createElement('h3'); commonTitle.className='fs-6 mb-3'; commonTitle.textContent='Hal yang juga dapat digunakan pada soal';
+        body.append(commonTitle);
+        for(const section of commonInfo) appendInfoSection(body,section,true);
+
         bootstrap.Modal.getOrCreateInstance($('questionInfoModal')).show();
     };
 
