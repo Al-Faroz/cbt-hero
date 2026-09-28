@@ -12,6 +12,7 @@
 <div id="jadwalApp"
     data-api="<?= esc(base_url('manager/api/jadwal'), 'attr') ?>"
     data-ui-base="<?= esc(base_url('manager/master-ujian/jadwal'), 'attr') ?>"
+    data-preparation-api-base="<?= esc(base_url('manager/api/jadwal'), 'attr') ?>"
     data-timezone="<?= esc($appTimezone, 'attr') ?>">
     <section class="manager-section-card">
         <div class="card-body">
@@ -161,8 +162,10 @@
         </div>
     </div>
 </div>
+<?= view('manager/schedule/_preparation_modal') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
 <script src="<?= base_url('assets/js/manager-jadwal.js') ?>" defer></script>
+<script src="<?= base_url('assets/js/manager-preparation.js') ?>" defer></script>
 <?= $this->endSection() ?>

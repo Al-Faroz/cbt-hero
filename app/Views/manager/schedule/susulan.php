@@ -16,6 +16,7 @@
     data-main-id="<?= (int) $mainJadwalId ?>"
     data-api="<?= esc(base_url('manager/api/jadwal/' . $mainJadwalId . '/susulan'), 'attr') ?>"
     data-jadwal-api="<?= esc(base_url('manager/api/jadwal'), 'attr') ?>"
+    data-preparation-api-base="<?= esc(base_url('manager/api/jadwal'), 'attr') ?>"
     data-timezone="<?= esc($appTimezone, 'attr') ?>">
     <section class="manager-section-card mb-3">
         <div class="card-body">
@@ -165,8 +166,10 @@
         </div>
     </div>
 </div>
+<?= view('manager/schedule/_preparation_modal') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
 <script src="<?= base_url('assets/js/manager-susulan.js') ?>" defer></script>
+<script src="<?= base_url('assets/js/manager-preparation.js') ?>" defer></script>
 <?= $this->endSection() ?>

@@ -1652,6 +1652,22 @@ Print tidak membawa sidebar/topbar.
 | Backup | Status/list | small |
 | Clear Data | Dependency wizard | command flow |
 
+
+## Catatan polishing Jadwal Ujian — DEFERRED 2026-09-28
+
+Tampilan tabel **Jadwal Ujian** perlu dirapikan pada tahap polishing tanpa mengubah
+fungsi backend. Temuan visual saat data nyata:
+
+- kolom **Soal Diambil** terlalu tinggi karena setiap tipe membungkus menjadi banyak baris;
+- kumpulan tombol pada kolom **Aksi** membuat lebar tabel berlebihan;
+- horizontal scroll muncul pada desktop walaupun ruang layar masih cukup;
+- hierarki aksi utama/sekunder perlu dipadatkan, misalnya melalui grouping/dropdown
+  atau action layout yang tetap mudah dijangkau;
+- isi tabel harus tetap terbaca pada desktop dan mobile tanpa mengecilkan font secara berlebihan.
+
+Perbaikan ini **bukan blocker fungsional Phase 5** dan sengaja ditunda sampai
+checkpoint polishing Master Ujian Akademis.
+
 ---
 
 # 54. PERFORMANCE GUARD

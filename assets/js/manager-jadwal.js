@@ -267,6 +267,14 @@
                 followUp.textContent = 'Susulan';
                 actions.append(followUp);
 
+                const preparation = document.createElement('button');
+                preparation.type = 'button';
+                preparation.className = 'btn btn-outline-primary btn-sm me-1 js-preparation';
+                preparation.dataset.jadwalId = String(item.id);
+                preparation.dataset.title = (item.mapel_nama || item.nama_bank || ('Jadwal #' + item.id));
+                preparation.textContent = 'Preparation';
+                actions.append(preparation);
+
                 actions.append(actionButton(
                     'Perpanjang',
                     'btn btn-outline-secondary btn-sm me-1',

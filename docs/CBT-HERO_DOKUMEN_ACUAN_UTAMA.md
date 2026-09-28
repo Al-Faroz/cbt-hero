@@ -931,6 +931,20 @@ Mendukung:
 
 Tidak membutuhkan Redis/queue sebagai dependency wajib.
 
+Implementasi akademik Phase 5C memproses maksimal **100 peserta per request**.
+UI melanjutkan chunk berikutnya secara berurutan sampai seluruh target READY.
+Jika browser/request terputus, proses dapat dijalankan lagi; Prepared Assignment
+yang fingerprint-nya masih sesuai dilewati.
+
+Fingerprint assignment mencakup Bank READY/version, komposisi pengambilan Jadwal,
+aturan shuffle Bank, peserta target, dan konteks replacement Susulan. Perubahan
+yang memang memengaruhi assignment menghasilkan status STALE dan dapat dibangun
+ulang secara selektif.
+
+Preparation juga membuat manifest media dan mem-pin `soal_revision_id`. START
+participant pada Phase Attempt Engine wajib menolak dengan `NOT_PREPARED` bila
+assignment READY yang sesuai tidak tersedia.
+
 ---
 
 # 18. JADWAL UJIAN
@@ -2896,6 +2910,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-28 | 1.3 | Template Excel Bank Soal | Excel dibuat dinamis dari Komposisi dengan sheet per tipe aktif, tanpa JSON; gambar dibaca berdasarkan posisi sel dan Audio/Video tetap memakai link Google Drive langsung pada isi | Menyamakan kemudahan Word dan Excel untuk import massal | Generator XLSX/parser/import staging |
 | 2026-09-28 | 1.4 | Jadwal Ujian Phase 5A | Jadwal MAIN akademik, BUKA/TAHAN, waktu, durasi, tampilkan nilai, dan selection_count per tipe Bank mulai diimplementasikan; structural edit hanya pada Kegiatan DRAFT | Memisahkan komposisi Bank dari jumlah soal yang benar-benar diberikan ke peserta | UI/API/JadwalService/jadwal_type_selection |
 | 2026-09-28 | 1.5 | Jadwal Ujian Phase 5B | Susulan N kali, target FIRST_ATTEMPT/REPLACEMENT, cancel target, idempotency create, perpanjang Batas Mulai, result visibility lock, dan Tambah Waktu Attempt ACTIVE | Menyelesaikan kontrol operasional Jadwal sebelum Preparation | UI/API/SusulanService/JadwalOperationalService/jadwal_operations |
+| 2026-09-28 | 1.6 | Preparation Phase 5C | Prepared Assignment akademik dibuat sebelum START secara chunked; selection_count, shuffle stabil, pin revision, media manifest, fingerprint, preflight peserta, dan selective rebuild diaktifkan | Menghilangkan pekerjaan berat dari peak START peserta | PreparationService/prepared_assignment/item/media/API/UI |
 
 ---
 

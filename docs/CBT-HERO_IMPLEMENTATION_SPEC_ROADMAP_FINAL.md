@@ -822,7 +822,7 @@ Urutan implementasi operasional:
 
 - **Phase 5A:** Jadwal MAIN akademik + `selection_count` per tipe + gate BUKA/TAHAN — implemented;
 - **Phase 5B:** Susulan N kali + target peserta + command perubahan waktu operasional — implemented;
-- **Phase 5C:** Preparation/Prepared Assignment + fingerprint + selective rebuild — next.
+- **Phase 5C:** Preparation/Prepared Assignment + fingerprint + selective rebuild — implemented.
 
 Acceptance mulai Phase 4D2 berstatus **DEFERRED** sesuai keputusan proyek:
 selesaikan rangkaian Master Ujian Akademis dahulu, kemudian jalankan acceptance

@@ -1791,6 +1791,23 @@ force_rebuild=false
 
 Implementasi harus chunked/resumable bila target besar.
 
+Phase 5C akademik memproses maksimal 100 target per request. Response menyertakan
+`processed_count` dan `has_more`; Manager UI meneruskan request berikutnya
+dengan Idempotency-Key baru sampai selesai. Retry setelah proses terputus aman
+karena assignment READY dengan fingerprint yang masih sesuai tidak dibuat ulang.
+
+Status juga menyertakan:
+
+```text
+assignments_ready
+preflight.pass
+preflight.missing_number
+preflight.credential_not_ready
+```
+
+`can_start=true` hanya bila seluruh assignment READY dan preflight identitas/login
+target juga lulus.
+
 ## 34.2 Status
 
 ```text

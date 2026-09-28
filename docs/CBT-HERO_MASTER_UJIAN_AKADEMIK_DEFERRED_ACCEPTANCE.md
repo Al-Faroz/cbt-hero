@@ -15,7 +15,7 @@ Status yang ditunda mulai keputusan ini:
 - Phase 4D2 — Excel Template Dinamis;
 - Phase 5A — Jadwal Ujian MAIN;
 - Phase 5B — Susulan + Kontrol Operasional;
-- Phase 5C — Preparation / Prepared Assignment;
+- Phase 5C — Preparation / Prepared Assignment (implementasi selesai; acceptance tetap DEFERRED);
 - subphase Master Ujian Akademis berikutnya yang selesai sebelum checkpoint tersebut.
 
 Dokumen acceptance masing-masing tetap menjadi sumber langkah pengujian. Kata

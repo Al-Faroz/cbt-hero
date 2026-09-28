@@ -299,6 +299,13 @@ $routes->group(
         $routes->post('jadwal/(:num)/susulan', $susulan . 'create/$1', $examFilter);
         $routes->post('jadwal/(:num)/targets/(:num)/cancel', $susulan . 'cancelTarget/$1/$2', $examFilter);
 
+        $preparation = 'Api\\Manager\\Schedule\\PreparationController::';
+        $routes->get('jadwal/(:num)/preparation', $preparation . 'status/$1', $examFilter);
+        $routes->post('jadwal/(:num)/prepare', $preparation . 'prepare/$1', $examFilter);
+        $routes->post('jadwal/(:num)/prepare/rebuild', $preparation . 'rebuild/$1', $examFilter);
+        $routes->get('jadwal/(:num)/prepared-assignments', $preparation . 'assignments/$1', $examFilter);
+        $routes->get('prepared-assignments/(:num)', $preparation . 'detail/$1', $examFilter);
+
         $routes->get(
             'users',
             'Manager\\System\\ManagerUserController::list',

@@ -126,6 +126,14 @@
                     () => openTargets(item.id)
                 ));
 
+                const preparation = document.createElement('button');
+                preparation.type = 'button';
+                preparation.className = 'btn btn-outline-primary btn-sm me-1 js-preparation';
+                preparation.dataset.jadwalId = String(item.id);
+                preparation.dataset.title = 'Susulan #' + (item.susulan_no || item.id);
+                preparation.textContent = 'Preparation';
+                actions.append(preparation);
+
                 if (item.editable) {
                     actions.append(actionButton(
                         'Edit',
