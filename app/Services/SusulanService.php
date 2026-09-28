@@ -437,6 +437,19 @@ class SusulanService
     {
         $selection = $db->table('jadwal_type_selection')->select('question_type, selection_count')
             ->where('jadwal_id', (int) $main['id'])->orderBy('id', 'ASC')->get()->getResultArray();
+        $labels = [
+            'PG' => 'Pilihan Ganda',
+            'PG_KOMPLEKS' => 'PG Kompleks',
+            'PG_BERTINGKAT' => 'PG Bertingkat',
+            'MATCHING' => 'Menjodohkan',
+            'ISIAN_SINGKAT' => 'Isian Singkat',
+            'URAIAN' => 'Uraian',
+        ];
+        foreach ($selection as &$row) {
+            $row['selection_count'] = (int) $row['selection_count'];
+            $row['label'] = $labels[$row['question_type']] ?? $row['question_type'];
+        }
+        unset($row);
         return [
             'id' => (int) $main['id'],
             'kegiatan_id' => (int) $main['kegiatan_id'],

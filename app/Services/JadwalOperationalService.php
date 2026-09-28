@@ -121,8 +121,10 @@ class JadwalOperationalService
             foreach ($attempts as $attempt) {
                 $attemptId = (int) $attempt['id'];
                 $db->query(
-                    'UPDATE attempt SET added_seconds = added_seconds + ?, deadline_at = DATE_ADD(deadline_at, INTERVAL ? SECOND) WHERE id = ? AND status = ?',
-                    [$seconds, $seconds, $attemptId, 'ACTIVE']
+                    'UPDATE attempt SET added_seconds = added_seconds + ' . $seconds
+                        . ', deadline_at = DATE_ADD(deadline_at, INTERVAL ' . $seconds
+                        . ' SECOND) WHERE id = ? AND status = ?',
+                    [$attemptId, 'ACTIVE']
                 );
                 $attemptIds[] = $attemptId;
             }
