@@ -12,7 +12,8 @@
         configMap:new Map(), configured:[], activeType:null, bank:null, editable:false,
         editing:null, revision:null, options:[], pairs:[], answers:[], mode:'TEXT',
         expected:'', tolerance:'0', rubric:'', media:{}, selected:new Set(), deleteIds:[],
-        table:null, richQuestion:null, richStimulus:null, dynamicEditors:[],
+        page:1, pages:1, total:0, filtered:0, seq:0,
+        richQuestion:null, richStimulus:null, dynamicEditors:[],
     };
 
     const info = {
@@ -303,46 +304,101 @@
         bootstrap.Modal.getOrCreateInstance($('questionInfoModal')).show();
     };
 
+    const rowCell = (text, className='') => {
+        const cell=document.createElement('td'); cell.className=className; cell.textContent=String(text??''); return cell;
+    };
+
+    const renderTableRows = items => {
+        const body=$('questionTable').querySelector('tbody'); body.replaceChildren();
+        for(const item of items){
+            const row=document.createElement('tr');
+
+            const selectCell=document.createElement('td'); selectCell.className='text-center question-check-col';
+            const check=document.createElement('input'); check.type='checkbox'; check.className='form-check-input question-row-check';
+            check.dataset.id=String(Number(item.id)); check.checked=state.selected.has(Number(item.id));
+            check.disabled=!state.editable; check.setAttribute('aria-label','Pilih soal');
+            selectCell.append(check);
+
+            const action=document.createElement('td'); action.className='text-nowrap';
+            const edit=document.createElement('button'); edit.type='button'; edit.className='btn btn-outline-primary btn-sm me-1';
+            edit.dataset.action='edit'; edit.dataset.id=String(Number(item.id)); edit.textContent='Edit / Tinjau';
+            const remove=document.createElement('button'); remove.type='button'; remove.className='btn btn-outline-danger btn-sm';
+            remove.dataset.action='delete'; remove.dataset.id=String(Number(item.id)); remove.textContent='Hapus'; remove.disabled=!state.editable;
+            action.append(edit,remove);
+
+            row.append(
+                selectCell,
+                rowCell(item.sort_order,'text-nowrap'),
+                rowCell((summaryText(item.question_text)||'[Konten media]').slice(0,180)),
+                rowCell(numberLabel(item.max_point),'text-nowrap'),
+                rowCell(item.current_revision_no,'text-nowrap'),
+                action
+            );
+            body.append(row);
+        }
+        if(!items.length){
+            const row=document.createElement('tr'), cell=document.createElement('td');
+            cell.colSpan=6; cell.className='text-center text-secondary py-4';
+            cell.textContent=$('questionSearch').value.trim()?'Tidak ada soal yang cocok.':'Belum ada soal tipe ini.';
+            row.append(cell); body.append(row);
+        }
+        $('questionCheckAll').disabled=!state.editable||!items.length;
+        updateSelectionUi();
+    };
+
+    const loadTable = async ({keepPage=true}={}) => {
+        const seq=++state.seq;
+        if(!keepPage) state.page=1;
+        feedback('questionFeedback','Memuat soal...');
+        try{
+            const params=new URLSearchParams({
+                type:state.activeType,
+                page:String(state.page),
+                per_page:$('questionPageSize').value,
+                q:$('questionSearch').value.trim()
+            });
+            const data=await api(base+'?'+params);
+            if(seq!==state.seq)return;
+
+            state.bank=data.bank;
+            state.editable=data.bank.status==='DRAFT'&&data.bank.kegiatan_status==='DRAFT';
+            state.page=Number(data.pagination.page||1);
+            state.pages=Number(data.pagination.pages||1);
+            state.total=Number(data.pagination.total||0);
+            state.filtered=Number(data.pagination.filtered??state.total);
+
+            $('questionContext').textContent=data.bank.nama_bank+' · '+data.bank.kegiatan_nama+' · '+data.bank.mapel_nama+' · Tingkat '+data.bank.tingkat+' · '+data.bank.status;
+            $('questionAdd').disabled=!state.editable;
+            $('questionImportLink').hidden=!state.editable;
+
+            renderTableRows(data.items||[]);
+
+            const perPage=Number($('questionPageSize').value)||25;
+            const startRow=state.filtered?((state.page-1)*perPage)+1:0;
+            const endRow=Math.min(state.page*perPage,state.filtered);
+            $('questionTableInfo').textContent=state.filtered===state.total
+                ? (state.filtered?startRow+'–'+endRow+' dari '+state.filtered+' soal':'Belum ada soal')
+                : startRow+'–'+endRow+' dari '+state.filtered+' hasil · '+state.total+' total';
+            $('questionPageInfo').textContent=state.page+' / '+state.pages;
+            $('questionPrevious').disabled=state.page<=1;
+            $('questionNext').disabled=state.page>=state.pages;
+            feedback('questionFeedback','');
+        }catch(error){
+            if(seq!==state.seq)return;
+            renderTableRows([]);
+            $('questionTableInfo').textContent='Gagal memuat soal';
+            feedback('questionFeedback',error.message,true);
+        }
+    };
+
     const initTable = () => {
-        state.table=new DataTable('#questionTable',{
-            processing:true,serverSide:true,searching:true,ordering:false,pageLength:25,
-            lengthMenu:[25,50,100],
-            ajax:async(request,callback)=>{
-                try{
-                    const params=new URLSearchParams({
-                        type:state.activeType,page:String(Math.floor(request.start/request.length)+1),
-                        per_page:String(request.length),q:request.search.value||''
-                    });
-                    const data=await api(base+'?'+params);
-                    state.bank=data.bank; state.editable=data.bank.status==='DRAFT'&&data.bank.kegiatan_status==='DRAFT';
-                    $('questionContext').textContent=data.bank.nama_bank+' · '+data.bank.kegiatan_nama+' · '+data.bank.mapel_nama+' · Tingkat '+data.bank.tingkat+' · '+data.bank.status;
-                    $('questionAdd').disabled=!state.editable;
-                    $('questionImportLink').hidden=!state.editable;
-                    callback({draw:request.draw,recordsTotal:Number(data.pagination.total||0),
-                        recordsFiltered:Number(data.pagination.filtered??data.pagination.total??0),data:data.items||[]});
-                    feedback('questionFeedback','');
-                }catch(error){feedback('questionFeedback',error.message,true);callback({draw:request.draw,recordsTotal:0,recordsFiltered:0,data:[]});}
-            },
-            columns:[
-                {data:'id',className:'text-center question-check-col',searchable:false,render:id=>'<input class="form-check-input question-row-check" type="checkbox" data-id="'+Number(id)+'" aria-label="Pilih soal">'},
-                {data:'sort_order',className:'text-nowrap'},
-                {data:'question_text',render:value=>esc((summaryText(value)||'[Konten media]').slice(0,180))},
-                {data:'max_point',className:'text-nowrap',render:numberLabel},
-                {data:'current_revision_no',className:'text-nowrap'},
-                {data:'id',className:'text-nowrap',searchable:false,render:id=>'<button type="button" class="btn btn-outline-primary btn-sm me-1" data-action="edit" data-id="'+Number(id)+'">Edit / Tinjau</button><button type="button" class="btn btn-outline-danger btn-sm" data-action="delete" data-id="'+Number(id)+'">Hapus</button>'},
-            ],
-            drawCallback:()=>{
-                for(const box of document.querySelectorAll('.question-row-check')) box.checked=state.selected.has(Number(box.dataset.id));
-                document.querySelectorAll('[data-action="delete"]').forEach(b=>b.disabled=!state.editable);
-                updateSelectionUi();
-            },
-            language:{search:'Cari soal:',lengthMenu:'Tampilkan _MENU_',info:'_START_–_END_ dari _TOTAL_ soal',infoEmpty:'Belum ada soal',zeroRecords:'Tidak ada soal yang cocok',processing:'Memuat...',paginate:{previous:'Sebelumnya',next:'Berikutnya'}}
-        });
-        $('#questionTable').addEventListener('change',event=>{
+        const table=$('questionTable');
+        table.addEventListener('change',event=>{
             const box=event.target.closest('.question-row-check'); if(!box)return;
-            const id=Number(box.dataset.id); if(box.checked)state.selected.add(id);else state.selected.delete(id);updateSelectionUi();
+            const id=Number(box.dataset.id); if(box.checked)state.selected.add(id);else state.selected.delete(id);
+            updateSelectionUi();
         });
-        $('#questionTable').addEventListener('click',async event=>{
+        table.addEventListener('click',async event=>{
             const button=event.target.closest('[data-action]'); if(!button)return;
             const id=Number(button.dataset.id);
             if(button.dataset.action==='delete'){if(state.editable)openDelete([id]);return;}
@@ -351,16 +407,25 @@
             catch(error){feedback('questionFeedback',error.message,true);}
             finally{button.disabled=false;}
         });
-        state.table.on('search',clearSelection);
+
+        let timer=null;
+        $('questionSearch').addEventListener('input',()=>{
+            clearTimeout(timer); clearSelection();
+            timer=setTimeout(()=>{state.page=1;loadTable();},250);
+        });
+        $('questionPageSize').addEventListener('change',()=>{clearSelection();state.page=1;loadTable();});
+        $('questionPrevious').addEventListener('click',()=>{if(state.page>1){state.page--;loadTable();}});
+        $('questionNext').addEventListener('click',()=>{if(state.page<state.pages){state.page++;loadTable();}});
     };
 
     const activateType = type => {
         if(!state.configured.includes(type))return;
-        state.activeType=type; clearSelection(); $('questionEditor').hidden=true;
+        state.activeType=type; state.page=1; clearSelection(); $('questionEditor').hidden=true;
+        $('questionSearch').value='';
         for(const button of document.querySelectorAll('[data-question-type]')){
             const active=button.dataset.questionType===type; button.classList.toggle('active',active); button.setAttribute('aria-selected',active?'true':'false');
         }
-        if(state.table) state.table.ajax.reload();
+        loadTable();
     };
 
     const buildTabs = () => {
@@ -393,7 +458,7 @@
             if(ids.length===1) await api(base+'/'+ids[0],'DELETE');
             else await api(base+'/bulk-delete','POST',{ids});
             bootstrap.Modal.getOrCreateInstance($('questionDeleteModal')).hide();
-            clearSelection();$('questionEditor').hidden=true;state.table.ajax.reload(null,false);await refreshCounts();
+            clearSelection();$('questionEditor').hidden=true;loadTable();await refreshCounts();
             feedback('questionFeedback',ids.length+' soal berhasil dihapus permanen.');
         }catch(error){feedback('questionFeedback',error.message,true);}
         finally{button.disabled=false;state.deleteIds=[];}
@@ -404,7 +469,7 @@
         const payload=currentPayload(), button=$('questionSave');button.disabled=true;
         try{
             const data=await api(state.editing===null?base:base+'/'+state.editing,state.editing===null?'POST':'PUT',payload);
-            $('questionEditor').hidden=true;state.table.ajax.reload(null,false);await refreshCounts();
+            $('questionEditor').hidden=true;loadTable();await refreshCounts();
             feedback('questionFeedback','Soal tersimpan pada revisi '+data.item.current_revision_no+'.');
         }catch(error){feedback('questionFormFeedback',error.message,true);}
         finally{button.disabled=false;}

@@ -1049,9 +1049,9 @@ COMMIT:
 Bank list memakai table/list biasa. Dari setiap Bank hanya ada satu entry **Daftar Soal**.
 
 Daftar Soal memakai tab sesuai tipe yang aktif di Komposisi. Masing-masing tab memakai
-DataTables server-side/lazy dengan checkbox halaman, row action **Edit/Tinjau** dan
-**Hapus**, serta bulk hard-delete terkontrol. Jangan membuat enam DataTables aktif
-sekaligus; instance aktif mengikuti tab yang sedang dibuka.
+**server-side table native/Vanilla JS** dengan search, page size, pagination, checkbox
+halaman, row action **Edit/Tinjau** dan **Hapus**, serta bulk hard-delete terkontrol.
+CBT-HERO tidak menambahkan jQuery hanya untuk tabel ini; hanya tab aktif yang memuat data.
 
 Editor soal tetap specialized dan **bukan form di dalam DataTables**.
 

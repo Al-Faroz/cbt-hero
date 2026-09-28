@@ -42,6 +42,20 @@
                     </button>
                 </div>
             </div>
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-md-6 col-lg-5">
+                    <label class="cbt-form-label" for="questionSearch">Cari soal</label>
+                    <input class="form-control form-control-sm" id="questionSearch" type="search" maxlength="120" placeholder="Cari isi pertanyaan...">
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="cbt-form-label" for="questionPageSize">Per halaman</label>
+                    <select class="form-select form-select-sm" id="questionPageSize">
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
             <div class="cbt-inline-feedback mb-2" id="questionFeedback" role="status" aria-live="polite"></div>
         </div>
         <div class="table-responsive">
@@ -58,6 +72,14 @@
                 </thead>
                 <tbody></tbody>
             </table>
+        </div>
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 border-top">
+            <span class="small text-secondary" id="questionTableInfo">Belum ada soal</span>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm" id="questionPrevious" type="button">Sebelumnya</button>
+                <span class="small text-secondary" id="questionPageInfo">1 / 1</span>
+                <button class="btn btn-outline-secondary btn-sm" id="questionNext" type="button">Berikutnya</button>
+            </div>
         </div>
     </section>
 
@@ -149,10 +171,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
-<link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/css/dataTables.bootstrap5.min.css') ?>">
 <link rel="stylesheet" href="<?= base_url('assets/vendor/katex/katex.min.css') ?>">
-<script src="<?= base_url('assets/vendor/datatables/js/dataTables.min.js') ?>" defer></script>
-<script src="<?= base_url('assets/vendor/datatables/js/dataTables.bootstrap5.min.js') ?>" defer></script>
 <script src="<?= base_url('assets/vendor/katex/katex.min.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/question-renderer.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/question-rich-editor.js') ?>" defer></script>
