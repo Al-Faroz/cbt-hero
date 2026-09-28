@@ -610,6 +610,11 @@ Status:
 DRAFT / READY
 ```
 
+Bank READY tetap dapat dicetak. Selama Kegiatan masih DRAFT dan Bank belum dipakai
+Jadwal, Admin/Operator dapat mengembalikan Bank dari READY ke DRAFT untuk membuka
+kembali Komposisi, editor, dan import. Transisi ini diaudit dan tetap mengikuti
+version check/server lock.
+
 Tidak ada reuse/clone/copy sebagai workflow utama. Membuat Bank baru dibuat murah melalui template/import.
 
 Komposisi, randomisasi, scoring, dan bobot berada dalam Bank.

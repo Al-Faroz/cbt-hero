@@ -1,6 +1,11 @@
 (() => {
     'use strict';
     const base=window.bankPrintApi, $=id=>document.getElementById(id);
+    const numberLabel=value=>{
+        const numeric=Number(value);
+        if(!Number.isFinite(numeric))return String(value ?? '0');
+        return numeric.toFixed(3).replace(/\.?0+$/,'');
+    };
     const get=async url=>{
         const response=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'}});
         const result=await response.json().catch(()=>null);
@@ -12,7 +17,7 @@
         const target=$('printBankQuestions');target.replaceChildren();
         for(const [i,item] of items.entries()){
             const section=document.createElement('section');section.className='question';
-            const title=document.createElement('h2');title.textContent=(i+1)+'. '+item.question_type+' · '+item.max_point+' poin';
+            const title=document.createElement('h2');title.textContent=(i+1)+'. '+item.question_type+' · '+numberLabel(item.max_point)+' poin';
             section.append(title,window.CbtQuestionRenderer.render(item,{showAnswer:$('printBankAnswer').checked}));target.append(section);
         }
     };

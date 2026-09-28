@@ -1,6 +1,11 @@
 // Safe shared renderer: text, simple emphasis, KaTeX formulas, and validated media references.
 (() => {
     'use strict';
+    const numberLabel = (value) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return String(value ?? '0');
+        return numeric.toFixed(3).replace(/\.?0+$/, '');
+    };
     const appendInline = (element, source, media) => {
         const tokens = /(\[\[media:([1-9][0-9]*)\]\]|\$([^$\n]{1,500})\$|\*\*([^*\n]+)\*\*|(?<!\*)\*([^*\n]+)\*(?!\*))/g;
         let cursor = 0, match;
@@ -75,7 +80,7 @@
                 if (showAnswer && (Number(option.is_correct) === 1 || (type === 'PG' && option.option_key === question.correct_key)))
                     line.append(node('span', 'Kunci', 'badge text-bg-success ms-2'));
                 if (showAnswer && type === 'PG_BERTINGKAT')
-                    line.append(node('span', 'Poin ' + (option.point_value ?? '0'), 'badge text-bg-info ms-2'));
+                    line.append(node('span', 'Poin ' + numberLabel(option.point_value), 'badge text-bg-info ms-2'));
                 list.append(line);
             }
             article.append(list);

@@ -366,3 +366,80 @@
         min-width: 720px;
     }
 }
+
+
+/* Bank readiness modal */
+.bank-status-hero {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    background: var(--bs-tertiary-bg);
+}
+
+.bank-status-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: 700;
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+}
+
+.bank-status-hero.is-pass .bank-status-icon {
+    background: rgba(var(--bs-success-rgb), .14);
+    color: var(--bs-success);
+}
+
+.bank-status-hero.is-fail .bank-status-icon {
+    background: rgba(var(--bs-warning-rgb), .18);
+    color: var(--bs-warning-text-emphasis);
+}
+
+.bank-status-count-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.bank-status-count-item {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    background: var(--bs-body-bg);
+}
+
+.bank-status-count-item span {
+    min-width: 0;
+    color: var(--bs-secondary-color);
+    font-size: 11px;
+}
+
+.bank-status-count-item strong {
+    flex: 0 0 auto;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 767.98px) {
+    .bank-status-count-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .bank-status-count-grid {
+        grid-template-columns: 1fr;
+    }
+}

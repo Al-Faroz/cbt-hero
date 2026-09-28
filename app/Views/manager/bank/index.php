@@ -29,5 +29,35 @@
         <div class="cbt-inline-feedback mt-2" id="bankFormFeedback" role="alert"></div>
     </form></div>
 </div></div></div>
+
+<div class="modal fade" id="bankStatusModal" tabindex="-1" aria-labelledby="bankStatusModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <div class="manager-page-kicker mb-1">Bank Soal / Validasi</div>
+                    <h2 class="modal-title fs-5" id="bankStatusModalTitle">Validasi Bank Soal</h2>
+                </div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <div class="bank-status-hero" id="bankStatusHero">
+                    <div class="bank-status-icon" id="bankStatusIcon" aria-hidden="true">✓</div>
+                    <div>
+                        <div class="fw-bold" id="bankStatusHeadline">Memeriksa Bank...</div>
+                        <div class="small text-secondary mt-1" id="bankStatusLead"></div>
+                    </div>
+                </div>
+                <div class="bank-status-count-grid my-3" id="bankStatusCounts"></div>
+                <div id="bankStatusErrors"></div>
+                <div class="small text-secondary mt-3" id="bankStatusNote"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Tutup</button>
+                <button class="btn btn-cbt-primary" type="button" id="bankStatusAction" hidden></button>
+            </div>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
 <?= $this->section('pageScripts') ?><script src="<?= base_url('assets/js/manager-bank-soal.js') ?>" defer></script><?= $this->endSection() ?>
