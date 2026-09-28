@@ -756,8 +756,9 @@ Tujuannya mencegah soal terlihat berbeda antara preview dan peserta.
 - formula KaTeX-compatible;
 - Arabic/RTL didukung;
 - table responsive;
-- audio lokal;
-- video external/reference;
+- audio external/reference Google Drive only;
+- video external/reference Google Drive only;
+- link ditulis langsung sebagai `Audio: <link Google Drive>` / `Video: <link Google Drive>` pada konten; tidak ada kolom media khusus dan tidak ada upload audio;
 - macro dokumen tidak dieksekusi.
 
 ## 8.8 Isian Singkat
@@ -1078,11 +1079,11 @@ Server authority menentukan acceptance berdasarkan waktu/attempt rules yang suda
 ```text
 question package
 → critical image prefetch
-→ audio prefetch bila reasonable
+→ validasi manifest audio/video Google Drive
 → READY
 ```
 
-Video tetap online/reference streaming.
+Audio dan video tetap online/reference streaming melalui Google Drive; file tidak diprefetch ke cache lokal CBT-HERO.
 
 ## 10.13 PASS
 

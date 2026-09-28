@@ -89,7 +89,7 @@ class AdvancedQuestionService
             foreach ($data['options'] as $row) $db->table('soal_opsi')->insert(['soal_revision_id' => $revisionId] + $row);
             foreach ($data['pairs'] as $row) $db->table('soal_matching_pair')->insert(['soal_revision_id' => $revisionId] + $row);
             foreach ($data['accepted'] as $row) $db->table('soal_short_answer_text')->insert(['soal_revision_id' => $revisionId] + $row);
-            (new QuestionMediaService())->attach($db, $revisionId, $payload);
+            (new QuestionMediaService())->attach($db, $revisionId, $payload, $actor);
             if ($old !== null) $db->table('soal')->where('id', $id)->update(['current_revision_no' => $next]);
             $db->table('bank_soal')->where('id', $bankId)->set('version_no', 'version_no + 1', false)
                 ->update(['fingerprint' => null, 'updated_by' => (int) ($actor['user_id'] ?? 0)]);

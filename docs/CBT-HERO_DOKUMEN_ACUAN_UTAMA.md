@@ -804,9 +804,12 @@ Preview import, Bank, Exam Client, dan PDF menggunakan renderer normalized-data 
 
 Prinsip media:
 
-- gambar: local/static setelah normalisasi;
-- audio: local jika ukuran wajar;
-- video: reference/streaming, misalnya Drive/provider lain;
+- gambar: local/static setelah normalisasi; pada template Word/Excel gambar boleh ditempel langsung pada sel isi;
+- audio: **Google Drive external/reference only**;
+- video: **Google Drive external/reference only**;
+- audio/video tidak diunggah ke hosting CBT-HERO dan tidak memakai YouTube/Vimeo;
+- user menulis langsung `Audio: <link Google Drive>` atau `Video: <link Google Drive>` pada isi soal/pilihan/pasangan yang membutuhkan media; tidak ada kolom media khusus;
+- file Google Drive wajib dibagikan sebagai **Siapa saja yang memiliki link / Viewer** dan harus diuji melalui Preview sebelum Bank READY;
 - text/options: wajib tersedia lokal di Exam Client.
 
 Sebelum workspace READY:
@@ -823,10 +826,9 @@ Prioritas:
 
 - teks/opsi: mandatory;
 - gambar small/medium: prefetch;
-- audio: prefetch jika reasonable;
-- video besar: online/reference.
+- audio/video Google Drive: online/reference streaming dan tidak masuk cache file lokal CBT-HERO.
 
-Threshold ukuran ditentukan saat tuning performa.
+Threshold gambar ditentukan saat tuning performa.
 
 ---
 
@@ -1858,7 +1860,7 @@ Peserta:
 - formula responsive;
 - Arabic RTL;
 - table horizontal scroll bila perlu;
-- native audio/video controls sesuai requirement.
+- player audio/video Google Drive tampil inline di workspace soal; tidak membuka tab baru.
 
 ## 40.2 Palette Soal
 
@@ -2844,6 +2846,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | Tanggal | Versi | Bagian | Perubahan | Alasan | Dampak |
 |---|---|---|---|---|---|
 | 2026-09-24 | 1.0 | Seluruh dokumen | Baseline final hasil audit konsep CBT-HERO | Menjadi single source of truth sebelum implementasi | Baseline DB/API/UI |
+| 2026-09-28 | 1.1 | Media Bank Soal | Audio dan video dikunci ke Google Drive link only; link ditulis langsung dengan awalan Audio:/Video: tanpa kolom khusus; upload audio dan provider YouTube/Vimeo dihapus | Menyederhanakan workflow operator dan menghindari beban streaming hosting CBT-HERO | Media service/parser/renderer/template/import |
 
 ---
 

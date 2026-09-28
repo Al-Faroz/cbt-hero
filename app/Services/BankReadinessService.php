@@ -112,11 +112,19 @@ class BankReadinessService
                     || !in_array($question['short_answer_mode'], ['TEXT', 'NUMERIC'], true))
                     $errors[] = 'Jawaban Isian #' . $id . ' belum lengkap.';
             }
-            $missingMedia = $db->table('soal_revision_media AS link')->select('link.id')
+            $linkedMedia = $db->table('soal_revision_media AS link')
+                ->select('asset.storage_type, asset.media_kind, asset.provider, asset.status')
                 ->join('media_assets AS asset', 'asset.id = link.media_asset_id')
-                ->where('link.soal_revision_id', $revisionId)->where('asset.status !=', 'ACTIVE')
-                ->countAllResults();
-            if ($missingMedia > 0) $errors[] = 'Media Soal #' . $id . ' tidak aktif.';
+                ->where('link.soal_revision_id', $revisionId)->get()->getResultArray();
+            foreach ($linkedMedia as $asset) {
+                if ($asset['status'] !== 'ACTIVE') {
+                    $errors[] = 'Media Soal #' . $id . ' tidak aktif.'; break;
+                }
+                if (in_array($asset['media_kind'], ['AUDIO', 'VIDEO'], true)
+                    && ($asset['storage_type'] !== 'EXTERNAL' || $asset['provider'] !== 'GDRIVE')) {
+                    $errors[] = 'Audio/Video Soal #' . $id . ' wajib menggunakan link Google Drive.'; break;
+                }
+            }
         }
         $fingerprint = hash('sha256', json_encode([$configs, array_map(fn($q) => [$q['id'], $q['current_revision_no']], $questions)]));
         return ['pass' => !$errors, 'errors' => $errors, 'counts' => $counts, 'fingerprint' => $fingerprint];

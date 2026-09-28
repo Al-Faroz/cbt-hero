@@ -113,7 +113,9 @@ class TemplateBuilderService
             '5. Menjodohkan: isi setiap sisi kiri dan pasangan kanan. Jumlah pasangan serta cara penilaian mengikuti Komposisi Bank. Poin maksimum adalah skor tertinggi untuk satu soal Menjodohkan; contoh isi 4 bila skor penuh soal tersebut adalah 4.',
             '6. Isian Singkat: pilih mode TEKS atau ANGKA. Untuk TEKS, tulis satu jawaban diterima per baris. Untuk ANGKA, isi angka harapan dan toleransi absolut. Toleransi kosong/0 berarti harus tepat; contoh angka harapan 10 dengan toleransi 0,5 menerima 9,5 sampai 10,5.',
             '7. Uraian: isi soal dan rubrik/pedoman penilaian. Poin maksimum otomatis terisi 1 sebagai default dan boleh diganti sesuai skala rubrik, misalnya 5 bila rubrik memakai skor 0–5.',
-            '8. Hapus/ganti teks di dalam tanda kurung siku sebelum impor. Jangan menambah atau menghapus baris struktur template.',
+            '8. Audio dan video hanya menggunakan file Google Drive. Atur akses file menjadi Siapa saja yang memiliki link / Viewer, lalu ketik langsung "Audio: <link Google Drive>" atau "Video: <link Google Drive>" di sel isi soal, pilihan, atau pasangan yang membutuhkan media. Tidak ada kolom media khusus.',
+            '9. Jangan mengunggah/menempel file audio-video ke dokumen dan jangan memakai YouTube/Vimeo. Gambar tetap boleh ditempel langsung ke sel. Pastikan Audio/Video dapat diputar pada Pratinjau sebelum Bank dijadikan READY.',
+            '10. Hapus/ganti teks di dalam tanda kurung siku sebelum impor. Jangan menambah atau menghapus baris struktur template.',
         ] as $line) $parts[] = $this->paragraph($line, false, 18, '243247');
 
         $summary = [['Tipe Soal', 'Jumlah Soal', 'Pilihan/Pasangan', 'Bobot', 'Catatan']];

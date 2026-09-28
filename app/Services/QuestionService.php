@@ -92,6 +92,8 @@ class QuestionService
     {
         if (array_diff(array_keys($payload), ['question_text', 'options', 'correct_key', 'max_point', 'expected_revision']) !== [])
             return $this->error(422, 'VALIDATION_FAILED', 'Kolom soal tidak dikenal.');
+        $mediaError = (new QuestionMediaService())->directiveError($payload);
+        if ($mediaError !== null) return $this->error(422, 'VALIDATION_FAILED', $mediaError);
         $text = $this->normalText($payload['question_text'] ?? null);
         $rawOptions = $payload['options'] ?? null;
         $correct = $payload['correct_key'] ?? null;

@@ -2449,17 +2449,21 @@ Contoh URL manifest:
 /media/{opaquePath}
 ```
 
-Tidak perlu melewati CI4 untuk setiap image/audio jika server static delivery aman dan jauh lebih ringan.
+Tidak perlu melewati CI4 untuk setiap gambar lokal jika server static delivery aman dan jauh lebih ringan. Audio/video tidak disimpan sebagai file lokal CBT-HERO.
 
 ## 54.2 External Media
 
-Video/asset external menggunakan provider metadata dari `media_assets`.
+Audio dan video menggunakan **Google Drive external/reference only**. `media_assets` menyimpan
+`storage_type=EXTERNAL`, `provider=GDRIVE`, `media_kind=AUDIO/VIDEO`, File ID, dan URL preview canonical.
 
-Client hanya menerima URL/embed data yang memang dibutuhkan renderer.
+User menulis `Audio: <link Google Drive>` atau `Video: <link Google Drive>` langsung pada
+konten soal/pilihan/pasangan. Renderer menampilkan player inline; tidak membuka tab baru.
+YouTube/Vimeo dan provider external lain tidak menjadi kontrak Bank Soal V1.
 
 ## 54.3 Manager Upload
 
-Upload media soal/instrumen dilakukan melalui import/editor endpoint, bukan public media route.
+Upload Manager hanya untuk gambar JPG/PNG/WebP. Audio/video tidak mempunyai endpoint upload file;
+link Google Drive diproses saat soal disimpan atau di-import.
 
 ---
 
@@ -2967,4 +2971,4 @@ Impor mengikuti kontrak generik bagian 24 dengan `import_type=BANK_EXCEL|BANK_WO
 Parser Word V2 membaca marker struktur tersembunyi dan menghasilkan payload
 normalized tanpa kolom JSON. Halaman Manager juga memakai alias
 `/manager/api/bank-soal/{id}/imports` untuk daftar job Bank dan staging ringkas.
-Media lokal dan video reference dikelola melalui `/manager/api/question-media`.
+Gambar lokal dikelola melalui `/manager/api/question-media`; audio/video Google Drive dibuat dari directive `Audio:`/`Video:` saat save/import dan tidak mempunyai endpoint upload tersendiri.

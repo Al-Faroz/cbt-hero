@@ -78,10 +78,11 @@ class QuestionImportService
             $item['media'] = [];
             $ids = array_unique(array_column((new QuestionMediaService())->references($item['payload']), 'media_asset_id'));
             if ($ids) {
-                $mediaRows = $db->table('media_assets')->select('id, media_kind, external_url')
+                $mediaRows = $db->table('media_assets')->select('id, storage_type, media_kind, provider, external_url')
                     ->where('status', 'ACTIVE')->whereIn('id', $ids)->get()->getResultArray();
                 foreach ($mediaRows as $asset) $item['media'][(string) $asset['id']] = [
-                    'kind' => $asset['media_kind'], 'url' => $asset['media_kind'] === 'VIDEO' ? $asset['external_url']
+                    'kind' => $asset['media_kind'], 'provider' => $asset['provider'],
+                    'url' => $asset['storage_type'] === 'EXTERNAL' ? $asset['external_url']
                         : base_url('manager/api/question-media/' . $asset['id'])];
             }
             unset($item['payload_json'], $item['errors_json']);

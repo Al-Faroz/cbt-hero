@@ -274,7 +274,6 @@ $routes->group(
         $routes->put('bank-soal/(:num)/imports/(:num)/items/(:num)/(:segment)', $import . 'change/$1/$2/$3/$4', $examFilter);
         $routes->post('bank-soal/(:num)/imports/(:num)/commit', $import . 'commit/$1/$2', $examFilter);
         $routes->post('question-media', 'Api\\Manager\\Bank\\MediaController::upload', $examFilter);
-        $routes->post('question-media/video', 'Api\\Manager\\Bank\\MediaController::video', $examFilter);
         $routes->get('question-media/(:num)', 'Api\\Manager\\Bank\\MediaController::show/$1', $examFilter);
 
         $routes->get(

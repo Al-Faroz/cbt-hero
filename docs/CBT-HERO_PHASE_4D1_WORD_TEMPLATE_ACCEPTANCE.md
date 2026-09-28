@@ -106,6 +106,9 @@ buta.
 - Formatting bold/italic pada field kontrol tidak mengubah makna: `**✓**`, `**4**`,
   `**TEKS**`, dan `**ANGKA**` dinormalisasi sebelum validasi.
 - Gambar JPG/PNG/WebP yang ditempel di sel tetap diimpor sebagai media.
+- Audio/video tidak memakai embed atau kolom khusus. Ketik `Audio: <link Google Drive>`
+  atau `Video: <link Google Drive>` langsung pada sel konten; link divalidasi sebagai file
+  Google Drive HTTPS dan dirender inline.
 - Bold/italic, tabel dalam sel, teks Arab/RTL, dan formula berbasis teks tetap
   mengikuti mekanisme parser/renderer yang ada.
 - Upload masuk staging dahulu; tidak ada commit langsung ke Bank.
@@ -126,6 +129,8 @@ buta.
 | W10 | Total Komposisi lebih dari 200 soal. | Generator menolak dan menjelaskan batas satu file. |
 | W11 | Buat tanda kunci, poin, mode TEKS/ANGKA, toleransi, atau poin maksimum menjadi bold/italic di Word. | Nilai kontrol tetap dibaca sebagai nilai mentah dan validasi tidak gagal hanya karena formatting. |
 | W12 | Unduh template yang memuat Uraian. | Kolom Poin maksimum Uraian sudah berisi default 1 dan masih dapat diganti. |
+| W13 | Ketik `Audio: <link Google Drive>` atau `Video: <link Google Drive>` pada sel soal/pilihan/pasangan lalu import. | Staging VALID bila URL adalah file Google Drive; Preview menampilkan player inline tanpa kolom media khusus. |
+| W14 | Gunakan URL YouTube/Vimeo atau link Google Drive yang bukan link file valid. | Staging INVALID dengan pesan bahwa audio/video hanya mendukung file Google Drive. |
 
 ## Belum termasuk
 

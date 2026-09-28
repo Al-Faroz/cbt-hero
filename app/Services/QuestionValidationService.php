@@ -10,6 +10,8 @@ class QuestionValidationService
     {
         $type = $payload['question_type'] ?? 'PG';
         if (! is_string($type) || ! in_array($type, self::TYPES, true)) return $this->bad('Tipe soal tidak dikenal.');
+        $mediaError = (new QuestionMediaService())->directiveError($payload);
+        if ($mediaError !== null) return $this->bad($mediaError);
         $question = $this->text($payload['question_text'] ?? null, 10000, true);
         $stimulus = $this->text($payload['stimulus_text'] ?? '', 20000, false);
         $point = $this->decimal($payload['max_point'] ?? null, 4, 1000, false);

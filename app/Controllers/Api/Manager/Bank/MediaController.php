@@ -16,19 +16,14 @@ class MediaController extends BaseController
         return $this->respond((new QuestionMediaService())->upload($this->request->getFile('file'), $this->actor()));
     }
 
-    public function video()
-    {
-        $json = $this->request->getJSON(true);
-        $url = is_array($json) && is_string($json['url'] ?? null) ? $json['url'] : '';
-        return $this->respond((new QuestionMediaService())->addVideo($url, $this->actor()));
-    }
-
     public function show(string $id)
     {
         $row = Database::connect()->table('media_assets')->where('id', (int) $id)->where('status', 'ACTIVE')->get()->getRowArray();
         if ($row === null) return $this->apiError('NOT_FOUND', 'Media tidak ditemukan.', 404);
-        if ($row['storage_type'] === 'EXTERNAL') return $this->apiSuccess(['kind' => $row['media_kind'], 'url' => $row['external_url']]);
-        if (!preg_match('~^question-media/[a-f0-9]{40}\.(?:jpg|png|webp|mp3|ogg|m4a)$~D', (string) $row['file_path']))
+        if ($row['storage_type'] === 'EXTERNAL') return $this->apiSuccess([
+            'kind' => $row['media_kind'], 'provider' => $row['provider'], 'url' => $row['external_url'],
+        ]);
+        if (!preg_match('~^question-media/[a-f0-9]{40}\.(?:jpg|png|webp)$~D', (string) $row['file_path']))
             return $this->apiError('NOT_FOUND', 'File media tidak tersedia.', 404);
         $path = WRITEPATH . 'uploads/' . $row['file_path'];
         if (!is_file($path)) return $this->apiError('NOT_FOUND', 'File media tidak tersedia.', 404);
