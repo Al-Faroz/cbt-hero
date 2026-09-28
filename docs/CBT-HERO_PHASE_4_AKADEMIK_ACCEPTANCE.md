@@ -32,10 +32,15 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A20 | Pada salah satu tab Daftar Soal, pilih beberapa checkbox dan **Hapus Terpilih**. | Konfirmasi menampilkan jumlah soal; seluruh soal terpilih terhapus permanen dalam satu aksi dan selection dibersihkan. |
 | A21 | Klik **Informasi** pada setiap tab. | Modal menjelaskan aturan tipe aktif, Rich Content, gambar per-field, Equation, Unicode, serta Audio/Video Google Drive. |
 | A22 | Klik tombol gambar pada salah satu opsi/pasangan/rubrik, bukan hanya pada Pertanyaan. | Gambar masuk ke field yang dipilih, tampil di Preview, tersimpan, dan muncul kembali saat Edit/Tinjau. |
+| A23 | Unduh **Template Excel sesuai Komposisi**. | Workbook berisi PETUNJUK dan hanya sheet tipe aktif; jumlah baris serta pilihan/pasangan mengikuti Komposisi. |
+| A24 | Isi Excel untuk beberapa tipe tanpa JSON, termasuk PG Kompleks `A,C`, PG Bertingkat, Menjodohkan, Isian TEKS/ANGKA, dan Uraian. | Upload menghasilkan staging per soal dengan tipe, jawaban, poin, dan mode yang sesuai. |
+| A25 | Tempel gambar pada sel Soal, Pilihan, pasangan Menjodohkan, atau Rubrik di Excel lalu upload. | Gambar dipetakan ke konten sel yang sesuai dan tampil pada Pratinjau staging. |
+| A26 | Ketik `Audio: <link Google Drive>` / `Video: <link Google Drive>` langsung dalam sel Excel. | Staging dan Pratinjau memakai player yang sama dengan Word/manual. |
+| A27 | Masukkan formula Excel seperti `=SUM(A1:A2)` pada area template lalu upload. | Import ditolak dengan pesan bahwa formula Excel tidak boleh digunakan pada template soal. |
 
 ## Batas data yang perlu diperhatikan
 
-- Template Word V2 tidak memakai kolom JSON dan dibuat dinamis dari Komposisi Bank. Template Excel masih memakai format teknis `options_json`, `pairs_json`, dan `accepted_values_json` sampai Phase 4D2.
+- Template Word V2 dan Excel V2 sama-sama dibuat dinamis dari Komposisi Bank dan tidak memakai kolom JSON. Excel berisi sheet PETUNJUK + sheet per tipe aktif; satu baris mewakili satu soal.
 - Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, gambar JPG/PNG/WebP, Unicode termasuk Arab/Jawa, dan **Insert → Equation** Word/OMML pada sel isi. Equation yang didukung dikonversi ke format rumus internal; shortcut KaTeX `$...$` / `$$...$$` tetap boleh tetapi bukan kewajiban pengguna. Audio/video tidak di-embed ke dokumen: tulis langsung `Audio: <link Google Drive>` atau `Video: <link Google Drive>`. Formatting bold/italic pada field kontrol dinormalisasi sebelum validasi. File `.doc` lama tidak diterima.
 - Cetak PDF menggunakan dialog cetak browser, sehingga operator memilih **Save as PDF** pada tujuan cetak.
 - Pengujian runtime PHP/database dilakukan setelah perubahan ditarik ke lingkungan lokal yang memiliki PHP dan MySQL.

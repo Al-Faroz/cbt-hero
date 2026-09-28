@@ -35,7 +35,11 @@ class QuestionDocumentService
                 $docx = $this->docx($zip, $imageImport);
                 if (($docx['format'] ?? '') === 'CBT-HERO-WORD-V2') return $docx['items'];
                 $rows = $docx['rows'] ?? [];
-            } else $rows = $this->xlsx($zip);
+            } else {
+                $xlsx = $this->xlsx($zip, $imageImport);
+                if (($xlsx['format'] ?? '') === 'CBT-HERO-EXCEL-V2') return $xlsx['items'];
+                $rows = $xlsx['rows'] ?? [];
+            }
 
             if (!$rows || array_map('strtolower', array_slice($rows[0], 0, count(self::HEADERS))) !== self::HEADERS)
                 throw new RuntimeException('Header dokumen tidak sesuai template Bank Soal Akademik.');
@@ -58,41 +62,341 @@ class QuestionDocumentService
         } finally { $zip->close(); }
     }
 
-    private function xlsx(ZipArchive $zip): array
+    private function xlsx(ZipArchive $zip, ?callable $imageImport): array
     {
-        $shared = []; $source = $zip->getFromName('xl/sharedStrings.xml');
-        if ($source !== false) {
-            $xp = new DOMXPath($this->xml($source));
-            foreach ($xp->query('//*[local-name()="si"]') as $node) {
-                $text = '';
-                foreach ($xp->query('.//*[local-name()="t"]', $node) as $part) $text .= $part->textContent;
-                $shared[] = $text;
+        $shared = $this->xlsxSharedStrings($zip);
+        $sheets = $this->xlsxSheets($zip);
+        foreach ($sheets as $sheet) {
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            $marker = trim((string) ($values[0][0] ?? ''));
+            if ($marker === 'CBT-HERO-EXCEL-V2') {
+                return ['format' => 'CBT-HERO-EXCEL-V2', 'items' => $this->humanExcel($zip, $sheets, $shared, $imageImport)];
             }
         }
+        return ['format' => 'TECHNICAL', 'rows' => $this->technicalXlsx($zip, $shared)];
+    }
+
+    private function humanExcel(ZipArchive $zip, array $sheets, array $shared, ?callable $imageImport): array
+    {
+        $result = []; $sequence = 0;
+        foreach ($sheets as $sheet) {
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            $marker = trim((string) ($values[0][0] ?? ''));
+            if (!preg_match('/^CBT-HERO-EXCEL-V2\|(PG|PG_KOMPLEKS|PG_BERTINGKAT|MATCHING|ISIAN_SINGKAT|URAIAN)\|(\d+)\|(.*)$/D', $marker, $match))
+                continue;
+
+            $type = $match[1];
+            $optionCount = (int) $match[2];
+            $mode = trim((string) $match[3]);
+            foreach (array_slice($values, 5, null, true) as $zeroRow => $row) {
+                $excelRow = $zeroRow + 1;
+                $data = $this->excelQuestionRow($type, $row, $optionCount, $mode);
+                if ($data === null) continue;
+                if (++$sequence > 200) throw new RuntimeException('Maksimal 200 soal per file.');
+                $result[] = [
+                    'line' => $sequence,
+                    'source_ref' => 'Excel ' . $this->label($type) . ' baris ' . $excelRow,
+                    'data' => $data,
+                ];
+            }
+        }
+        if (!$result) throw new RuntimeException('Template Excel CBT-HERO belum berisi soal.');
+        return $result;
+    }
+
+    private function excelQuestionRow(string $type, array $row, int $optionCount, string $mode): ?array
+    {
+        $value = static fn(array $source, int $index): string => trim((string) ($source[$index] ?? ''));
+
+        if ($type === 'PG') {
+            $question = $this->input($value($row, 1)); $options = [];
+            $meaningful = $question !== '';
+            for ($i = 0; $i < $optionCount; $i++) {
+                $text = $this->input($value($row, 2 + $i)); $options[] = ['text' => $text];
+                $meaningful = $meaningful || $text !== '';
+            }
+            $key = mb_strtoupper($this->control($value($row, 2 + $optionCount)), 'UTF-8');
+            $meaningful = $meaningful || $key !== '';
+            if (!$meaningful) return null;
+            return ['question_type' => 'PG', 'question_text' => $question, 'options' => $options,
+                'correct_key' => $key, 'max_point' => '1'];
+        }
+
+        if ($type === 'PG_KOMPLEKS') {
+            $question = $this->input($value($row, 1)); $options = [];
+            $meaningful = $question !== '';
+            for ($i = 0; $i < $optionCount; $i++) {
+                $text = $this->input($value($row, 2 + $i)); $options[] = ['text' => $text, 'correct' => false];
+                $meaningful = $meaningful || $text !== '';
+            }
+            $letters = $this->excelLetters($this->control($value($row, 2 + $optionCount)), $optionCount);
+            foreach ($letters as $letter) $options[ord($letter) - 65]['correct'] = true;
+            $meaningful = $meaningful || $letters !== [];
+            if (!$meaningful) return null;
+            return ['question_type' => 'PG_KOMPLEKS', 'question_text' => $question, 'options' => $options,
+                'max_point' => '1'];
+        }
+
+        if ($type === 'PG_BERTINGKAT') {
+            $question = $this->input($value($row, 1)); $options = []; $points = [];
+            $meaningful = $question !== '';
+            for ($i = 0; $i < $optionCount; $i++) {
+                $text = $this->input($value($row, 2 + ($i * 2)));
+                $point = $this->control($value($row, 3 + ($i * 2)));
+                $options[] = ['text' => $text, 'point_value' => $point];
+                $numeric = str_replace(',', '.', $point);
+                if (is_numeric($numeric)) $points[] = (float) $numeric;
+                $meaningful = $meaningful || $text !== '' || $point !== '';
+            }
+            if (!$meaningful) return null;
+            return ['question_type' => 'PG_BERTINGKAT', 'question_text' => $question, 'options' => $options,
+                'max_point' => $points ? (string) max($points) : '0'];
+        }
+
+        if ($type === 'MATCHING') {
+            $question = $this->input($value($row, 1)); $pairs = [];
+            $meaningful = $question !== '';
+            for ($i = 0; $i < $optionCount; $i++) {
+                $left = $this->input($value($row, 2 + ($i * 2)));
+                $right = $this->input($value($row, 3 + ($i * 2)));
+                $pairs[] = ['left' => $left, 'right' => $right];
+                $meaningful = $meaningful || $left !== '' || $right !== '';
+            }
+            $maxPoint = $this->control($value($row, 2 + ($optionCount * 2)));
+            $meaningful = $meaningful || $maxPoint !== '';
+            if (!$meaningful) return null;
+            return ['question_type' => 'MATCHING', 'question_text' => $question, 'pairs' => $pairs,
+                'scoring_mode' => $mode === 'ALL_OR_NOTHING' ? 'ALL_OR_NOTHING' : 'PARTIAL',
+                'max_point' => $maxPoint];
+        }
+
+        if ($type === 'ISIAN_SINGKAT') {
+            $question = $this->input($value($row, 1));
+            $answer = $this->input($value($row, 3));
+            $tolerance = $this->control($value($row, 4));
+            $meaningful = $question !== '' || $answer !== '' || $tolerance !== '';
+            if (!$meaningful) return null;
+            $modeText = mb_strtoupper($this->control($value($row, 2)), 'UTF-8');
+            $shortMode = in_array($modeText, ['ANGKA', 'NUMERIC', 'N'], true) ? 'NUMERIC' : 'TEXT';
+            $maxPoint = $this->control($value($row, 5));
+            $data = ['question_type' => 'ISIAN_SINGKAT', 'question_text' => $question,
+                'short_answer_mode' => $shortMode, 'max_point' => $maxPoint === '' ? '1' : $maxPoint];
+            if ($shortMode === 'TEXT') {
+                $data['accepted_values'] = array_values(array_filter(
+                    array_map('trim', preg_split('/\R/u', $answer) ?: []),
+                    static fn(string $item): bool => $item !== ''
+                ));
+            } else {
+                $data['expected_numeric'] = $this->control($answer);
+                $data['numeric_tolerance'] = $tolerance === '' ? '0' : $tolerance;
+            }
+            return $data;
+        }
+
+        $question = $this->input($value($row, 1));
+        $rubric = $this->input($value($row, 2));
+        if ($question === '' && $rubric === '') return null;
+        $maxPoint = $this->control($value($row, 3));
+        return ['question_type' => 'URAIAN', 'question_text' => $question, 'rubric_text' => $rubric,
+            'max_point' => $maxPoint === '' ? '1' : $maxPoint];
+    }
+
+    private function excelLetters(string $value, int $optionCount): array
+    {
+        if ($value === '') return [];
+        $tokens = preg_split('/[^A-Za-z]+/u', mb_strtoupper($value, 'UTF-8')) ?: [];
+        $result = [];
+        foreach ($tokens as $token) {
+            if (strlen($token) !== 1) continue;
+            $index = ord($token) - 65;
+            if ($index >= 0 && $index < $optionCount) $result[$token] = $token;
+        }
+        return array_values($result);
+    }
+
+    private function technicalXlsx(ZipArchive $zip, array $shared): array
+    {
         $source = $zip->getFromName('xl/worksheets/sheet1.xml');
         if ($source === false) throw new RuntimeException('Sheet Soal tidak ada.');
         $xp = new DOMXPath($this->xml($source)); $rows = [];
         foreach ($xp->query('//*[local-name()="sheetData"]/*[local-name()="row"]') as $row) {
             $cells = array_fill(0, count(self::HEADERS), '');
             foreach ($xp->query('./*[local-name()="c"]', $row) as $cell) {
-                if (!preg_match('/^([A-Z]+)[0-9]+$/D', $cell->getAttribute('r'), $match)) continue;
-                $col = 0; foreach (str_split($match[1]) as $letter) $col = $col * 26 + ord($letter) - 64;
+                if (!$cell instanceof DOMElement || !preg_match('/^([A-Z]+)[0-9]+$/D', $cell->getAttribute('r'), $match)) continue;
+                $col = $this->excelColumnIndex($match[1]);
                 if ($col < 1 || $col > count(self::HEADERS)) continue;
                 if ($xp->query('./*[local-name()="f"]', $cell)->length) throw new RuntimeException('Rumus Excel tidak boleh dipakai.');
-                $type = $cell->getAttribute('t'); $value = '';
-                if ($type === 'inlineStr') {
-                    foreach ($xp->query('.//*[local-name()="t"]', $cell) as $text) $value .= $text->textContent;
-                } else {
-                    $value = $xp->query('./*[local-name()="v"]', $cell)->item(0)?->textContent ?? '';
-                    if ($type === 's') $value = $shared[(int) $value] ?? '';
-                }
-                if (mb_strlen($value) > 20000) throw new RuntimeException('Sel Excel terlalu panjang.');
-                $cells[$col - 1] = trim($value);
+                $cells[$col - 1] = trim($this->xlsxCellValue($xp, $cell, $shared));
             }
             $rows[] = $cells;
             if (count($rows) > 202) throw new RuntimeException('Dokumen terlalu banyak baris.');
         }
         return $rows;
+    }
+
+    private function xlsxSharedStrings(ZipArchive $zip): array
+    {
+        $shared = []; $source = $zip->getFromName('xl/sharedStrings.xml');
+        if ($source === false) return $shared;
+        $xp = new DOMXPath($this->xml($source));
+        foreach ($xp->query('//*[local-name()="si"]') as $node) {
+            $text = '';
+            foreach ($xp->query('.//*[local-name()="t"]', $node) as $part) $text .= $part->textContent;
+            $shared[] = $text;
+        }
+        return $shared;
+    }
+
+    private function xlsxSheets(ZipArchive $zip): array
+    {
+        $source = $zip->getFromName('xl/workbook.xml');
+        if ($source === false) throw new RuntimeException('Workbook Excel tidak ditemukan.');
+        $xp = new DOMXPath($this->xml($source));
+        $rels = $this->officeRelationships($zip, 'xl/workbook.xml');
+        $result = [];
+        foreach ($xp->query('//*[local-name()="sheets"]/*[local-name()="sheet"]') as $sheet) {
+            if (!$sheet instanceof DOMElement) continue;
+            $id = $sheet->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+            $path = $rels[$id]['target'] ?? '';
+            if ($path === '' || !str_starts_with($path, 'xl/worksheets/')) continue;
+            $result[] = ['name' => $sheet->getAttribute('name'), 'path' => $path];
+        }
+        if (!$result) throw new RuntimeException('Sheet Excel tidak ditemukan.');
+        return $result;
+    }
+
+    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport): array
+    {
+        $source = $zip->getFromName($path);
+        if ($source === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
+        $xp = new DOMXPath($this->xml($source)); $values = [];
+
+        foreach ($xp->query('//*[local-name()="sheetData"]/*[local-name()="row"]/*[local-name()="c"]') as $cell) {
+            if (!$cell instanceof DOMElement || !preg_match('/^([A-Z]+)([0-9]+)$/D', $cell->getAttribute('r'), $match)) continue;
+            if ($xp->query('./*[local-name()="f"]', $cell)->length)
+                throw new RuntimeException('Rumus/formula Excel tidak boleh dipakai pada template soal.');
+            $row = (int) $match[2] - 1; $col = $this->excelColumnIndex($match[1]) - 1;
+            if ($row < 0 || $row > 260 || $col < 0 || $col > 60) continue;
+            $text = trim($this->xlsxCellValue($xp, $cell, $shared));
+            if (mb_strlen($text) > 20000) throw new RuntimeException('Sel Excel terlalu panjang.');
+            $values[$row][$col] = $text;
+        }
+
+        foreach ($this->xlsxDrawingTokens($zip, $path, $source, $imageImport) as $item) {
+            $row = $item['row']; $col = $item['col'];
+            $current = trim((string) ($values[$row][$col] ?? ''));
+            $values[$row][$col] = $current === '' ? $item['token'] : $current . "\n" . $item['token'];
+        }
+
+        $maxRow = $values ? max(array_keys($values)) : 0;
+        $maxCol = 0;
+        foreach ($values as $row) if ($row) $maxCol = max($maxCol, max(array_keys($row)));
+        $matrix = [];
+        for ($r = 0; $r <= $maxRow; $r++) {
+            $matrix[$r] = [];
+            for ($c = 0; $c <= $maxCol; $c++) $matrix[$r][$c] = (string) ($values[$r][$c] ?? '');
+        }
+        return $matrix;
+    }
+
+    private function xlsxCellValue(DOMXPath $xp, DOMElement $cell, array $shared): string
+    {
+        $type = $cell->getAttribute('t');
+        if ($type === 'inlineStr') {
+            $value = '';
+            foreach ($xp->query('.//*[local-name()="is"]//*[local-name()="t"]', $cell) as $text) $value .= $text->textContent;
+            return $value;
+        }
+        $value = $xp->query('./*[local-name()="v"]', $cell)->item(0)?->textContent ?? '';
+        if ($type === 's') return $shared[(int) $value] ?? '';
+        if ($type === 'b') return $value === '1' ? 'TRUE' : 'FALSE';
+        return $value;
+    }
+
+    private function xlsxDrawingTokens(ZipArchive $zip, string $sheetPath, string $sheetXml, ?callable $imageImport): array
+    {
+        $xp = new DOMXPath($this->xml($sheetXml));
+        $rels = $this->officeRelationships($zip, $sheetPath);
+        $result = []; $cache = [];
+        foreach ($xp->query('//*[local-name()="drawing"]') as $drawing) {
+            if (!$drawing instanceof DOMElement) continue;
+            $id = $drawing->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+            $drawingPath = $rels[$id]['target'] ?? '';
+            if ($drawingPath === '') continue;
+            $drawingXml = $zip->getFromName($drawingPath);
+            if ($drawingXml === false) continue;
+            $drawingXp = new DOMXPath($this->xml($drawingXml));
+            $drawingRels = $this->officeRelationships($zip, $drawingPath);
+            foreach ($drawingXp->query('//*[local-name()="oneCellAnchor" or local-name()="twoCellAnchor"]') as $anchor) {
+                $from = $drawingXp->query('./*[local-name()="from"]', $anchor)->item(0);
+                if ($from === null) continue;
+                $colNode = $drawingXp->query('./*[local-name()="col"]', $from)->item(0);
+                $rowNode = $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
+                $blip = $drawingXp->query('.//*[local-name()="blip"]', $anchor)->item(0);
+                if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) continue;
+                $relId = $blip->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+                $mediaPath = $drawingRels[$relId]['target'] ?? '';
+                if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) continue;
+                if ($imageImport === null) throw new RuntimeException('Gambar Excel tidak dapat diproses.');
+
+                if (!isset($cache[$mediaPath])) {
+                    $bytes = $zip->getFromName($mediaPath);
+                    if ($bytes === false) throw new RuntimeException('Gambar Excel tidak ditemukan.');
+                    $cache[$mediaPath] = $imageImport($bytes);
+                }
+                $result[] = [
+                    'row' => (int) $rowNode->textContent,
+                    'col' => (int) $colNode->textContent,
+                    'token' => '[[media:' . $cache[$mediaPath] . ']]',
+                ];
+            }
+        }
+        return $result;
+    }
+
+    private function officeRelationships(ZipArchive $zip, string $partPath): array
+    {
+        $dir = dirname($partPath);
+        $relsPath = ($dir === '.' ? '' : $dir . '/') . '_rels/' . basename($partPath) . '.rels';
+        $source = $zip->getFromName($relsPath);
+        if ($source === false) return [];
+        $xp = new DOMXPath($this->xml($source)); $result = [];
+        foreach ($xp->query('//*[local-name()="Relationship"]') as $relation) {
+            if (!$relation instanceof DOMElement || $relation->getAttribute('TargetMode') === 'External') continue;
+            $id = $relation->getAttribute('Id');
+            $target = $this->resolveOfficePath($partPath, $relation->getAttribute('Target'));
+            if ($id !== '' && $target !== '') $result[$id] = [
+                'target' => $target,
+                'type' => $relation->getAttribute('Type'),
+            ];
+        }
+        return $result;
+    }
+
+    private function resolveOfficePath(string $base, string $target): string
+    {
+        $target = str_replace('\\', '/', trim($target));
+        if ($target === '' || str_contains($target, "\0")) return '';
+        if (str_starts_with($target, '/')) $combined = ltrim($target, '/');
+        else $combined = dirname($base) . '/' . $target;
+        $parts = [];
+        foreach (explode('/', $combined) as $part) {
+            if ($part === '' || $part === '.') continue;
+            if ($part === '..') {
+                if (!$parts) return '';
+                array_pop($parts); continue;
+            }
+            $parts[] = $part;
+        }
+        $resolved = implode('/', $parts);
+        return str_starts_with($resolved, 'xl/') ? $resolved : '';
+    }
+
+    private function excelColumnIndex(string $letters): int
+    {
+        $index = 0;
+        foreach (str_split($letters) as $letter) $index = ($index * 26) + ord($letter) - 64;
+        return $index;
     }
 
     private function docx(ZipArchive $zip, ?callable $imageImport): array

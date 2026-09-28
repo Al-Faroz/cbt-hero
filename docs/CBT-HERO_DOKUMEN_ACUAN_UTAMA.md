@@ -777,12 +777,35 @@ parser menormalisasi formatting sebelum validasi.
 
 ## 15.2 Excel
 
-Cocok untuk:
+Template Excel Bank Soal dibuat **dinamis per Bank** dari Komposisi dan tidak memakai
+kolom JSON. Workbook berisi sheet **PETUNJUK** serta hanya sheet tipe soal yang aktif:
+PG, PG Kompleks, PG Bertingkat, Menjodohkan, Isian Singkat, dan/atau Uraian.
 
-- structured bulk;
+Prinsip pengisian:
+
+- satu baris = satu soal;
+- jumlah baris, pilihan, dan pasangan sudah disiapkan dari Komposisi;
+- PG memakai kolom Pilihan A–N + satu kolom Jawaban Benar;
+- PG Kompleks memakai Pilihan A–N + satu kolom Pilihan Benar, misalnya `A,C`;
+- PG Bertingkat memakai pasangan kolom Pilihan + Poin per pilihan;
+- Menjodohkan memakai pasangan kolom Kiri + Pasangan Kanan sesuai jumlah pasangan;
+- Isian Singkat memakai Mode TEKS/ANGKA, jawaban/angka harapan, toleransi, dan poin maksimum;
+- Uraian memakai Soal, Pedoman Penilaian, dan Poin Maksimum.
+
+Gambar boleh ditempel/Insert dan diletakkan pada area sel konten yang sesuai. Parser
+membaca posisi gambar dari anchor sheet lalu menormalisasinya ke media internal.
+Audio/video tetap ditulis langsung sebagai `Audio: <link Google Drive>` atau
+`Video: <link Google Drive>` tanpa kolom khusus. Formula Excel seperti `=SUM(...)`
+tidak boleh digunakan pada template soal; rumus matematika sederhana dapat ditulis
+sebagai teks atau ditempel sebagai gambar. Untuk Equation Word native, gunakan template Word.
+
+Excel cocok untuk:
+
+- pengisian massal terstruktur;
 - PG Bertingkat;
-- psikologis;
-- data dengan scoring matrix.
+- Menjodohkan dengan banyak pasangan;
+- Isian Singkat;
+- data dengan pola kolom yang berulang.
 
 ## 15.2A Daftar Soal + Rich Content Editor Manager
 
@@ -2865,7 +2888,8 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 |---|---|---|---|---|---|
 | 2026-09-24 | 1.0 | Seluruh dokumen | Baseline final hasil audit konsep CBT-HERO | Menjadi single source of truth sebelum implementasi | Baseline DB/API/UI |
 | 2026-09-28 | 1.1 | Media Bank Soal | Audio dan video dikunci ke Google Drive link only; link ditulis langsung dengan awalan Audio:/Video: tanpa kolom khusus; upload audio dan provider YouTube/Vimeo dihapus | Menyederhanakan workflow operator dan menghindari beban streaming hosting CBT-HERO | Media service/parser/renderer/template/import |
-| 2026-09-28 | 1.2 | Daftar Soal / Rich Content | Soal PG dan Tipe Lain digabung menjadi Daftar Soal bertab; editor manual memakai rich-content sederhana, gambar per-field, fx Rumus visual, DataTables + bulk hard-delete; Word Equation/OMML menjadi input rumus utama template | Menyamakan workflow manual/import dan mengurangi kebutuhan user memahami sintaks teknis | UI/API/parser/renderer |
+| 2026-09-28 | 1.2 | Daftar Soal / Rich Content | Soal PG dan Tipe Lain digabung menjadi Daftar Soal bertab; editor manual memakai rich-content sederhana, gambar per-field, fx Rumus visual, tabel server-side + bulk hard-delete; Word Equation/OMML menjadi input rumus utama template | Menyamakan workflow manual/import dan mengurangi kebutuhan user memahami sintaks teknis | UI/API/parser/renderer |
+| 2026-09-28 | 1.3 | Template Excel Bank Soal | Excel dibuat dinamis dari Komposisi dengan sheet per tipe aktif, tanpa JSON; gambar dibaca berdasarkan posisi sel dan Audio/Video tetap memakai link Google Drive langsung pada isi | Menyamakan kemudahan Word dan Excel untuk import massal | Generator XLSX/parser/import staging |
 
 ---
 

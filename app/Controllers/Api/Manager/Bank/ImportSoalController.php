@@ -3,6 +3,7 @@
 namespace App\Controllers\Api\Manager\Bank;
 
 use App\Controllers\BaseController;
+use App\Services\QuestionExcelTemplateService;
 use App\Services\QuestionImportService;
 use App\Services\TemplateBuilderService;
 use App\Traits\ApiResponseTrait;
@@ -30,13 +31,19 @@ class ImportSoalController extends BaseController
 
     public function bankTemplate(string $bankId, string $format)
     {
-        if ($format !== 'docx') return $this->apiError('NOT_FOUND', 'Template tidak ditemukan.', 404);
-        $result = (new TemplateBuilderService())->word((int) $bankId);
+        if (!in_array($format, ['xlsx', 'docx'], true))
+            return $this->apiError('NOT_FOUND', 'Template tidak ditemukan.', 404);
+        $result = $format === 'xlsx'
+            ? (new QuestionExcelTemplateService())->excel((int) $bankId)
+            : (new TemplateBuilderService())->word((int) $bankId);
         if (!($result['ok'] ?? false))
             return $this->apiError($result['code'], $result['message'], $result['status']);
         $data = $result['data'];
+        $mime = $format === 'xlsx'
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         return $this->response
-            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            ->setHeader('Content-Type', $mime)
             ->setHeader('Content-Disposition', 'attachment; filename="' . $data['filename'] . '"')
             ->setHeader('Cache-Control', 'no-store, private')
             ->setBody($data['content']);

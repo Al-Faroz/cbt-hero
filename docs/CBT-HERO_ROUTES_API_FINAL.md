@@ -2967,12 +2967,17 @@ sebagai **Daftar Soal** bertab. Route lama `/soal-lanjutan` hanya menjadi redire
 kompatibilitas ke Daftar Soal. Halaman `/impor`, `/preview`, dan `/cetak` tetap
 tersedia. Halaman `/cetak` menggunakan dialog browser **Save as PDF**. Alih status mengikuti `POST /manager/api/bank-soal/{id}/ready` dan `/draft` dengan `expected_version`; `GET /manager/api/bank-soal/{id}/preflight` menampilkan hitungan dan kesalahan.
 
-Template Excel legacy diunduh dari `/manager/import-template/bank-soal.xlsx`.
-Template Word V2 dibuat per Bank melalui
-`GET /manager/api/bank-soal/{id}/template/docx` dan mengikuti Komposisi Bank.
+Template Word dan Excel dinamis dibuat per Bank melalui:
+`GET /manager/api/bank-soal/{id}/template/docx` dan
+`GET /manager/api/bank-soal/{id}/template/xlsx`.
+Keduanya mengikuti Komposisi Bank dan tidak meminta user mengisi kolom JSON.
+Route template Excel legacy tetap dapat dipertahankan untuk kompatibilitas internal,
+tetapi UI Bank menggunakan template Excel dinamis.
+
 Impor mengikuti kontrak generik bagian 24 dengan `import_type=BANK_EXCEL|BANK_WORD`,
 `context_type=bank_soal`, `context_id={id}`, dan `Idempotency-Key` pada commit.
-Parser Word V2 membaca marker struktur tersembunyi dan menghasilkan payload
-normalized tanpa kolom JSON. Halaman Manager juga memakai alias
+Parser Word V2 membaca marker struktur tersembunyi. Parser Excel V2 membaca marker
+sheet, data per tipe, dan posisi gambar pada drawing anchor; keduanya menghasilkan
+payload normalized yang sama sebelum staging. Halaman Manager juga memakai alias
 `/manager/api/bank-soal/{id}/imports` untuk daftar job Bank dan staging ringkas.
 Gambar lokal dikelola melalui `/manager/api/question-media`; audio/video Google Drive dibuat dari directive `Audio:`/`Video:` saat save/import dan tidak mempunyai endpoint upload tersendiri.
