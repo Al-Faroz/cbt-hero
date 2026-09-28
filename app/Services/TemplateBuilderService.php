@@ -110,9 +110,9 @@ class TemplateBuilderService
             '2. Jangan mengubah label Bagian/Soal/Pilihan/Mode/Rubrik. Isi hanya sel yang disediakan; gambar, teks Arab/RTL, rumus, dan tabel boleh ditempatkan pada sel isi.',
             '3. Pilihan Ganda: beri tanda ✓ pada tepat satu jawaban benar. PG Kompleks: beri ✓ pada semua jawaban benar, dengan minimal satu benar dan satu salah.',
             '4. PG Bertingkat: isi poin setiap pilihan. Poin maksimum soal dihitung otomatis dari poin pilihan tertinggi.',
-            '5. Menjodohkan: isi setiap sisi kiri dan pasangan kanan. Jumlah pasangan serta cara penilaian mengikuti Komposisi Bank.',
-            '6. Isian Singkat: pilih mode TEKS atau ANGKA. Untuk TEKS, tulis satu jawaban diterima per baris. Untuk ANGKA, isi angka harapan dan toleransi.',
-            '7. Uraian: isi soal, rubrik/pedoman penilaian, dan poin maksimum.',
+            '5. Menjodohkan: isi setiap sisi kiri dan pasangan kanan. Jumlah pasangan serta cara penilaian mengikuti Komposisi Bank. Poin maksimum adalah skor tertinggi untuk satu soal Menjodohkan; contoh isi 4 bila skor penuh soal tersebut adalah 4.',
+            '6. Isian Singkat: pilih mode TEKS atau ANGKA. Untuk TEKS, tulis satu jawaban diterima per baris. Untuk ANGKA, isi angka harapan dan toleransi absolut. Toleransi kosong/0 berarti harus tepat; contoh angka harapan 10 dengan toleransi 0,5 menerima 9,5 sampai 10,5.',
+            '7. Uraian: isi soal dan rubrik/pedoman penilaian. Poin maksimum otomatis terisi 1 sebagai default dan boleh diganti sesuai skala rubrik, misalnya 5 bila rubrik memakai skor 0–5.',
             '8. Hapus/ganti teks di dalam tanda kurung siku sebelum impor. Jangan menambah atau menghapus baris struktur template.',
         ] as $line) $parts[] = $this->paragraph($line, false, 18, '243247');
 
@@ -122,8 +122,9 @@ class TemplateBuilderService
             $choice = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING'], true)
                 ? (string) (int) $config['option_count'] : '—';
             $note = $type === 'MATCHING'
-                ? ($config['scoring_mode'] === 'ALL_OR_NOTHING' ? 'Semua benar' : 'Poin sebagian')
-                : ($type === 'PG' || $type === 'PG_KOMPLEKS' ? 'Poin maksimum otomatis 1' : '');
+                ? ($config['scoring_mode'] === 'ALL_OR_NOTHING' ? 'Semua benar; isi poin maksimum per soal' : 'Poin sebagian; isi poin maksimum per soal')
+                : ($type === 'PG' || $type === 'PG_KOMPLEKS' ? 'Poin maksimum otomatis 1'
+                    : ($type === 'URAIAN' ? 'Poin maksimum default 1; boleh diubah' : ''));
             $summary[] = [self::TYPE_LABELS[$type] ?? $type, (string) (int) $config['question_count'], $choice,
                 $this->decimal((string) $config['weight_percent']) . '%', $note];
         }
@@ -138,10 +139,10 @@ class TemplateBuilderService
             $parts[] = $this->paragraph($this->typeInstruction($type, $optionCount, (string) ($config['scoring_mode'] ?? '')), false, 18, '475467');
 
             if ($type === 'ISIAN_SINGKAT') {
-                $rows = [['No', 'Soal', 'Mode', 'Jawaban diterima / Angka harapan', 'Toleransi', 'Poin maksimum']];
+                $rows = [['No', 'Soal', 'Mode', 'Jawaban diterima / Angka harapan', 'Toleransi (khusus ANGKA)', 'Poin maksimum']];
                 for ($i = 1; $i <= $count; $i++) {
                     $rows[] = [$this->hiddenMarker("CBT-HERO-WORD-V2|ISIAN_SINGKAT|{$i}") . (string) $i,
-                        '[Tulis soal isian singkat]', '[TEKS/ANGKA]', '[Satu jawaban per baris / angka harapan]', '[Khusus ANGKA]', '[Isi angka]'];
+                        '[Tulis soal isian singkat]', '[TEKS/ANGKA]', '[Satu jawaban per baris / angka harapan]', '[Kosong/0 = tepat; contoh 0,5]', '[Isi angka]'];
                 }
                 $parts[] = $this->table($rows, [600, 3800, 1200, 3300, 1500, 1500], true);
                 continue;
@@ -150,7 +151,7 @@ class TemplateBuilderService
                 $rows = [['No', 'Soal', 'Rubrik / Pedoman Penilaian', 'Poin maksimum']];
                 for ($i = 1; $i <= $count; $i++) {
                     $rows[] = [$this->hiddenMarker("CBT-HERO-WORD-V2|URAIAN|{$i}") . (string) $i,
-                        '[Tulis soal uraian]', '[Tulis rubrik/pedoman penilaian]', '[Isi angka]'];
+                        '[Tulis soal uraian]', '[Tulis rubrik/pedoman penilaian]', '1'];
                 }
                 $parts[] = $this->table($rows, [650, 4800, 4400, 1600], true);
                 continue;
@@ -195,9 +196,10 @@ class TemplateBuilderService
             'PG_KOMPLEKS' => "Setiap soal mempunyai {$optionCount} pilihan. Beri ✓ pada semua jawaban benar; harus tetap ada pilihan salah. Poin maksimum otomatis 1.",
             'PG_BERTINGKAT' => "Setiap soal mempunyai {$optionCount} pilihan. Isi poin setiap pilihan; poin maksimum diambil dari nilai pilihan tertinggi.",
             'MATCHING' => "Setiap soal mempunyai {$optionCount} pasangan. Cara penilaian dikunci dari Komposisi Bank: "
-                . ($mode === 'ALL_OR_NOTHING' ? 'Semua benar.' : 'Poin sebagian.') . ' Isi poin maksimum setiap soal.',
-            'ISIAN_SINGKAT' => 'Satu baris adalah satu soal. Mode TEKS menerima satu atau lebih jawaban (satu per baris); mode ANGKA memakai angka harapan dan toleransi.',
-            'URAIAN' => 'Satu baris adalah satu soal. Isi rubrik/pedoman penilaian dan poin maksimum untuk pemeriksa.',
+                . ($mode === 'ALL_OR_NOTHING' ? 'Semua benar.' : 'Poin sebagian.')
+                . ' Poin maksimum adalah skor tertinggi untuk satu soal; contoh isi 4 bila skor penuh soal tersebut adalah 4.',
+            'ISIAN_SINGKAT' => 'Satu baris adalah satu soal. Mode TEKS menerima satu atau lebih jawaban (satu per baris). Mode ANGKA memakai angka harapan dan toleransi absolut; kosong/0 berarti harus tepat, contoh 10 dengan toleransi 0,5 menerima 9,5–10,5.',
+            'URAIAN' => 'Satu baris adalah satu soal. Isi rubrik/pedoman penilaian. Poin maksimum default 1 sudah diisi otomatis dan boleh diganti sesuai skala rubrik, misalnya 5 untuk rubrik 0–5.',
             default => '',
         };
     }

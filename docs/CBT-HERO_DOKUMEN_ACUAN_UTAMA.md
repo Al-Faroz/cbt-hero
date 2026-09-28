@@ -739,10 +739,15 @@ Format pengisian guru:
 - PG Bertingkat: tabel `Bagian | Isi | Poin pilihan`; `max_point` diambil dari
   poin pilihan tertinggi.
 - Menjodohkan: tabel `Soal | Sisi kiri | Pasangan benar di sisi kanan`; jumlah
-  pasangan dan scoring mode berasal dari Komposisi; guru mengisi poin maksimum.
+  pasangan dan scoring mode berasal dari Komposisi. Guru mengisi poin maksimum,
+  yaitu skor tertinggi yang dapat diperoleh dari satu soal Menjodohkan.
 - Isian Singkat: satu row per soal dengan `Mode TEKS/ANGKA`, jawaban/angka harapan,
-  toleransi khusus ANGKA, dan poin maksimum. TEKS menerima satu jawaban per baris.
+  toleransi absolut khusus ANGKA, dan poin maksimum. TEKS menerima satu jawaban per
+  baris. Toleransi kosong/0 berarti exact numeric; contoh target 10 dan toleransi 0,5
+  menerima 9,5–10,5.
 - Uraian: satu row per soal berisi Soal, Rubrik/Pedoman Penilaian, dan poin maksimum.
+  Generator mengisi default `max_point = 1`; guru boleh menggantinya sesuai skala
+  rubrik, misalnya 5 untuk rubrik 0–5.
 
 Generator menambahkan marker internal tersembunyi yang tidak perlu dipahami guru.
 Parser memakai marker tersebut untuk memetakan struktur Word ke payload normalized,
@@ -759,7 +764,9 @@ Mendukung:
 
 Label struktur template tidak boleh diubah. Teks placeholder dalam tanda kurung siku
 harus diganti; placeholder yang dibiarkan akan diperlakukan sebagai input kosong dan
-tertahan pada validasi staging.
+tertahan pada validasi staging. Formatting Word (bold/italic) pada field kontrol seperti
+tanda benar, mode, poin, angka harapan, dan toleransi tidak boleh mengubah nilai mesin;
+parser menormalisasi formatting sebelum validasi.
 
 ## 15.2 Excel
 

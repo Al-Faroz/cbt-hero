@@ -157,11 +157,11 @@ class QuestionDocumentService
             foreach (array_slice($rows, 1) as $row) {
                 $label = trim((string) ($row[0] ?? ''));
                 if (mb_strtolower($label) === 'cara penilaian') {
-                    $modeText = mb_strtolower(trim((string) ($row[1] ?? '')), 'UTF-8');
+                    $modeText = mb_strtolower($this->control((string) ($row[1] ?? '')), 'UTF-8');
                     $mode = str_contains($modeText, 'semua') ? 'ALL_OR_NOTHING' : 'PARTIAL'; continue;
                 }
                 if (mb_strtolower($label) === 'poin maksimum') {
-                    $maxPoint = $this->input((string) ($row[1] ?? '')); continue;
+                    $maxPoint = $this->control((string) ($row[1] ?? '')); continue;
                 }
                 $left = $this->input((string) ($row[1] ?? ''));
                 $right = $this->input((string) ($row[2] ?? ''));
@@ -176,7 +176,7 @@ class QuestionDocumentService
         foreach (array_slice($rows, 2) as $row) {
             $label = trim((string) ($row[0] ?? ''));
             if (!preg_match('/^Pilihan\s+([A-L])$/iD', $label, $m)) continue;
-            $letter = strtoupper($m[1]); $text = $this->input((string) ($row[1] ?? '')); $third = $this->input((string) ($row[2] ?? ''));
+            $letter = strtoupper($m[1]); $text = $this->input((string) ($row[1] ?? '')); $third = $this->control((string) ($row[2] ?? ''));
             if ($type === 'PG') {
                 if ($this->marked($third)) $correctKey = $letter;
                 $options[] = ['text' => $text];
@@ -200,26 +200,28 @@ class QuestionDocumentService
 
     private function shortAnswerRow(array $row): array
     {
-        $modeText = mb_strtoupper($this->input((string) ($row[2] ?? '')), 'UTF-8');
+        $modeText = mb_strtoupper($this->control((string) ($row[2] ?? '')), 'UTF-8');
         $mode = in_array($modeText, ['ANGKA', 'NUMERIC', 'N'], true) ? 'NUMERIC'
             : (in_array($modeText, ['TEKS', 'TEXT', 'T'], true) ? 'TEXT' : $modeText);
         $answer = $this->input((string) ($row[3] ?? ''));
         $data = ['question_type' => 'ISIAN_SINGKAT', 'question_text' => $this->input((string) ($row[1] ?? '')),
-            'short_answer_mode' => $mode, 'max_point' => $this->input((string) ($row[5] ?? ''))];
+            'short_answer_mode' => $mode, 'max_point' => $this->control((string) ($row[5] ?? ''))];
         if ($mode === 'TEXT') {
             $values = array_values(array_filter(array_map('trim', preg_split('/\R/u', $answer) ?: []), static fn(string $v): bool => $v !== ''));
             $data['accepted_values'] = $values;
         } else {
-            $data['expected_numeric'] = $answer;
-            $data['numeric_tolerance'] = $this->input((string) ($row[4] ?? ''));
+            $data['expected_numeric'] = $this->control($answer);
+            $tolerance = $this->control((string) ($row[4] ?? ''));
+            $data['numeric_tolerance'] = $tolerance === '' ? '0' : $tolerance;
         }
         return $data;
     }
 
     private function essayRow(array $row): array
     {
+        $maxPoint = $this->control((string) ($row[3] ?? ''));
         return ['question_type' => 'URAIAN', 'question_text' => $this->input((string) ($row[1] ?? '')),
-            'rubric_text' => $this->input((string) ($row[2] ?? '')), 'max_point' => $this->input((string) ($row[3] ?? ''))];
+            'rubric_text' => $this->input((string) ($row[2] ?? '')), 'max_point' => $maxPoint === '' ? '1' : $maxPoint];
     }
 
     private function relationships(ZipArchive $zip): array
@@ -294,9 +296,16 @@ class QuestionDocumentService
         return preg_match('/^\[[^\]]+\]$/uD', $value) ? '' : $value;
     }
 
+    private function control(string $value): string
+    {
+        $value = $this->input($value);
+        if ($value === '') return '';
+        return trim(str_replace(['**', '*'], '', $value));
+    }
+
     private function marked(string $value): bool
     {
-        $value = mb_strtoupper(trim($value), 'UTF-8');
+        $value = mb_strtoupper($this->control($value), 'UTF-8');
         return in_array($value, ['✓', '✔', 'V', 'X', '1', 'BENAR', 'TRUE'], true);
     }
 

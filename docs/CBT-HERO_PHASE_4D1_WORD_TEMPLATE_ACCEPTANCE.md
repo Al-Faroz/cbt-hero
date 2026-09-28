@@ -68,7 +68,9 @@ Cara penilaian | <dari Komposisi>
 Poin maksimum | <diisi guru>
 ```
 
-Jumlah pasangan dan cara penilaian tidak ditentukan ulang oleh guru.
+Jumlah pasangan dan cara penilaian tidak ditentukan ulang oleh guru. Poin maksimum
+adalah skor tertinggi yang dapat diperoleh dari satu soal Menjodohkan; contoh isi 4
+bila skor penuh soal tersebut adalah 4.
 
 ### Isian Singkat
 
@@ -77,13 +79,17 @@ No | Soal | Mode | Jawaban diterima / Angka harapan | Toleransi | Poin maksimum
 ```
 
 Mode `TEKS`: satu jawaban diterima per baris di sel jawaban.
-Mode `ANGKA`: isi angka harapan dan toleransi.
+Mode `ANGKA`: isi angka harapan dan toleransi absolut. Toleransi kosong/0 berarti
+jawaban harus tepat; contoh target 10 dan toleransi 0,5 menerima 9,5–10,5.
 
 ### Uraian
 
 ```text
 No | Soal | Rubrik / Pedoman Penilaian | Poin maksimum
 ```
+
+Poin maksimum otomatis diisi `1` sebagai default dan boleh diganti sesuai skala
+rubrik, misalnya `5` bila rubrik menggunakan skor 0–5.
 
 ## Marker Internal
 
@@ -97,6 +103,8 @@ buta.
 - Word V2 dan Word teknis lama tetap dapat dibaca.
 - Placeholder utuh seperti `[Tulis soal di sini]` diperlakukan sebagai kosong.
 - Tanda benar yang diterima: `✓`, `✔`, `V`, `X`, `1`, `BENAR`, `TRUE`.
+- Formatting bold/italic pada field kontrol tidak mengubah makna: `**✓**`, `**4**`,
+  `**TEKS**`, dan `**ANGKA**` dinormalisasi sebelum validasi.
 - Gambar JPG/PNG/WebP yang ditempel di sel tetap diimpor sebagai media.
 - Bold/italic, tabel dalam sel, teks Arab/RTL, dan formula berbasis teks tetap
   mengikuti mekanisme parser/renderer yang ada.
@@ -116,6 +124,8 @@ buta.
 | W08 | Commit job valid, panggil commit ulang dengan job sama. | Soal hanya masuk sekali; job tetap COMMITTED. |
 | W09 | Bank tanpa Komposisi mencoba unduh Word. | Ditolak dengan pesan atur Komposisi terlebih dahulu. |
 | W10 | Total Komposisi lebih dari 200 soal. | Generator menolak dan menjelaskan batas satu file. |
+| W11 | Buat tanda kunci, poin, mode TEKS/ANGKA, toleransi, atau poin maksimum menjadi bold/italic di Word. | Nilai kontrol tetap dibaca sebagai nilai mentah dan validasi tidak gagal hanya karena formatting. |
+| W12 | Unduh template yang memuat Uraian. | Kolom Poin maksimum Uraian sudah berisi default 1 dan masih dapat diganti. |
 
 ## Belum termasuk
 

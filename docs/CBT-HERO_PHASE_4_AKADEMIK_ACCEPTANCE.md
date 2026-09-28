@@ -16,7 +16,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A04 | Buat PG Bertingkat dengan minimal satu opsi bernilai positif dan nilai tiap opsi tidak melebihi poin maksimal. | Simpan berhasil; pratinjau menampilkan nilai setiap opsi. |
 | A05 | Atur Menjodohkan 4 pasangan pada Komposisi lalu buat soal dengan tepat empat pasangan unik. | Jumlah pasangan dan mode penilaian mengikuti Komposisi; pratinjau dan simpan berhasil. |
 | A06 | Buat Isian Singkat mode TEXT dengan dua jawaban berbeda, lalu satu soal mode NUMERIC dengan angka harapan dan toleransi. | Jawaban dan angka tersimpan; input duplikat atau toleransi negatif ditolak. |
-| A07 | Buat Uraian beserta rubrik. | Pertanyaan tersimpan; rubrik muncul pada pratinjau Manager. |
+| A07 | Buat Uraian beserta rubrik. Pada template Word, biarkan Poin maksimum default 1 atau ubah sesuai skala rubrik. | Pertanyaan tersimpan; rubrik muncul pada pratinjau Manager dan max point mengikuti nilai template. |
 | A08 | Coba menyimpan soal tanpa pertanyaan, tanpa kunci PG, opsi kosong, atau poin negatif. | API menolak dengan pesan validasi; tidak menambah soal. |
 | A09 | Sisipkan `**tebal**`, `*miring*`, `$x^2$`, teks Arab, serta tabel dengan baris `| Kolom A | Kolom B |` pada pertanyaan. | Pratinjau dan halaman cetak menampilkan format, rumus, arah teks, dan tabel. Teks `<script>` tampil sebagai teks, tidak dieksekusi. |
 | A10 | Unggah gambar JPG/PNG/WebP atau audio MP3/OGG/M4A dari editor, sisipkan kode `[[media:ID]]`. Tambahkan tautan video YouTube/Vimeo HTTPS bila perlu. | Media tampak/diputar pada pratinjau; referensi media yang tidak aktif/tidak ditemukan menolak penyimpanan. |
@@ -33,6 +33,6 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 ## Batas data yang perlu diperhatikan
 
 - Template Word V2 tidak memakai kolom JSON dan dibuat dinamis dari Komposisi Bank. Template Excel masih memakai format teknis `options_json`, `pairs_json`, dan `accepted_values_json` sampai Phase 4D2.
-- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, dan gambar JPG/PNG/WebP pada sel isi. Formula ditulis dalam sintaks KaTeX `$...$`. File `.doc` lama tidak diterima.
+- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, dan gambar JPG/PNG/WebP pada sel isi. Formatting bold/italic pada field kontrol (kunci, mode, poin, toleransi) dinormalisasi sebelum validasi. Formula ditulis dalam sintaks KaTeX `$...$`. File `.doc` lama tidak diterima.
 - Cetak PDF menggunakan dialog cetak browser, sehingga operator memilih **Save as PDF** pada tujuan cetak.
 - Pengujian runtime PHP/database dilakukan setelah perubahan ditarik ke lingkungan lokal yang memiliki PHP dan MySQL.
