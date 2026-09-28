@@ -724,14 +724,42 @@ Staging **wajib**. Tidak ada upload langsung ke Bank tanpa validation/preview.
 
 ## 15.1 Word
 
+Template Word akademik dibuat **per Bank** dari Komposisi aktif, bukan file kosong
+generik. Generator memakai format `CBT-HERO-WORD-V2` dan membuat jumlah blok soal
+tepat sebanyak `question_count`; PG/PG Kompleks/PG Bertingkat memakai
+`option_count` sebagai jumlah pilihan, sedangkan Menjodohkan memakai
+`option_count` sebagai jumlah pasangan. Maksimal satu file Word memuat 200 soal,
+sesuai batas satu job impor.
+
+Format pengisian guru:
+
+- PG: tabel `Bagian | Isi | Benar`; tepat satu tanda benar; `max_point = 1` otomatis.
+- PG Kompleks: tabel `Bagian | Isi | Benar`; minimal satu benar dan satu salah;
+  `max_point = 1` otomatis.
+- PG Bertingkat: tabel `Bagian | Isi | Poin pilihan`; `max_point` diambil dari
+  poin pilihan tertinggi.
+- Menjodohkan: tabel `Soal | Sisi kiri | Pasangan benar di sisi kanan`; jumlah
+  pasangan dan scoring mode berasal dari Komposisi; guru mengisi poin maksimum.
+- Isian Singkat: satu row per soal dengan `Mode TEKS/ANGKA`, jawaban/angka harapan,
+  toleransi khusus ANGKA, dan poin maksimum. TEKS menerima satu jawaban per baris.
+- Uraian: satu row per soal berisi Soal, Rubrik/Pedoman Penilaian, dan poin maksimum.
+
+Generator menambahkan marker internal tersembunyi yang tidak perlu dipahami guru.
+Parser memakai marker tersebut untuk memetakan struktur Word ke payload normalized,
+sehingga kolom JSON tidak digunakan pada Word V2.
+
 Mendukung:
 
 - rich text;
 - gambar;
 - Arab/RTL;
-- formula;
-- tabel;
+- formula KaTeX sebagai teks;
+- tabel dalam sel;
 - media reference yang diizinkan.
+
+Label struktur template tidak boleh diubah. Teks placeholder dalam tanda kurung siku
+harus diganti; placeholder yang dibiarkan akan diperlakukan sebagai input kosong dan
+tertahan pada validasi staging.
 
 ## 15.2 Excel
 

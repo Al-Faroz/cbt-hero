@@ -24,11 +24,12 @@ Halaman Komposisi, kontrak API Bank, skema dan pemeriksaan READY memakai
 jumlah pilihan terhadap Komposisi. Migrasi SQL untuk database yang sudah ada
 terdapat pada `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql`.
 
-Modul Jadwal, generator template dinamis, dan parser template manusiawi belum
-diimplementasikan. Tabel `jadwal_type_selection` disiapkan dalam skema supaya
-implementasi Jadwal kelak mengikuti keputusan ini. Endpoint unduh sekarang
-masih mengirim file statis; importer lama masih memakai tabel 13 kolom teknis.
-Jangan menguji file Word rancangan sebagai format impor yang sudah aktif.
+Generator Word dinamis dan parser Word manusiawi `CBT-HERO-WORD-V2` sudah
+diimplementasikan pada Phase 4D1. Template Word mengikuti `question_count` dan
+`option_count` Komposisi serta dapat round-trip melalui staging tanpa kolom JSON.
+Template/parser Excel masih memakai format teknis 13 kolom dan dikerjakan pada
+Phase 4D2. Modul Jadwal belum diimplementasikan; tabel `jadwal_type_selection`
+sudah disiapkan agar pengambilan soal per tipe tetap mengikuti keputusan ini.
 
 ## Pemeriksaan Revisi Komposisi
 

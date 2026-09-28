@@ -4,6 +4,7 @@ namespace App\Controllers\Api\Manager\Bank;
 
 use App\Controllers\BaseController;
 use App\Services\QuestionImportService;
+use App\Services\TemplateBuilderService;
 use App\Traits\ApiResponseTrait;
 
 class ImportSoalController extends BaseController
@@ -25,6 +26,20 @@ class ImportSoalController extends BaseController
         return $this->response->setHeader('Content-Type', $mime)
             ->setHeader('Content-Disposition', 'attachment; filename="template_bank_soal_akademik.' . $format . '"')
             ->setHeader('Cache-Control', 'no-store, private')->setBody(file_get_contents($path));
+    }
+
+    public function bankTemplate(string $bankId, string $format)
+    {
+        if ($format !== 'docx') return $this->apiError('NOT_FOUND', 'Template tidak ditemukan.', 404);
+        $result = (new TemplateBuilderService())->word((int) $bankId);
+        if (!($result['ok'] ?? false))
+            return $this->apiError($result['code'], $result['message'], $result['status']);
+        $data = $result['data'];
+        return $this->response
+            ->setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $data['filename'] . '"')
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setBody($data['content']);
     }
 
     public function upload(string $bankId)

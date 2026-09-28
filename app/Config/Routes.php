@@ -266,6 +266,7 @@ $routes->group(
         $routes->delete('bank-soal/(:num)/soal/(:num)', $question . 'remove/$1/$2', $examFilter);
         $import = 'Api\\Manager\\Bank\\ImportSoalController::';
         $routes->get('bank-soal/template/(:segment)', $import . 'template/$1', $examFilter);
+        $routes->get('bank-soal/(:num)/template/(:segment)', $import . 'bankTemplate/$1/$2', $examFilter);
         $routes->get('bank-soal/(:num)/imports', $import . 'index/$1', $examFilter);
         $routes->post('bank-soal/(:num)/imports', $import . 'upload/$1', $examFilter);
         $routes->get('bank-soal/(:num)/imports/(:num)', $import . 'show/$1/$2', $examFilter);

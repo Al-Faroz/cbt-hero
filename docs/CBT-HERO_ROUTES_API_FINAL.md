@@ -2959,4 +2959,12 @@ Enam tipe di editor memakai CRUD soal bagian 29.3. `question_type` wajib untuk P
 
 Halaman Manager tersedia pada `/manager/master-ujian/bank-soal/{id}/soal-lanjutan`, `/impor`, `/preview`, dan `/cetak`. Halaman `/cetak` menggunakan dialog browser **Save as PDF**. Alih status mengikuti `POST /manager/api/bank-soal/{id}/ready` dan `/draft` dengan `expected_version`; `GET /manager/api/bank-soal/{id}/preflight` menampilkan hitungan dan kesalahan.
 
-Template diunduh dari `/manager/import-template/bank-soal.xlsx` atau `.docx`. Impor mengikuti kontrak generik bagian 24 dengan `import_type=BANK_EXCEL|BANK_WORD`, `context_type=bank_soal`, `context_id={id}`, dan `Idempotency-Key` pada commit. Halaman Manager juga memakai alias `/manager/api/bank-soal/{id}/imports` untuk daftar job Bank dan staging ringkas. Media lokal dan video reference dikelola melalui `/manager/api/question-media`.
+Template Excel legacy diunduh dari `/manager/import-template/bank-soal.xlsx`.
+Template Word V2 dibuat per Bank melalui
+`GET /manager/api/bank-soal/{id}/template/docx` dan mengikuti Komposisi Bank.
+Impor mengikuti kontrak generik bagian 24 dengan `import_type=BANK_EXCEL|BANK_WORD`,
+`context_type=bank_soal`, `context_id={id}`, dan `Idempotency-Key` pada commit.
+Parser Word V2 membaca marker struktur tersembunyi dan menghasilkan payload
+normalized tanpa kolom JSON. Halaman Manager juga memakai alias
+`/manager/api/bank-soal/{id}/imports` untuk daftar job Bank dan staging ringkas.
+Media lokal dan video reference dikelola melalui `/manager/api/question-media`.

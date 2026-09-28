@@ -53,7 +53,7 @@ class QuestionImportService
             $id = (int) $db->insertID();
             foreach ($rows as $row) $db->table('import_staging_items')->insert([
                 'import_job_id' => $id, 'item_no' => $row['line'],
-                'source_ref' => ($extension === 'xlsx' ? 'Sheet Soal baris ' : 'Tabel Word baris ') . $row['line'],
+                'source_ref' => (string) ($row['source_ref'] ?? (($extension === 'xlsx' ? 'Sheet Soal baris ' : 'Tabel Word baris ') . $row['line'])),
                 'payload_json' => json_encode($row['data'], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
                 'validation_status' => 'INVALID']);
             if ($db->transStatus() === false || $db->transCommit() === false) throw new RuntimeException('Staging gagal.');

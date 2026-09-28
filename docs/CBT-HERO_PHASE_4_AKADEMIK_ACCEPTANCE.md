@@ -20,7 +20,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A08 | Coba menyimpan soal tanpa pertanyaan, tanpa kunci PG, opsi kosong, atau poin negatif. | API menolak dengan pesan validasi; tidak menambah soal. |
 | A09 | Sisipkan `**tebal**`, `*miring*`, `$x^2$`, teks Arab, serta tabel dengan baris `| Kolom A | Kolom B |` pada pertanyaan. | Pratinjau dan halaman cetak menampilkan format, rumus, arah teks, dan tabel. Teks `<script>` tampil sebagai teks, tidak dieksekusi. |
 | A10 | Unggah gambar JPG/PNG/WebP atau audio MP3/OGG/M4A dari editor, sisipkan kode `[[media:ID]]`. Tambahkan tautan video YouTube/Vimeo HTTPS bila perlu. | Media tampak/diputar pada pratinjau; referensi media yang tidak aktif/tidak ditemukan menolak penyimpanan. |
-| A11 | Dari **Impor**, unduh template Excel dan Word. Isi satu soal per baris sesuai Panduan; unggah. | Job berisi staging dan status valid/invalid per baris; Bank belum bertambah sebelum commit. |
+| A11 | Dari **Impor**, unduh **Template Word sesuai Komposisi**. Pastikan jumlah blok/row mengikuti `question_count` dan jumlah pilihan/pasangan mengikuti `option_count`; isi lalu unggah DOCX yang sama. | Parser Word V2 membuat staging tanpa JSON; status valid/invalid muncul per soal dan Bank belum bertambah sebelum commit. |
 | A12 | Pada staging, buka **Pratinjau** dan periksa kunci. Perbaiki satu baris invalid lewat JSON, keluarkan baris lain, lalu **Validasi ulang**. | Jumlah valid/invalid diperbarui; baris yang dikeluarkan tidak ikut commit. |
 | A13 | Commit staging yang seluruh baris aktifnya valid; buka ulang riwayat job yang sama. | Soal masuk Bank sekali saja dan job berstatus COMMITTED; panggilan commit ulang tidak menggandakan soal. |
 | A14 | Dalam template Word, sisipkan gambar JPG/PNG/WebP ke sel pertanyaan lalu unggah. | Gambar menjadi referensi media pada staging dan terlihat saat pratinjau; ikut soal setelah commit. |
@@ -32,7 +32,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 
 ## Batas data yang perlu diperhatikan
 
-- Template Word/Excel menggunakan kolom `options_json`, `pairs_json`, dan `accepted_values_json` untuk struktur jawaban. Panduan serta contoh sintaks tersedia pada kedua template.
-- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, dan gambar JPG/PNG/WebP pada sel pertanyaan. Formula ditulis dalam sintaks KaTeX `$...$`. File `.doc` lama tidak diterima.
+- Template Word V2 tidak memakai kolom JSON dan dibuat dinamis dari Komposisi Bank. Template Excel masih memakai format teknis `options_json`, `pairs_json`, dan `accepted_values_json` sampai Phase 4D2.
+- Word `.docx` mendukung teks, tebal/miring, tabel dalam sel, dan gambar JPG/PNG/WebP pada sel isi. Formula ditulis dalam sintaks KaTeX `$...$`. File `.doc` lama tidak diterima.
 - Cetak PDF menggunakan dialog cetak browser, sehingga operator memilih **Save as PDF** pada tujuan cetak.
 - Pengujian runtime PHP/database dilakukan setelah perubahan ditarik ke lingkungan lokal yang memiliki PHP dan MySQL.
