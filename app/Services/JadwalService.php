@@ -50,7 +50,9 @@ class JadwalService
         $page = min($page, $pages);
         $items = $builder->select('j.id, j.kegiatan_id, j.bank_soal_id, j.mulai_at, j.batas_mulai_at, '
                 . 'j.durasi_seconds, j.access_state, j.tampilkan_nilai_saat_selesai, j.first_attempt_started_at, '
-                . 'j.results_finalized_at, k.nama AS kegiatan_nama, k.status AS kegiatan_status, '
+                . 'j.results_finalized_at, '
+                . '(SELECT COUNT(*) FROM attempt a WHERE a.jadwal_id = j.id AND a.status = \'ACTIVE\') AS active_attempt_count, '
+                . 'k.nama AS kegiatan_nama, k.status AS kegiatan_status, '
                 . 'b.nama_bank, b.tingkat, b.status AS bank_status, m.nama_mapel AS mapel_nama')
             ->orderBy('j.mulai_at', 'DESC')->orderBy('j.id', 'DESC')
             ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
@@ -127,7 +129,9 @@ class JadwalService
         if ($id < 1) return null;
         $db = Database::connect();
         $item = $db->table('jadwal AS j')
-            ->select('j.*, k.nama AS kegiatan_nama, k.status AS kegiatan_status, b.nama_bank, b.tingkat, '
+            ->select('j.*, '
+                . '(SELECT COUNT(*) FROM attempt a WHERE a.jadwal_id = j.id AND a.status = \'ACTIVE\') AS active_attempt_count, '
+                . 'k.nama AS kegiatan_nama, k.status AS kegiatan_status, b.nama_bank, b.tingkat, '
                 . 'b.status AS bank_status, m.nama_mapel AS mapel_nama')
             ->join('kegiatan AS k', 'k.id = j.kegiatan_id')
             ->join('bank_soal AS b', 'b.id = j.bank_soal_id', 'left')

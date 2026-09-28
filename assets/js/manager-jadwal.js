@@ -5,7 +5,9 @@
 
     const $ = id => document.getElementById(id);
     const base = app.dataset.api;
+    const uiBase = app.dataset.uiBase;
     const modal = bootstrap.Modal.getOrCreateInstance($('jadwalModal'));
+    const operationModal = bootstrap.Modal.getOrCreateInstance($('jadwalOperationModal'));
     const state = {page: 1, pages: 1, editing: null, options: {kegiatan: [], banks: []}, sequence: 0};
     let debounce;
 
@@ -38,9 +40,10 @@
         return td;
     };
 
-    const actionButton = (label, className, handler) => {
+    const actionButton = (label, className, handler, disabled = false) => {
         const button = document.createElement('button');
         button.type = 'button'; button.className = className; button.textContent = label;
+        button.disabled = disabled;
         button.addEventListener('click', handler); return button;
     };
 
@@ -176,6 +179,41 @@
         }
     };
 
+    const openOperation = (id, type, currentValue = '') => {
+        $('jadwalOperationId').value = String(id);
+        $('jadwalOperationType').value = type;
+        $('jadwalOperationFields').replaceChildren();
+        feedback('jadwalOperationFeedback', '');
+
+        const label = document.createElement('label');
+        label.className = 'cbt-form-label';
+        label.htmlFor = 'jadwalOperationValue';
+        const input = document.createElement('input');
+        input.className = 'form-control';
+        input.id = 'jadwalOperationValue';
+        input.required = true;
+        const help = document.createElement('div');
+        help.className = 'form-text';
+
+        if (type === 'EXTEND') {
+            $('jadwalOperationTitle').textContent = 'Perpanjang Batas Mulai';
+            label.textContent = 'Batas Mulai baru';
+            input.type = 'datetime-local';
+            input.value = inputDate(currentValue);
+            help.textContent = 'Waktu baru harus lebih akhir dari Batas Mulai sekarang.';
+        } else {
+            $('jadwalOperationTitle').textContent = 'Tambah Waktu';
+            label.textContent = 'Tambahan waktu untuk semua peserta aktif (menit)';
+            input.type = 'number';
+            input.min = '1';
+            input.step = '1';
+            input.value = '10';
+            help.textContent = 'Hanya Attempt yang masih aktif pada Jadwal ini yang mendapat tambahan waktu.';
+        }
+        $('jadwalOperationFields').append(label, input, help);
+        operationModal.show();
+    };
+
     const loadOptions = async () => {
         state.options = await api(base + '/options');
         populateFilter();
@@ -222,6 +260,44 @@
 
                 const actions = document.createElement('td');
                 actions.className = 'text-nowrap';
+
+                const followUp = document.createElement('a');
+                followUp.className = 'btn btn-outline-primary btn-sm me-1';
+                followUp.href = uiBase + '/' + item.id + '/susulan';
+                followUp.textContent = 'Susulan';
+                actions.append(followUp);
+
+                actions.append(actionButton(
+                    'Perpanjang',
+                    'btn btn-outline-secondary btn-sm me-1',
+                    () => openOperation(item.id, 'EXTEND', item.batas_mulai_at)
+                ));
+
+                actions.append(actionButton(
+                    'Tambah Waktu',
+                    'btn btn-outline-secondary btn-sm me-1',
+                    () => openOperation(item.id, 'ADD_TIME'),
+                    Number(item.active_attempt_count) < 1
+                ));
+
+                if (item.first_attempt_started_at === null) {
+                    const visible = Number(item.tampilkan_nilai_saat_selesai) === 1;
+                    actions.append(actionButton(
+                        visible ? 'Nilai: ON' : 'Nilai: OFF',
+                        'btn btn-outline-secondary btn-sm me-1',
+                        async () => {
+                            try {
+                                await api(base + '/' + item.id + '/result-visibility', 'PATCH', {
+                                    tampilkan_nilai_saat_selesai: !visible,
+                                });
+                                await load();
+                            } catch (error) {
+                                feedback('jadwalFeedback', error.message, true);
+                            }
+                        }
+                    ));
+                }
+
                 if (item.access_editable) {
                     const target = item.access_state === 'BUKA' ? 'TAHAN' : 'BUKA';
                     actions.append(actionButton(
@@ -347,6 +423,32 @@
             feedback('jadwalFormFeedback', error.message, true);
         } finally {
             submit.disabled = false;
+        }
+    });
+
+    $('jadwalOperationForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = Number($('jadwalOperationId').value);
+        const type = $('jadwalOperationType').value;
+        const value = $('jadwalOperationValue').value;
+        try {
+            if (type === 'EXTEND') {
+                await api(base + '/' + id + '/extend-start-window', 'POST', {
+                    batas_mulai_at: value,
+                });
+            } else {
+                await api(base + '/' + id + '/add-time', 'POST', {
+                    seconds: Math.round(Number(value) * 60),
+                    scope: 'ALL_ACTIVE',
+                });
+            }
+            operationModal.hide();
+            await load();
+            feedback('jadwalFeedback', type === 'EXTEND'
+                ? 'Batas Mulai berhasil diperpanjang.'
+                : 'Tambahan waktu berhasil diterapkan.');
+        } catch (error) {
+            feedback('jadwalOperationFeedback', error.message, true);
         }
     });
 

@@ -1,3 +1,5 @@
+> **Checkpoint pengujian Master Ujian Akademis (2026-09-28):** acceptance mulai Phase 4D2 ditunda dan disimpan untuk dijalankan bersama setelah Master Ujian Akademis selesai, sebelum Master Ujian Psikologi. Status DEFERRED bukan PASS. Lihat `CBT-HERO_MASTER_UJIAN_AKADEMIK_DEFERRED_ACCEPTANCE.md`.
+
 # CBT-HERO — Test & Acceptance
 
 **Versi:** 1.2 · **Fokus saat ini:** Revisi konteks Tahun/Semester setelah Phase 1F  

@@ -1,5 +1,7 @@
 # CBT-HERO — PHASE 4D2 Excel Template Acceptance
 
+> **Status pengujian: DEFERRED (keputusan 2026-09-28).** Acceptance disimpan dan akan dijalankan pada akhir pengerjaan Master Ujian Akademis sebelum Master Ujian Psikologi. DEFERRED bukan PASS.
+
 Tanggal baseline: 2026-09-28
 
 ## Tujuan

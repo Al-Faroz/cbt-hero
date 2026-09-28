@@ -3,7 +3,9 @@
 namespace App\Controllers\Api\Manager\Schedule;
 
 use App\Controllers\BaseController;
+use App\Services\JadwalOperationalService;
 use App\Services\JadwalService;
+use App\Services\SusulanService;
 use App\Traits\ApiResponseTrait;
 
 class JadwalController extends BaseController
@@ -23,8 +25,9 @@ class JadwalController extends BaseController
     public function show(string $id)
     {
         $item = (new JadwalService())->find((int) $id);
+        if ($item === null) $item = (new SusulanService())->find((int) $id);
         return $item === null
-            ? $this->apiError('NOT_FOUND', 'Jadwal utama tidak ditemukan.', 404)
+            ? $this->apiError('NOT_FOUND', 'Jadwal tidak ditemukan.', 404)
             : $this->apiSuccess(['item' => $item]);
     }
 
@@ -35,7 +38,33 @@ class JadwalController extends BaseController
 
     public function update(string $id)
     {
-        return $this->respond((new JadwalService())->save($this->payload(), (int) $id, $this->actor()));
+        $susulan = (new SusulanService())->find((int) $id);
+        return $susulan !== null
+            ? $this->respond((new SusulanService())->update((int) $id, $this->payload(), $this->actor()))
+            : $this->respond((new JadwalService())->save($this->payload(), (int) $id, $this->actor()));
+    }
+
+    public function extendStartWindow(string $id)
+    {
+        $payload = $this->payload();
+        return $this->respond((new JadwalOperationalService())->extendStartWindow(
+            (int) $id, $payload['batas_mulai_at'] ?? null, $this->actor()
+        ));
+    }
+
+    public function resultVisibility(string $id)
+    {
+        $payload = $this->payload();
+        return $this->respond((new JadwalOperationalService())->resultVisibility(
+            (int) $id, $payload['tampilkan_nilai_saat_selesai'] ?? null, $this->actor()
+        ));
+    }
+
+    public function addTime(string $id)
+    {
+        return $this->respond((new JadwalOperationalService())->addTime(
+            (int) $id, $this->payload(), $this->actor()
+        ));
     }
 
     public function access(string $id)

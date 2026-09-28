@@ -140,6 +140,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/jadwal', 'Manager\\Schedule\\JadwalController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/jadwal/(:num)/susulan', 'Manager\\Schedule\\SusulanController::index/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
@@ -286,7 +288,16 @@ $routes->group(
         $routes->get('jadwal/(:num)', $jadwal . 'show/$1', $examFilter);
         $routes->put('jadwal/(:num)', $jadwal . 'update/$1', $examFilter);
         $routes->patch('jadwal/(:num)/access', $jadwal . 'access/$1', $examFilter);
+        $routes->post('jadwal/(:num)/extend-start-window', $jadwal . 'extendStartWindow/$1', $examFilter);
+        $routes->patch('jadwal/(:num)/result-visibility', $jadwal . 'resultVisibility/$1', $examFilter);
+        $routes->post('jadwal/(:num)/add-time', $jadwal . 'addTime/$1', $examFilter);
         $routes->delete('jadwal/(:num)', $jadwal . 'remove/$1', $examFilter);
+
+        $susulan = 'Api\\Manager\\Schedule\\SusulanController::';
+        $routes->get('jadwal/(:num)/susulan', $susulan . 'index/$1', $examFilter);
+        $routes->get('jadwal/(:num)/susulan/candidates', $susulan . 'candidates/$1', $examFilter);
+        $routes->post('jadwal/(:num)/susulan', $susulan . 'create/$1', $examFilter);
+        $routes->post('jadwal/(:num)/targets/(:num)/cancel', $susulan . 'cancelTarget/$1/$2', $examFilter);
 
         $routes->get(
             'users',

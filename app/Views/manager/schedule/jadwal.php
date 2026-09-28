@@ -11,6 +11,7 @@
 
 <div id="jadwalApp"
     data-api="<?= esc(base_url('manager/api/jadwal'), 'attr') ?>"
+    data-ui-base="<?= esc(base_url('manager/master-ujian/jadwal'), 'attr') ?>"
     data-timezone="<?= esc($appTimezone, 'attr') ?>">
     <section class="manager-section-card">
         <div class="card-body">
@@ -133,6 +134,29 @@
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
                 <button class="btn btn-cbt-primary" type="submit" form="jadwalForm" id="jadwalSubmit">Simpan Jadwal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="jadwalOperationModal" tabindex="-1" aria-labelledby="jadwalOperationTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="jadwalOperationTitle">Kontrol Jadwal</h2>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <form id="jadwalOperationForm">
+                    <input type="hidden" id="jadwalOperationId">
+                    <input type="hidden" id="jadwalOperationType">
+                    <div id="jadwalOperationFields"></div>
+                    <div class="cbt-inline-feedback mt-2" id="jadwalOperationFeedback"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-cbt-primary" type="submit" form="jadwalOperationForm">Simpan</button>
             </div>
         </div>
     </div>

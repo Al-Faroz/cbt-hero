@@ -1681,6 +1681,24 @@ Setelah Attempt pertama START:
 
 Untuk Psikologis hasil participant tetap tidak ditampilkan.
 
+## 32.5 Tambah Waktu
+
+```text
+POST /manager/api/jadwal/{jadwalId}/add-time
+```
+
+Request:
+
+```text
+seconds
+scope ALL_ACTIVE / IDS
+attempt_ids[]  // wajib bila scope IDS
+```
+
+Tambah Waktu hanya memodifikasi Attempt `ACTIVE` pada Jadwal tersebut:
+`added_seconds` bertambah dan `deadline_at` maju sebesar jumlah detik yang sama.
+Attempt yang sudah selesai tidak diubah.
+
 ---
 
 # 33. SUSULAN API
@@ -1726,7 +1744,12 @@ bukan chain child-of-child.
 
 ```text
 GET /manager/api/jadwal/{mainJadwalId}/susulan
+GET /manager/api/jadwal/{mainJadwalId}/susulan/candidates
 ```
+
+Endpoint `candidates` membantu UI memilih target dan mengembalikan klasifikasi
+`FIRST_ATTEMPT` atau `REPLACEMENT` berdasarkan riwayat Attempt root. Peserta
+dengan Attempt ACTIVE atau target Susulan pending lain tidak dapat dipilih.
 
 ## 33.3 Update Susulan
 
