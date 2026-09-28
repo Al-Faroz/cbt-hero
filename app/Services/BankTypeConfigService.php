@@ -53,12 +53,13 @@ class BankTypeConfigService
             $rawCount = $input['question_count'] ?? null;
             $count = is_scalar($rawCount) ? filter_var($rawCount, FILTER_VALIDATE_INT,
                 ['options' => ['min_range' => 1, 'max_range' => 1000]]) : false;
-            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true);
+            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING'], true);
             $rawOptions = $input['option_count'] ?? null;
+            $maxOptions = $type === 'PG' ? 6 : ($type === 'MATCHING' ? 12 : 8);
             $optionCount = is_scalar($rawOptions) ? filter_var($rawOptions, FILTER_VALIDATE_INT,
-                ['options' => ['min_range' => 2, 'max_range' => $type === 'PG' ? 6 : 8]]) : false;
+                ['options' => ['min_range' => 2, 'max_range' => $maxOptions]]) : false;
             if (($choiceType && ! is_int($optionCount)) || (! $choiceType && $rawOptions !== null))
-                return $this->error(422, 'VALIDATION_FAILED', 'Jumlah pilihan tidak valid untuk tipe soal.');
+                return $this->error(422, 'VALIDATION_FAILED', 'Jumlah pilihan/pasangan tidak valid untuk tipe soal.');
             $weight = $input['weight_percent'] ?? null;
             if (! is_int($count) || (! is_string($weight) && ! is_int($weight) && ! is_float($weight))
                 || ! preg_match('/^(?:100(?:\.0{1,3})?|[0-9]{1,2}(?:\.[0-9]{1,3})?)$/D', (string) $weight))

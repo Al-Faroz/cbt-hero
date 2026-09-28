@@ -45,6 +45,11 @@ class AdvancedQuestionService
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED',
                     'Jumlah pilihan harus sesuai Komposisi Bank (' . $config['option_count'] . ').');
             }
+            if ($data['question_type'] === 'MATCHING'
+                && count($data['pairs']) !== (int) $config['option_count']) {
+                $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED',
+                    'Jumlah pasangan Menjodohkan harus sesuai Komposisi Bank (' . $config['option_count'] . ').');
+            }
             if ($data['question_type'] === 'MATCHING' && $data['scoring_mode'] !== $config['scoring_mode']) {
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Mode Menjodohkan harus sama dengan Komposisi Bank.');
             }

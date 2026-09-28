@@ -6,10 +6,10 @@ ALTER TABLE bank_type_config
   CHANGE COLUMN selection_count question_count INT UNSIGNED NULL,
   ADD COLUMN option_count TINYINT UNSIGNED NULL AFTER question_count;
 
--- Existing PG manual menerima 2-6 opsi; nilai awal ini dapat diubah di Komposisi.
+-- Nilai awal dapat diubah di Komposisi. Menjodohkan memakai option_count sebagai jumlah pasangan.
 UPDATE bank_type_config
 SET option_count = 4
-WHERE question_type IN ('PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT');
+WHERE question_type IN ('PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING');
 
 CREATE TABLE jadwal_type_selection (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

@@ -5,7 +5,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 ## Persiapan
 
 1. Buka **Master Ujian → Bank Soal**, buat Bank untuk Kegiatan DRAFT.
-2. Buka **Komposisi**. Aktifkan keenam tipe bila hendak menguji semuanya. Isi `question_count = 1` masing-masing, `option_count = 4` untuk ketiga tipe pilihan, dan bobot yang berjumlah tepat 100%, misalnya `20, 20, 15, 15, 15, 15`. Pada database lama, jalankan `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql` sebelum menguji.
+2. Buka **Komposisi**. Aktifkan keenam tipe bila hendak menguji semuanya. Isi `question_count = 1` masing-masing, `option_count = 4` untuk PG/PG Kompleks/PG Bertingkat dan Menjodohkan (pada Menjodohkan berarti 4 pasangan), lalu isi bobot yang berjumlah tepat 100%, misalnya `20, 20, 15, 15, 15, 15`. Pada database lama, jalankan `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql`; bila upgrade lama sudah pernah dijalankan sebelum revisi Matching, jalankan juga `CBT-HERO_MATCHING_OPTION_COUNT_UPGRADE.sql`.
 3. Untuk Menjodohkan pilih mode **Per pasangan**. Simpan. Bank tetap DRAFT sampai semua syarat READY terpenuhi.
 
 | ID | Langkah | Hasil yang diharapkan |
@@ -14,7 +14,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A02 | Edit PG yang sama, ubah teks/kunci, simpan. | Nomor revisi naik; daftar dan pratinjau menampilkan revisi baru. |
 | A03 | Pada **Tipe Lain**, pilih PG Kompleks; centang minimal satu opsi benar dan sisakan satu salah. | Simpan berhasil, pratinjau menandai semua opsi benar. |
 | A04 | Buat PG Bertingkat dengan minimal satu opsi bernilai positif dan nilai tiap opsi tidak melebihi poin maksimal. | Simpan berhasil; pratinjau menampilkan nilai setiap opsi. |
-| A05 | Buat Menjodohkan dengan dua pasangan unik. | Mode penilaian mengikuti Komposisi; pratinjau pasangan dan simpan berhasil. |
+| A05 | Atur Menjodohkan 4 pasangan pada Komposisi lalu buat soal dengan tepat empat pasangan unik. | Jumlah pasangan dan mode penilaian mengikuti Komposisi; pratinjau dan simpan berhasil. |
 | A06 | Buat Isian Singkat mode TEXT dengan dua jawaban berbeda, lalu satu soal mode NUMERIC dengan angka harapan dan toleransi. | Jawaban dan angka tersimpan; input duplikat atau toleransi negatif ditolak. |
 | A07 | Buat Uraian beserta rubrik. | Pertanyaan tersimpan; rubrik muncul pada pratinjau Manager. |
 | A08 | Coba menyimpan soal tanpa pertanyaan, tanpa kunci PG, opsi kosong, atau poin negatif. | API menolak dengan pesan validasi; tidak menambah soal. |

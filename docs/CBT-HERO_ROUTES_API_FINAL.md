@@ -2941,9 +2941,10 @@ tidak mengembalikan key rahasia atau berkas logo.
 
 `GET /manager/master-ujian/bank-soal/{id}/komposisi` membuka form komposisi. `GET`/`PUT /manager/api/bank-soal/{id}/type-config` mengikuti bagian 29.2. PUT mengganti komposisi tipe terpilih secara atomik dan wajib membawa `expected_version`; jika versi Bank berubah, server menolak 409. Jumlah/bobot diperiksa pada DRAFT, sedangkan kelayakan READY menunggu soal dan validasi lengkap.
 
-`question_count` pada Komposisi adalah jumlah soal yang dibuat dalam Bank,
-`option_count` jumlah pilihan setiap soal PG/PG Kompleks/PG Bertingkat.
-Pengunduhan template Bank kelak memakai kedua angka ini. Pada Jadwal akademik,
+`question_count` pada Komposisi adalah jumlah soal yang dibuat dalam Bank.
+`option_count` adalah jumlah pilihan untuk PG/PG Kompleks/PG Bertingkat dan
+jumlah pasangan untuk Menjodohkan. Pengunduhan template Bank kelak memakai
+kedua angka ini. Pada Jadwal akademik,
 `type_selection` menyimpan `question_type` dan `selection_count` per tipe;
 validasi Jadwal menolak jumlah yang melebihi soal aktif di Bank. Susulan
 mengikuti pilihan Jadwal utama.

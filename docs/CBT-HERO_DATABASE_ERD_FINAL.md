@@ -537,13 +537,13 @@ Saat Bank menjadi READY:
 
 - total weight tipe aktif harus 100;
 - jumlah soal aktif pada setiap tipe harus sama dengan `question_count` Bank;
-- `option_count` wajib untuk PG, PG Kompleks, dan PG Bertingkat serta NULL untuk tipe lain;
+- `option_count` wajib untuk PG, PG Kompleks, PG Bertingkat, dan Matching (pada Matching berarti jumlah pasangan), serta NULL untuk Isian Singkat/Uraian;
 - randomization rule tervalidasi.
 
 `question_count` menyatakan banyaknya soal yang disiapkan dalam Bank, bukan
 jumlah yang dipilih untuk satu peserta. `option_count` menetapkan banyak pilihan
-setiap soal pada ketiga tipe pilihan. Unduhan template Bank membuat tabel/baris
-sesuai kedua nilai ini.
+pada PG/PG Kompleks/PG Bertingkat dan banyak pasangan pada Matching. Unduhan
+template Bank membuat tabel/baris sesuai kedua nilai ini.
 
 ## 7.3 `soal`
 

@@ -616,7 +616,8 @@ Komposisi, randomisasi, scoring, dan bobot berada dalam Bank.
 
 Komposisi Bank menetapkan **jumlah soal yang dibuat/tersedia** untuk setiap tipe.
 Untuk PG, PG Kompleks, dan PG Bertingkat, Komposisi juga menetapkan jumlah pilihan
-per soal. Template impor yang diunduh dari Bank mengikuti kedua angka ini.
+per soal; untuk Menjodohkan, Komposisi menetapkan jumlah pasangan per soal.
+Template impor yang diunduh dari Bank mengikuti kedua angka ini.
 Jumlah soal yang benar-benar diambil untuk peserta ditetapkan **per tipe pada Jadwal**;
 jumlah tersebut tidak boleh melebihi soal aktif yang tersedia pada Bank. Dengan
 demikian Bank dapat berisi, misalnya, 40 soal dan Jadwal mengambil 20 soal.

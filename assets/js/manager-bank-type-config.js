@@ -61,15 +61,17 @@
             const name = document.createElement('strong'); name.textContent = labels[type];
             const count = input('number', config?.question_count ?? 1, 'form-control form-control-sm');
             count.min = '1'; count.max = '1000'; count.step = '1'; count.style.minWidth = '85px'; row.count = count;
-            const choiceType = ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'].includes(type);
+            const choiceType = ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING'].includes(type);
             const choice = choiceType ? input('number', config?.option_count ?? 4, 'form-control form-control-sm') : null;
             if (choice) {
-                choice.min = '2'; choice.max = type === 'PG' ? '6' : '8'; choice.step = '1';
-                choice.style.minWidth = '75px'; choice.setAttribute('aria-label', 'Jumlah pilihan ' + labels[type]);
+                choice.min = '2'; choice.max = type === 'PG' ? '6' : (type === 'MATCHING' ? '12' : '8'); choice.step = '1';
+                choice.style.width = '92px'; choice.style.minWidth = '92px';
+                choice.setAttribute('aria-label', (type === 'MATCHING' ? 'Jumlah pasangan ' : 'Jumlah pilihan ') + labels[type]);
             }
             row.choice = choice;
-            const weight = input('number', config?.weight_percent ?? 0, 'form-control form-control-sm');
-            weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.style.minWidth = '85px'; row.weight = weight;
+            const weight = input('number', config?.weight_percent ?? 0, 'form-control form-control-sm text-end');
+            weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.inputMode = 'decimal';
+            weight.style.width = '104px'; weight.style.minWidth = '104px'; row.weight = weight;
             const questions = input('checkbox', Number(config?.shuffle_questions) === 1, 'form-check-input'); row.questions = questions;
             const options = input('checkbox', Number(config?.shuffle_options) === 1, 'form-check-input'); row.options = options;
             questions.setAttribute('aria-label', 'Acak soal ' + labels[type]);

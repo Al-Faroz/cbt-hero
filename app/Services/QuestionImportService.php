@@ -123,6 +123,10 @@ class QuestionImportService
                 if (!$check['ok']) $errors[] = $check['message'];
                 if (($payload['question_type'] ?? '') === 'MATCHING' && ($payload['scoring_mode'] ?? '') !== $matchingMode)
                     $errors[] = 'Mode Menjodohkan harus sama dengan Komposisi Bank.';
+                if (($payload['question_type'] ?? '') === 'MATCHING'
+                    && is_array($payload['pairs'] ?? null)
+                    && count($payload['pairs']) !== (int) ($configByType['MATCHING']['option_count'] ?? 0))
+                    $errors[] = 'Jumlah pasangan Menjodohkan harus sesuai Komposisi Bank.';
                 if (in_array($payload['question_type'] ?? '', ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)
                     && is_array($payload['options'] ?? null)
                     && count($payload['options']) !== (int) ($configByType[$payload['question_type']]['option_count'] ?? 0))

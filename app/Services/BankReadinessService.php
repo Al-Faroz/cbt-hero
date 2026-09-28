@@ -77,10 +77,11 @@ class BankReadinessService
             foreach ($questions as $question) if ($question['question_type'] === $type) $count++;
             $counts[$type] = ['available' => $count, 'planned' => (int) $config['question_count']];
             if ($count !== (int) $config['question_count']) $errors[] = $type . ': tersedia ' . $count . ', rencana Bank ' . $config['question_count'] . '.';
-            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true);
-            if (($choiceType && ((int) $config['option_count'] < 2 || (int) $config['option_count'] > ($type === 'PG' ? 6 : 8)))
+            $choiceType = in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING'], true);
+            $maxOptions = $type === 'PG' ? 6 : ($type === 'MATCHING' ? 12 : 8);
+            if (($choiceType && ((int) $config['option_count'] < 2 || (int) $config['option_count'] > $maxOptions))
                 || (! $choiceType && $config['option_count'] !== null))
-                $errors[] = 'Jumlah pilihan komposisi ' . $type . ' tidak valid.';
+                $errors[] = 'Jumlah pilihan/pasangan komposisi ' . $type . ' tidak valid.';
             $weight += (int) round((float) $config['weight_percent'] * 1000);
         }
         if ($weight !== 100000) $errors[] = 'Total bobot komposisi harus 100%.';
@@ -100,10 +101,11 @@ class BankReadinessService
                     || ($type === 'PG_BERTINGKAT' && !array_filter($options, fn($o) => (float) $o['point_value'] > 0)))
                     $errors[] = 'Opsi/kunci Soal #' . $id . ' belum lengkap.';
             } elseif ($type === 'MATCHING') {
-                if ($db->table('soal_matching_pair')->where('soal_revision_id', $revisionId)->countAllResults() < 2
+                if ($db->table('soal_matching_pair')->where('soal_revision_id', $revisionId)->countAllResults()
+                        !== (int) ($configByType[$type]['option_count'] ?? 0)
                     || !in_array($question['scoring_mode'], ['PARTIAL', 'ALL_OR_NOTHING'], true)
                     || $question['scoring_mode'] !== ($configByType[$type]['scoring_mode'] ?? null))
-                    $errors[] = 'Pasangan Soal #' . $id . ' belum lengkap.';
+                    $errors[] = 'Jumlah pasangan atau mode Menjodohkan Soal #' . $id . ' belum sesuai Komposisi.';
             } elseif ($type === 'ISIAN_SINGKAT') {
                 if (($question['short_answer_mode'] === 'TEXT' && $db->table('soal_short_answer_text')->where('soal_revision_id', $revisionId)->countAllResults() < 1)
                     || ($question['short_answer_mode'] === 'NUMERIC' && $question['expected_numeric'] === null)
