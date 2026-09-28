@@ -1379,6 +1379,17 @@ Urutan fallback:
 
 Jangan otomatis mengubah semua table menjadi card.
 
+Semua table Manager wajib berada di dalam wrapper `.table-responsive`.
+Horizontal scroll adalah behavior global dari `manager-ui-standard.css`, bukan
+CSS khusus per halaman. Pada viewport Manager di bawah 992px, `.manager-table`
+memiliki minimum width 720px dan wrapper menjadi pemilik scroll horizontal.
+Parent card/content wajib tetap `min-width: 0`/maksimal selebar viewport agar
+table tidak memperlebar halaman secara keseluruhan.
+
+Jangan menonaktifkan `overflow-x: auto`, `-webkit-overflow-scrolling: touch`,
+atau touch pan pada wrapper table. Jika suatu table sangat lebar, biarkan lebar
+natural kolom menambah area scroll; jangan mengecilkan font untuk memaksanya muat.
+
 Kolom aksi tetap dapat dijangkau.
 
 Bulk checkbox pada mobile hanya ditampilkan bila workflow bulk memang masuk akal di mobile.

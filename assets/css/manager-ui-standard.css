@@ -315,3 +315,54 @@
         gap: 8px;
     }
 }
+
+
+/* Global Manager table overflow
+ * All Manager tables use a local horizontal scroll container on narrow screens.
+ * Keep the page itself locked to the viewport; the table wrapper owns x-scroll.
+ */
+.manager-main,
+.manager-content,
+.manager-section-card,
+.manager-section-card form {
+    min-width: 0;
+}
+
+.manager-section-card .table-responsive {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+}
+
+.manager-section-card .table-responsive > .manager-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.manager-weight-input {
+    width: 88px !important;
+    min-width: 88px !important;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 991.98px) {
+    body.manager-body {
+        overflow-x: hidden;
+    }
+
+    .manager-main,
+    .manager-content,
+    .manager-section-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .manager-section-card .table-responsive > .manager-table {
+        min-width: 720px;
+    }
+}

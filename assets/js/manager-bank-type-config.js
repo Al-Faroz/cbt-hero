@@ -26,6 +26,10 @@
         return node;
     };
     const cell = (node) => {const td = document.createElement('td'); td.append(node); return td;};
+    const displayDecimal = (value) => {
+        const numeric = Number(value);
+        return Number.isFinite(numeric) ? numeric.toFixed(3).replace(/\.?0+$/, '') : '0';
+    };
     const current = () => [...$('typeRows').querySelectorAll('tr[data-type]')].filter((row) => row.enabled.checked).map((row) => ({
         question_type: row.dataset.type, question_count: Number(row.count.value),
         option_count: row.choice ? Number(row.choice.value) : null,
@@ -69,9 +73,8 @@
                 choice.setAttribute('aria-label', (type === 'MATCHING' ? 'Jumlah pasangan ' : 'Jumlah pilihan ') + labels[type]);
             }
             row.choice = choice;
-            const weight = input('number', config?.weight_percent ?? 0, 'form-control form-control-sm text-end');
-            weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.inputMode = 'decimal';
-            weight.style.width = '104px'; weight.style.minWidth = '104px'; row.weight = weight;
+            const weight = input('number', displayDecimal(config?.weight_percent ?? 0), 'form-control form-control-sm text-end manager-weight-input');
+            weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.inputMode = 'decimal'; row.weight = weight;
             const questions = input('checkbox', Number(config?.shuffle_questions) === 1, 'form-check-input'); row.questions = questions;
             const options = input('checkbox', Number(config?.shuffle_options) === 1, 'form-check-input'); row.options = options;
             questions.setAttribute('aria-label', 'Acak soal ' + labels[type]);
