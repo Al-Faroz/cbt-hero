@@ -2,6 +2,8 @@
     'use strict';
     const app=document.getElementById('questionImportApp'); if(!app) return;
     const $=id=>document.getElementById(id), base=app.dataset.api;
+    const labels={PG:'Pilihan Ganda',PG_KOMPLEKS:'PG Kompleks',PG_BERTINGKAT:'PG Bertingkat',
+        MATCHING:'Menjodohkan',ISIAN_SINGKAT:'Isian Singkat',URAIAN:'Uraian'};
     let current=null;
     const message=(text,error=false)=>{const node=$('questionImportFeedback');node.textContent=text;
         node.className='cbt-inline-feedback'+(text?error?' is-error':' is-info':'');};
@@ -46,19 +48,12 @@
             detail.append(detailCell);detail.hidden=true;
             actions.append(button('Pratinjau',()=>{detail.hidden=!detail.hidden;}));
             if(job.status!=='COMMITTED'){
-                actions.append(button('Perbaiki JSON',async()=>{
-                    const input=window.prompt('Ubah objek JSON untuk satu soal:',JSON.stringify(item.payload,null,2));
-                    if(input===null)return;
-                    try {const payload=JSON.parse(input); if(!payload||Array.isArray(payload)||typeof payload!=='object')throw Error('Objek JSON diperlukan.');
-                        render(await request(base+'/'+job.id+'/items/'+item.id+'/FIX','PUT',payload));message('Baris diperbaiki; validasi ulang sebelum commit.');}
-                    catch(error){message(error.message,true);}
-                }));
                 actions.append(button(item.validation_status==='EXCLUDED'?'Sertakan':'Keluarkan',async()=>{
                     try {render(await request(base+'/'+job.id+'/items/'+item.id+'/'+(item.validation_status==='EXCLUDED'?'INCLUDE':'EXCLUDE'),'PUT',{}));}
                     catch(error){message(error.message,true);}
                 }));
             }
-            row.append(cell(item.item_no),cell(item.payload.question_type),cell((item.payload.question_text||'').slice(0,160)),
+            row.append(cell(item.item_no),cell(labels[item.payload.question_type]||item.payload.question_type),cell((item.payload.question_text||'').slice(0,160)),
                 cell(item.validation_status+(item.errors.length?' · '+item.errors.join('; '):'')),actions);body.append(row,detail);
         }
     };
