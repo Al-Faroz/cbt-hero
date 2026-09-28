@@ -452,6 +452,12 @@ created_at
 
 Local upload tidak executable.
 
+Kontrak Bank Soal V1:
+- `IMAGE` disimpan `LOCAL` setelah upload/import gambar;
+- `AUDIO` dan `VIDEO` hanya `EXTERNAL` dengan `provider=GDRIVE`;
+- user menulis `Audio: <link Google Drive>` / `Video: <link Google Drive>` langsung pada konten, lalu relasi ke `media_assets` dibuat saat save/commit;
+- tidak ada upload audio/video lokal dan tidak ada provider YouTube/Vimeo untuk Bank Soal V1.
+
 ## 6.2 `import_jobs`
 
 Header setiap proses import.
