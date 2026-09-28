@@ -37,7 +37,7 @@ Jangan menguji file Word rancangan sebagai format impor yang sudah aktif.
 | K01 | Di Bank DRAFT, isi PG 4 soal dan 4 pilihan, PG Kompleks 2 soal dan 5 pilihan, serta Menjodohkan 1 soal dan 6 pasangan. Simpan dan muat ulang. | Nilai tetap tersimpan; label UI menyebut jumlah soal Bank dan jumlah pilihan/pasangan. |
 | K02 | Isi PG 7 pilihan, Menjodohkan 13 pasangan, atau jumlah soal Bank 0 melalui API. | Ditolak 422; konfigurasi sebelumnya tidak berubah. |
 | K03 | Buat empat PG dengan empat opsi dan dua PG Kompleks dengan lima opsi; bobot tepat 100%. Validasi READY. | READY lolos bila persyaratan lain lengkap. |
-| K04 | Coba READY saat salah satu tipe memiliki jumlah soal lebih sedikit atau lebih banyak daripada `question_count`, atau opsi tidak sesuai. | READY ditolak dengan rincian tipe. |
+| K04 | Coba READY saat salah satu tipe memiliki jumlah soal lebih sedikit atau lebih banyak daripada `question_count`, atau jumlah pilihan/pasangan tidak sesuai `option_count`. | READY ditolak dengan rincian tipe. |
 | K05 | Ubah jumlah pilihan Komposisi saat soal sudah ada; coba edit soal mengikuti jumlah baru. | Editor mengikuti Komposisi; soal lama yang belum disesuaikan mencegah READY. |
 
 Pada tahap Jadwal, tambahkan pemeriksaan 40 soal Bank → 20 soal Jadwal serta

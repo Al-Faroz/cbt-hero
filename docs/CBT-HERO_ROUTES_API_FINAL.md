@@ -1469,7 +1469,7 @@ Validasi READY:
 
 ```text
 total weight tipe aktif = 100
-question_count valid untuk soal yang dibuat di Bank; option_count valid untuk tipe pilihan
+question_count valid untuk soal yang dibuat di Bank; option_count valid untuk tipe pilihan dan Menjodohkan
 shuffle/scoring config valid
 ```
 
