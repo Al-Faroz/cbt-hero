@@ -31,6 +31,7 @@ class WorkspaceController extends BaseController
             'participant' => $participant,
             'attempt' => $attempt,
             'pageTitle' => 'Mengerjakan Ujian',
+            'bodyClass' => 'participant-exam-mode',
         ]);
     }
 }
