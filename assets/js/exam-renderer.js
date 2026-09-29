@@ -53,6 +53,13 @@
         const wrap = document.createElement('div');
         wrap.className = 'exam-options';
 
+        if (multiple) {
+            const hint = document.createElement('div');
+            hint.className = 'exam-question-hint';
+            hint.innerHTML = '<i class="bi bi-check2-square" aria-hidden="true"></i><span>Pilih satu atau lebih jawaban yang benar.</span>';
+            wrap.append(hint);
+        }
+
         for (const option of item.options || []) {
             const label = document.createElement('label');
             label.className = 'exam-option';
@@ -81,62 +88,128 @@
 
     const renderMatching = (item, answer) => {
         const wrap = document.createElement('div');
+        wrap.className = 'exam-matching';
+
         const current = answer?.pairs && typeof answer.pairs === 'object' ? {...answer.pairs} : {};
+        const leftItems = item.matching_left || [];
         const rightChoices = item.matching_right || [];
         const labels = new Map();
 
-        const bank = document.createElement('div');
-        bank.className = 'border rounded p-2 mb-3';
-        const bankTitle = document.createElement('div');
-        bankTitle.className = 'small fw-semibold mb-2';
-        bankTitle.textContent = 'Pilihan pasangan';
-        bank.append(bankTitle);
-
         rightChoices.forEach((right, index) => {
-            const label = String.fromCharCode(65 + index);
-            labels.set(right.key, label);
-            const line = document.createElement('div');
-            line.className = 'd-flex gap-2 align-items-start py-1';
-            const badge = document.createElement('strong');
-            badge.textContent = label + '.';
-            const content = document.createElement('div');
-            content.className = 'flex-grow-1';
-            content.append(rich(right.content_text || ''));
-            line.append(badge, content);
-            bank.append(line);
+            labels.set(right.key, String.fromCharCode(65 + index));
         });
-        wrap.append(bank);
 
-        for (const left of item.matching_left || []) {
+        const hint = document.createElement('div');
+        hint.className = 'exam-question-hint';
+        hint.innerHTML = '<i class="bi bi-diagram-3" aria-hidden="true"></i><span>Pasangkan setiap pernyataan di sebelah kiri dengan satu jawaban di sebelah kanan.</span>';
+        wrap.append(hint);
+
+        const grid = document.createElement('div');
+        grid.className = 'exam-matching-grid';
+
+        const leftPanel = document.createElement('section');
+        leftPanel.className = 'exam-matching-panel';
+        const leftTitle = document.createElement('div');
+        leftTitle.className = 'exam-matching-panel-title';
+        leftTitle.textContent = 'Pernyataan';
+        leftPanel.append(leftTitle);
+
+        const rightPanel = document.createElement('section');
+        rightPanel.className = 'exam-matching-panel';
+        const rightTitle = document.createElement('div');
+        rightTitle.className = 'exam-matching-panel-title';
+        rightTitle.textContent = 'Pilihan Jawaban';
+        rightPanel.append(rightTitle);
+
+        rightChoices.forEach((right) => {
+            const answerRow = document.createElement('div');
+            answerRow.className = 'exam-matching-answer';
+            answerRow.dataset.rightKey = String(right.key);
+
+            const badge = document.createElement('span');
+            badge.className = 'exam-matching-answer-key';
+            badge.textContent = labels.get(right.key) || String(right.key);
+
+            const content = document.createElement('div');
+            content.className = 'exam-matching-answer-text';
+            content.append(rich(right.content_text || ''));
+
+            answerRow.append(badge, content);
+            rightPanel.append(answerRow);
+        });
+
+        leftItems.forEach((left, index) => {
             const row = document.createElement('div');
-            row.className = 'exam-matching-row';
-            const leftBox = document.createElement('div');
-            leftBox.append(rich(left.content_text || ''));
+            row.className = 'exam-matching-question';
+
+            const number = document.createElement('span');
+            number.className = 'exam-matching-question-number';
+            number.textContent = String(index + 1);
+
+            const content = document.createElement('div');
+            content.className = 'exam-matching-question-text';
+            content.append(rich(left.content_text || ''));
 
             const select = document.createElement('select');
-            select.className = 'form-select';
-            select.dataset.leftKey = left.key;
-            select.append(new Option('Pilih pasangan', ''));
+            select.className = 'form-select exam-matching-select';
+            select.dataset.leftKey = String(left.key);
+            select.setAttribute('aria-label', 'Pilih pasangan untuk pernyataan ' + (index + 1));
+            select.append(new Option('Pilih jawaban', ''));
+
             for (const right of rightChoices) {
-                select.append(new Option('Pilihan ' + (labels.get(right.key) || right.key), right.key));
+                const label = labels.get(right.key) || String(right.key);
+                const optionText = label + ' — ' + String(right.content_text || '').replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').trim();
+                select.append(new Option(optionText, right.key));
             }
+
             select.value = String(current[left.key] || '');
             select.addEventListener('change', () => {
                 const chosen = select.value || null;
+
                 if (chosen) {
                     for (const [otherLeft, otherRight] of Object.entries(current)) {
-                        if (otherLeft !== left.key && otherRight === chosen) current[otherLeft] = null;
+                        if (otherLeft !== String(left.key) && String(otherRight || '') === chosen) {
+                            current[otherLeft] = null;
+                        }
                     }
+
                     for (const otherSelect of wrap.querySelectorAll('select[data-left-key]')) {
-                        if (otherSelect !== select && otherSelect.value === chosen) otherSelect.value = '';
+                        if (otherSelect !== select && otherSelect.value === chosen) {
+                            otherSelect.value = '';
+                        }
                     }
                 }
+
                 current[left.key] = chosen;
                 scheduleSave({pairs: {...current}});
+
+                for (const answerNode of rightPanel.querySelectorAll('.exam-matching-answer')) {
+                    answerNode.classList.toggle(
+                        'is-used',
+                        Object.values(current).some(value => String(value || '') === answerNode.dataset.rightKey)
+                    );
+                }
             });
-            row.append(leftBox, select);
-            wrap.append(row);
+
+            row.append(number, content, select);
+            leftPanel.append(row);
+        });
+
+        for (const answerNode of rightPanel.querySelectorAll('.exam-matching-answer')) {
+            answerNode.classList.toggle(
+                'is-used',
+                Object.values(current).some(value => String(value || '') === answerNode.dataset.rightKey)
+            );
         }
+
+        grid.append(leftPanel, rightPanel);
+        wrap.append(grid);
+
+        const note = document.createElement('div');
+        note.className = 'exam-matching-note';
+        note.textContent = 'Setiap pilihan jawaban hanya dapat digunakan satu kali.';
+        wrap.append(note);
+
         return wrap;
     };
 
