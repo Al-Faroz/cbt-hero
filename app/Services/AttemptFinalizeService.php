@@ -8,8 +8,6 @@ use Throwable;
 
 class AttemptFinalizeService
 {
-    private const CLICK_TYPES = ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT', 'MATCHING'];
-
     public function finalize(
         int $participantId,
         int $attemptId,
@@ -258,98 +256,6 @@ class AttemptFinalizeService
             'attempt_id' => $attemptId,
             'result_snapshot_id' => $resultId,
             'scoring_status' => $snapshot['scoring_status'],
-        ];
-    }
-
-    private function buildSnapshot($db, array $attempt): array
-    {
-        $rows = $db->table('prepared_assignment_item AS pai')
-            ->select('pai.id AS item_id, pai.metadata_json, sr.question_type, sr.max_point, '
-                . 'ar.answer_payload, ar.auto_score, ar.manual_score, ar.effective_score, ar.scoring_state')
-            ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
-            ->join(
-                'attempt_response AS ar',
-                'ar.prepared_assignment_item_id = pai.id AND ar.attempt_id = ' . (int) $attempt['id'],
-                'left',
-                false
-            )
-            ->where('pai.prepared_assignment_id', (int) $attempt['prepared_assignment_id'])
-            ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
-
-        $totals = [];
-        $prepared = [];
-        $pendingManual = false;
-
-        foreach ($rows as $row) {
-            $type = (string) $row['question_type'];
-            $metadata = json_decode((string) ($row['metadata_json'] ?? ''), true);
-            $weight = is_array($metadata) ? (float) ($metadata['weight_percent'] ?? 0) : 0.0;
-            $max = max(0.0, (float) $row['max_point']);
-            $manual = $row['manual_score'];
-            $auto = $row['auto_score'];
-            $raw = $manual !== null ? (float) $manual : ($auto !== null ? (float) $auto : 0.0);
-            $raw = max(0.0, min($max, $raw));
-
-            $state = (string) ($row['scoring_state'] ?? '');
-            if ($type === 'URAIAN') {
-                $answer = json_decode((string) ($row['answer_payload'] ?? ''), true);
-                $hasText = is_array($answer) && trim((string) ($answer['text'] ?? '')) !== '';
-                if ($hasText && $manual === null) {
-                    $pendingManual = true;
-                    $state = 'PENDING_MANUAL';
-                } elseif (!$hasText && $manual === null) {
-                    $state = 'AUTO_ZERO';
-                }
-            } elseif ($state === '') {
-                $state = 'AUTO_ZERO';
-            }
-
-            $totals[$type]['max'] = ($totals[$type]['max'] ?? 0.0) + $max;
-            $totals[$type]['raw'] = ($totals[$type]['raw'] ?? 0.0) + $raw;
-            $totals[$type]['weight'] = $weight;
-
-            $prepared[] = [
-                'item_id' => (int) $row['item_id'],
-                'question_type' => $type,
-                'raw_score' => $raw,
-                'max_point' => $max,
-                'weight_percent' => $weight,
-                'scoring_state' => $state,
-            ];
-        }
-
-        $typeContribution = [];
-        foreach ($totals as $type => $total) {
-            $typeContribution[$type] = $total['max'] > 0
-                ? ($total['raw'] / $total['max']) * $total['weight']
-                : 0.0;
-        }
-
-        $click = 0.0; $typed = 0.0;
-        foreach ($typeContribution as $type => $value) {
-            if (in_array($type, self::CLICK_TYPES, true)) $click += $value;
-            else $typed += $value;
-        }
-
-        foreach ($prepared as &$item) {
-            $denominator = (float) ($totals[$item['question_type']]['max'] ?? 0);
-            $item['weighted_score'] = $denominator > 0
-                ? ($item['raw_score'] / $denominator) * $item['weight_percent']
-                : 0.0;
-        }
-        unset($item);
-
-        $status = $pendingManual ? 'IN_PROCESS' : 'COMPLETE';
-        return [
-            'scoring_status' => $status,
-            'click_score' => round($click, 2),
-            'typed_score' => $pendingManual ? null : round($typed, 2),
-            'final_score' => $pendingManual ? null : round($click + $typed, 2),
-            'items' => $prepared,
-            'payload' => [
-                'type_contribution' => $typeContribution,
-                'pending_manual' => $pendingManual,
-            ],
         ];
     }
 
