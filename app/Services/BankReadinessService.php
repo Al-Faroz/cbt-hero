@@ -61,7 +61,7 @@ class BankReadinessService
         }
     }
 
-    public function refreshFingerprintAfterLiveEdit($db, int $bankId, int $actorId): string
+    public function validateLiveEdit($db, int $bankId): void
     {
         $result = $this->check($db, $bankId);
         if (!($result['pass'] ?? false)) {
@@ -70,15 +70,10 @@ class BankReadinessService
             );
         }
 
-        $fingerprint = (string) $result['fingerprint'];
-        $db->table('bank_soal')->where('id', $bankId)
-            ->set('version_no', 'version_no + 1', false)
-            ->update([
-                'fingerprint' => $fingerprint,
-                'updated_by' => $actorId > 0 ? $actorId : null,
-            ]);
-
-        return $fingerprint;
+        // Bank version/fingerprint adalah baseline kontrak Preparation saat READY.
+        // Live Edit tidak mengubah pool stable question atau komposisi assignment,
+        // sehingga baseline tersebut sengaja tidak digeser agar Prepared Assignment
+        // yang belum START tidak menjadi STALE secara massal.
     }
 
     private function check($db, int $bankId): array
