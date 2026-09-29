@@ -85,10 +85,20 @@
         }
         element.append(document.createTextNode(source.slice(cursor)));
     };
+    const normalizeText = value => {
+        let source = String(value ?? '');
+        source = source.replace(/<br\s*\/?>/gi, '\n');
+
+        // Decode character entities as text only; never interpret arbitrary HTML.
+        const decoder = document.createElement('textarea');
+        decoder.innerHTML = source;
+        return decoder.value;
+    };
+
     const node = (tag, value, className = '', media = {}) => {
         const element = document.createElement(tag);
         element.className = className; element.dir = 'auto'; element.style.whiteSpace = 'pre-wrap';
-        const lines = String(value ?? '').split('\n');
+        const lines = normalizeText(value).split('\n');
         for (let i = 0; i < lines.length;) {
             if (/^\s*\|.*\|\s*$/.test(lines[i])) {
                 const table = document.createElement('table'); table.className = 'table table-bordered table-sm w-auto my-2';
