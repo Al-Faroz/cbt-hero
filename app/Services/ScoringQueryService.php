@@ -90,10 +90,13 @@ class ScoringQueryService
         $builder = $db->table('attempt_response AS ar')
             ->select('ar.id AS response_id, ar.answer_payload, ar.auto_score, ar.manual_score, ar.effective_score, '
                 . 'ar.scoring_state, ar.updated_at, a.id AS attempt_id, a.jadwal_id, a.status AS attempt_status, '
-                . 'a.nomor_peserta_snapshot, a.nama_snapshot, a.rombel_snapshot, j.results_finalized_at')
+                . 'a.nomor_peserta_snapshot, a.nama_snapshot, a.rombel_snapshot, j.results_finalized_at, '
+                . 'sr.question_type, sr.max_point, sr.rubric_html')
             ->join('attempt AS a', 'a.id = ar.attempt_id')
             ->join('jadwal AS j', 'j.id = a.jadwal_id')
             ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
+            ->join('soal AS s', 's.id = pai.soal_id')
+            ->join('soal_revision AS sr', 'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no', 'left', false)
             ->where('pai.soal_id', $questionId);
 
         if ($jadwalId > 0) $builder->where('a.jadwal_id', $jadwalId);
