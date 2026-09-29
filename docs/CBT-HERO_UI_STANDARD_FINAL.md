@@ -1794,3 +1794,56 @@ Tujuan akhirnya:
 > **Satu aplikasi, satu bahasa visual, satu pola operasional.**
 
 Halaman berikutnya tidak mendesain ulang table, pagination, filter, modal, card, atau responsive behavior dari nol.
+
+
+---
+
+# 43. FORMAT ANGKA INDONESIA
+
+Seluruh **tampilan dan input angka kepada pengguna** mengikuti notasi Indonesia:
+
+```text
+Desimal       → koma
+Ribuan        → titik
+Contoh poin   → 12,5
+Contoh bobot  → 17,25%
+Contoh jumlah → 1.500
+```
+
+Aturan implementasi:
+
+- database dan JSON/API tetap memakai representasi numerik standar;
+- frontend memformat output menggunakan locale `id-ID`;
+- input pecahan pada Manager menerima koma sebagai separator desimal;
+- sebelum payload dikirim, nilai UI dinormalisasi ke angka;
+- jangan menampilkan `12.5` kepada pengguna jika konteksnya angka desimal;
+- waktu/durasi seperti `01:20:45` bukan angka desimal dan tidak diubah.
+
+# 44. KEPADATAN KONTROL MANAGER
+
+Untuk Admin/Operator, ruang vertikal diprioritaskan untuk data utama.
+
+Desktop baseline:
+
+```text
+Input / select / button normal : ±34px
+Label form                     : 10–11px
+Card body                      : 10–12px
+Table cell vertical            : 7–8px
+Page header                    : compact
+```
+
+Monitoring, Hasil, Peserta, dan halaman tabel operasional tidak boleh menghabiskan
+sebagian besar viewport hanya untuk filter dan kartu ringkasan. Metric Monitoring
+menggunakan bentuk compact strip, bukan kartu tinggi.
+
+# 45. PORTAL PESERTA — DAFTAR UJIAN HARI INI
+
+Daftar Ujian peserta menampilkan:
+
+- Jadwal MAIN/SUSULAN yang menjadi hak peserta dan tanggal `Mulai`-nya adalah hari ini;
+- sebelum jam `Mulai`, ujian terlihat tetapi belum dapat dibuka;
+- setelah jam `Mulai` dan sebelum `Batas Mulai`, START mengikuti gate BUKA/TAHAN,
+  Preparation, Token, dan aturan lain;
+- Attempt ACTIVE tetap ditampilkan untuk RESUME meskipun melewati pergantian tanggal;
+- ujian hari lain tidak memenuhi daftar harian peserta.
