@@ -64,7 +64,9 @@
     const numberText = value => {
         if (value === null || value === undefined || value === '') return '-';
         const n = Number(value);
-        return Number.isFinite(n) ? n.toFixed(4).replace(/\.?0+$/, '') : String(value);
+        return Number.isFinite(n)
+            ? (window.CbtNumber?.format(n, 4) ?? new Intl.NumberFormat('id-ID', {maximumFractionDigits: 4}).format(n))
+            : String(value);
     };
 
     const plain = value => {
@@ -371,7 +373,7 @@
         const responseId = Number($('manualResponseId').value || 0);
         const score = window.CbtNumber?.parse($('manualScoreValue').value) ?? Number(String($('manualScoreValue').value).replace(',', '.'));
         const reason = $('manualScoreReason').value.trim();
-        if (!responseId || score === '' || !reason) {
+        if (!responseId || !Number.isFinite(score) || !reason) {
             feedback('manualScoreFeedback', 'Nilai dan alasan koreksi wajib diisi.', true);
             return;
         }
