@@ -100,7 +100,7 @@
             if (!response.ok || result?.ok !== true) return;
 
             const data = result.data || {};
-            runtime.serverSyncRevision = Math.max(
+            const nextServerRevision = Math.max(
                 runtime.serverSyncRevision,
                 Number(data.server_sync_revision || 0)
             );
@@ -109,6 +109,7 @@
                 runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
             }
             await applyRevisionChanges(data.revision_changes || []);
+            runtime.serverSyncRevision = nextServerRevision;
             if (String(data.status || '') !== 'ACTIVE') {
                 runtime.lockInputs('Ujian sudah selesai');
                 runtime.emit('cbt:attempt-status-changed', {status: data.status});
@@ -160,7 +161,8 @@
                 throw new Error(result?.error?.message ?? 'Sinkronisasi gagal.');
 
             const data = result.data;
-            runtime.serverSyncRevision = Number(data.server_sync_revision || runtime.serverSyncRevision);
+            const previousServerRevision = runtime.serverSyncRevision;
+            const nextServerRevision = Number(data.server_sync_revision || previousServerRevision);
             if (data.deadline_at && runtime.bootstrap?.attempt) {
                 runtime.bootstrap.attempt.deadline_at = data.deadline_at;
                 runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
@@ -185,13 +187,19 @@
                 }
 
                 const state = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
-                state.server_sync_revision = runtime.serverSyncRevision;
+                state.server_sync_revision = previousServerRevision;
                 state.deadline_at = data.deadline_at || state.deadline_at || null;
                 state.updated_at = Date.now();
                 await db.runtime_state.put(state);
             });
 
             await applyRevisionChanges(data.revision_changes || []);
+            runtime.serverSyncRevision = nextServerRevision;
+            const runtimeState = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
+            runtimeState.server_sync_revision = runtime.serverSyncRevision;
+            runtimeState.deadline_at = data.deadline_at || runtimeState.deadline_at || null;
+            runtimeState.updated_at = Date.now();
+            await db.runtime_state.put(runtimeState);
 
             retryDelay = 1000;
             const remaining = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).count();
