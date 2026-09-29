@@ -31,6 +31,13 @@ class AttemptRuntimeService
             'last_sync_at' => $attempt['last_sync_at'] === null
                 ? null : $ownership->iso((string) $attempt['last_sync_at']),
             'scoring_status' => (string) $attempt['scoring_status'],
+            'revision_changes' => $attempt['status'] === 'ACTIVE'
+                ? (new QuestionRuntimeItemService())->revisionChanges(
+                    $db,
+                    $attemptId,
+                    (int) $attempt['prepared_assignment_id']
+                )
+                : [],
         ]];
     }
 
