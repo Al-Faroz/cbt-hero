@@ -233,11 +233,11 @@
             };
             if(type==='PG') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,is_correct:o.correct?1:0}));
             if(type==='PG_KOMPLEKS') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,is_correct:o.correct?1:0}));
-            if(type==='PG_BERTINGKAT') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,point_value:o.point_value}));
+            if(type==='PG_BERTINGKAT') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,point_value:parseDecimal(o.point_value)}));
             if(type==='MATCHING') data.pairs=state.pairs.map((p,i)=>({left_key:String(i+1),left_text:p.left,right_text:p.right}));
             if(type==='ISIAN_SINGKAT') {
                 data.short_answer_mode=state.mode; data.accepted_values=state.answers;
-                data.expected_numeric=state.expected; data.numeric_tolerance=state.tolerance;
+                data.expected_numeric=parseDecimal(state.expected); data.numeric_tolerance=parseDecimal(state.tolerance);
             }
             if(type==='URAIAN') data.rubric_text=state.rubric;
             $('questionPreview').replaceChildren(window.CbtQuestionRenderer.render(data,{showAnswer:true}));
