@@ -252,6 +252,20 @@
                 windowInfo.textContent = windowLabel(item.window_state);
                 startCell.append(windowInfo);
 
+                const preparationCell = document.createElement('td');
+                const preparationBadge = document.createElement('span');
+                preparationBadge.className = 'badge ' + (item.preparation_state === 'READY'
+                    ? 'text-bg-success'
+                    : 'text-bg-secondary');
+                preparationBadge.textContent = item.preparation_state === 'READY' ? 'READY' : 'DRAFT';
+                preparationCell.append(preparationBadge);
+                const preparationInfo = document.createElement('div');
+                preparationInfo.className = 'small text-secondary mt-1';
+                preparationInfo.textContent = item.preparation_state === 'READY'
+                    ? (String(item.preparation_ready || 0) + '/' + String(item.preparation_total || 0) + ' assignment siap')
+                    : (String(item.preparation_progress || 0) + '% siap');
+                preparationCell.append(preparationInfo);
+
                 const accessCell = document.createElement('td');
                 const badge = document.createElement('span');
                 badge.className = 'badge ' + (item.access_state === 'BUKA' ? 'text-bg-success' : 'text-bg-secondary');
@@ -362,6 +376,7 @@
                     cell(durationLabel(item.durasi_seconds), 'text-nowrap'),
                     cell(selectionLabel(item.type_selection)),
                     cell(Number(item.tampilkan_nilai_saat_selesai) === 1 ? 'Ditampilkan' : 'Disembunyikan'),
+                    preparationCell,
                     accessCell,
                     actions
                 );
@@ -371,7 +386,7 @@
             if (!data.items.length) {
                 const row = document.createElement('tr');
                 const td = cell('Belum ada Jadwal sesuai filter.');
-                td.colSpan = 9;
+                td.colSpan = 10;
                 td.className = 'text-center text-secondary py-4';
                 row.append(td);
                 body.append(row);
