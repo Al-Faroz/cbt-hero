@@ -177,6 +177,14 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('pelaksanaan/monitoring', 'Manager\\Execution\\MonitoringController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/penilaian', 'Manager\\Scoring\\ScoringController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/koreksi', 'Manager\\Scoring\\CorrectionController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/finalisasi-hasil', 'Manager\\Scoring\\FinalizationController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('master-ujian/bank-soal/(:num)/soal/(:num)/live-edit', 'Manager\\Scoring\\LiveEditController::question/$1/$2',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
