@@ -26,21 +26,19 @@
         return node;
     };
     const cell = (node) => {const td = document.createElement('td'); td.append(node); return td;};
-    const displayDecimal = (value) => {
-        const numeric = Number(value);
-        return Number.isFinite(numeric) ? numeric.toFixed(3).replace(/\.?0+$/, '') : '0';
-    };
+    const displayDecimal = (value) => window.CbtNumber?.format(value, 3) ?? String(value ?? '0');
+    const parseDecimal = (value) => window.CbtNumber?.parse(value) ?? Number(String(value ?? '').replace(',', '.'));
     const current = () => [...$('typeRows').querySelectorAll('tr[data-type]')].filter((row) => row.enabled.checked).map((row) => ({
         question_type: row.dataset.type, question_count: Number(row.count.value),
         option_count: row.choice ? Number(row.choice.value) : null,
-        weight_percent: row.weight.value.trim(), shuffle_questions: row.questions.checked,
+        weight_percent: parseDecimal(row.weight.value), shuffle_questions: row.questions.checked,
         shuffle_options: row.options.checked,
         scoring_mode: ['PG_KOMPLEKS', 'MATCHING'].includes(row.dataset.type) ? row.mode.value : null,
     }));
     const updateTotals = () => {
         const items = current();
         const thousandths = items.reduce((sum, item) => sum + Math.round((Number(item.weight_percent) || 0) * 1000), 0);
-        $('typeTotal').textContent = 'Total bobot: ' + (thousandths / 1000).toFixed(3).replace(/\.0+$/, '') + '%';
+        $('typeTotal').textContent = 'Total bobot: ' + (window.CbtNumber?.format(thousandths / 1000, 3) ?? (thousandths / 1000)) + '%';
         $('typeStatus').textContent = items.length ? (thousandths === 100000 ? 'Bobot lengkap. Validasi soal dilakukan saat Bank READY tersedia.' :
             thousandths > 100000 ? 'Bobot melebihi 100%.' : 'Bobot masih belum mencapai 100%.') : 'Belum ada tipe yang dipilih.';
     };
@@ -73,8 +71,8 @@
                 choice.setAttribute('aria-label', (type === 'MATCHING' ? 'Jumlah pasangan ' : 'Jumlah pilihan ') + labels[type]);
             }
             row.choice = choice;
-            const weight = input('number', displayDecimal(config?.weight_percent ?? 0), 'form-control form-control-sm text-end manager-weight-input');
-            weight.min = '0'; weight.max = '100'; weight.step = '0.001'; weight.inputMode = 'decimal'; row.weight = weight;
+            const weight = input('text', displayDecimal(config?.weight_percent ?? 0), 'form-control form-control-sm text-end manager-weight-input');
+            weight.inputMode = 'decimal'; weight.setAttribute('pattern', '[0-9.,]+'); row.weight = weight;
             const questions = input('checkbox', Number(config?.shuffle_questions) === 1, 'form-check-input'); row.questions = questions;
             const options = input('checkbox', Number(config?.shuffle_options) === 1, 'form-check-input'); row.options = options;
             questions.setAttribute('aria-label', 'Acak soal ' + labels[type]);
