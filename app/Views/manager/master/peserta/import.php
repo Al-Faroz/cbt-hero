@@ -32,8 +32,11 @@
                 <button type="button" class="btn btn-outline-primary btn-sm" id="importValidate">Validasi / Validasi Ulang</button>
                 <button type="button" class="btn btn-cbt-primary btn-sm" id="importCommit">Commit Peserta</button>
                 <select class="form-select form-select-sm w-auto" id="importStatusFilter" aria-label="Filter status baris">
-                    <option value="">Semua baris</option><option value="INVALID">Invalid</option>
-                    <option value="VALID">Valid</option><option value="EXCLUDED">Excluded</option>
+                    <option value="">Semua baris</option>
+                    <option value="PENDING">Belum Divalidasi</option>
+                    <option value="INVALID">Tidak Valid</option>
+                    <option value="VALID">Valid</option>
+                    <option value="EXCLUDED">Dikeluarkan</option>
                 </select>
             </div>
             <div id="importActionFeedback" class="cbt-inline-feedback" role="alert"></div>
