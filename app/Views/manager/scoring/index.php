@@ -132,7 +132,7 @@
                     <input type="hidden" id="manualResponseId">
                     <div class="mb-3">
                         <label class="cbt-form-label" for="manualScoreValue">Nilai</label>
-                        <input class="form-control" id="manualScoreValue" type="number" min="0" step="0.0001" required>
+                        <input class="form-control" id="manualScoreValue" type="text" inputmode="decimal" pattern="[0-9.,]+" required>
                         <div class="form-text" id="manualScoreLimit"></div>
                     </div>
                     <div>
