@@ -170,6 +170,66 @@ class KegiatanService
         }
     }
 
+    public function changeStatus(int $id, string $targetStatus, array $actor): array
+    {
+        $targetStatus = strtoupper(trim($targetStatus));
+        if (! in_array($targetStatus, ['BERJALAN', 'SELESAI'], true)) {
+            return $this->error(422, 'STATUS_INVALID', 'Status Kegiatan tidak valid.');
+        }
+
+        $db = Database::connect();
+        $db->transBegin();
+
+        try {
+            $old = $this->lockedRow($id);
+            if ($old === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
+            }
+
+            $current = strtoupper((string) $old['status']);
+
+            if ($targetStatus === 'BERJALAN') {
+                if ($current !== 'DRAFT') {
+                    $db->transRollback();
+                    return $this->error(409, 'STATE_CONFLICT', 'Hanya Kegiatan DRAFT yang dapat dijalankan.');
+                }
+
+                $preflight = (new KegiatanPreflightService())->inspect($id);
+                if (! is_array($preflight) || ! ($preflight['administrativeReady'] ?? false)) {
+                    $db->transRollback();
+                    return $this->error(
+                        409,
+                        'PREFLIGHT_NOT_READY',
+                        'Kegiatan belum siap dijalankan. Selesaikan Pemeriksaan Kesiapan terlebih dahulu.'
+                    );
+                }
+            }
+
+            if ($targetStatus === 'SELESAI' && $current !== 'BERJALAN') {
+                $db->transRollback();
+                return $this->error(409, 'STATE_CONFLICT', 'Hanya Kegiatan BERJALAN yang dapat diselesaikan.');
+            }
+
+            if ($this->model->update($id, ['status' => $targetStatus]) === false) {
+                throw new RuntimeException('Perubahan status Kegiatan gagal.');
+            }
+
+            $saved = $this->find($id);
+            $this->audit($id, 'STATUS_' . $targetStatus, $old, $saved, $actor);
+
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit status Kegiatan gagal.');
+            }
+
+            return ['ok' => true, 'status' => 200, 'item' => $saved];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Ubah status Kegiatan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Status Kegiatan tidak dapat diubah.');
+        }
+    }
+
     private function lockedRow(int $id): ?array
     {
         return $id > 0 ? Database::connect()->query('SELECT * FROM kegiatan WHERE id = ? FOR UPDATE',
