@@ -1847,3 +1847,37 @@ Daftar Ujian peserta menampilkan:
   Preparation, Token, dan aturan lain;
 - Attempt ACTIVE tetap ditampilkan untuk RESUME meskipun melewati pergantian tanggal;
 - ujian hari lain tidak memenuhi daftar harian peserta.
+
+
+# 46. HEADER HALAMAN MANAGER — COMPACT INLINE
+
+Pada desktop, header halaman Manager menggunakan satu garis horizontal bila ruang
+mencukupi:
+
+```text
+KICKER · JUDUL · DESKRIPSI                              [AKSI] [AKSI UTAMA]
+```
+
+Ukuran, warna, dan hierarchy font tetap mengikuti token yang sudah ditetapkan.
+Yang berubah hanya penataan ruang:
+
+- kicker, judul, deskripsi berada satu baris jika muat;
+- boleh wrap otomatis pada layar sempit atau deskripsi panjang;
+- tombol header memakai tinggi compact sekitar 34px;
+- mobile tetap menggunakan flow bertumpuk agar terbaca.
+
+# 47. VISIBILITAS JADWAL HARI INI PADA PESERTA
+
+Jadwal yang menjadi hak peserta dan tanggal Mulai-nya adalah hari ini tetap
+ditampilkan walaupun Kegiatan masih DRAFT. Pada kondisi tersebut kartu bersifat
+informasi dan START tetap ditolak.
+
+START baru aktif jika seluruh gate lulus:
+
+- Kegiatan MAIN berstatus BERJALAN;
+- waktu telah mencapai Mulai;
+- belum melewati Batas Mulai;
+- access_state BUKA;
+- Prepared Assignment READY;
+- tidak ada Attempt aktif lain;
+- Token/Exam Browser bila diwajibkan.
