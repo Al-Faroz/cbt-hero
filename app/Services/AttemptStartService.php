@@ -164,6 +164,20 @@ class AttemptStartService
                 return $this->error(409, 'ACTIVE_ATTEMPT_EXISTS', 'Selesaikan ujian yang sedang berlangsung terlebih dahulu.');
             }
 
+            $existingScheduleAttempt = $db->table('attempt')
+                ->select('id, status')
+                ->where('jadwal_id', $jadwalId)
+                ->where('peserta_kegiatan_id', (int) $membership['id'])
+                ->orderBy('id', 'DESC')->get()->getRowArray();
+            if ($existingScheduleAttempt !== null) {
+                $db->transRollback();
+                return $this->error(
+                    409,
+                    'ATTEMPT_ALREADY_EXISTS',
+                    'Peserta sudah mempunyai Attempt pada Jadwal ini.'
+                );
+            }
+
             $assignment = (new PreparationService())->readyAssignmentForStart(
                 $jadwalId,
                 (int) $membership['id']
@@ -176,17 +190,37 @@ class AttemptStartService
             $rootId = $schedule['parent_jadwal_id'] === null
                 ? $jadwalId
                 : (int) $schedule['parent_jadwal_id'];
-            $last = $db->table('attempt')
-                ->selectMax('attempt_no', 'max_no')
+            $history = $db->table('attempt')
+                ->select('id, attempt_no, status, peserta_kegiatan_id, root_jadwal_id')
                 ->where('root_jadwal_id', $rootId)
                 ->where('peserta_kegiatan_id', (int) $membership['id'])
-                ->get()->getRowArray();
-            $attemptNo = ((int) ($last['max_no'] ?? 0)) + 1;
+                ->orderBy('attempt_no', 'DESC')->orderBy('id', 'DESC')
+                ->get()->getResultArray();
+            $attemptNo = $history ? ((int) $history[0]['attempt_no'] + 1) : 1;
 
+            $targetMode = (string) ($assignment['target_mode'] ?? 'MAIN');
             $supersedes = isset($assignment['supersede_attempt_id']) && $assignment['supersede_attempt_id'] !== null
                 ? (int) $assignment['supersede_attempt_id']
                 : null;
-            if ($supersedes !== null) {
+
+            if ($targetMode === 'FIRST_ATTEMPT' && $history) {
+                $db->transRollback();
+                return $this->error(
+                    409,
+                    'FIRST_ATTEMPT_ALREADY_USED',
+                    'Peserta sudah mempunyai riwayat Attempt pada ujian utama ini.'
+                );
+            }
+
+            if ($targetMode === 'REPLACEMENT') {
+                $latest = $history[0] ?? null;
+                if ($supersedes === null || $latest === null
+                    || (int) $latest['id'] !== $supersedes
+                    || $latest['status'] !== 'FINISHED') {
+                    $db->transRollback();
+                    return $this->error(409, 'REPLACEMENT_INVALID', 'Attempt replacement sudah tidak sesuai dengan riwayat terbaru.');
+                }
+
                 $old = $db->query(
                     'SELECT id, status, peserta_kegiatan_id, root_jadwal_id FROM attempt WHERE id = ? FOR UPDATE',
                     [$supersedes]
@@ -197,6 +231,9 @@ class AttemptStartService
                     $db->transRollback();
                     return $this->error(409, 'REPLACEMENT_INVALID', 'Attempt yang akan diganti tidak valid.');
                 }
+            } elseif ($supersedes !== null) {
+                $db->transRollback();
+                return $this->error(409, 'REPLACEMENT_INVALID', 'Target Attempt replacement tidak konsisten.');
             }
 
             $duration = (int) $schedule['durasi_seconds'];

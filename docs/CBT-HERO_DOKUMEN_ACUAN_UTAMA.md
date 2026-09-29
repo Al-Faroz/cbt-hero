@@ -1319,6 +1319,10 @@ Prinsip:
 
 Server tetap authority untuk jawaban resmi yang sudah ACK.
 
+Untuk Menjodohkan, client tidak menerima `left_key/right_key` internal yang
+membentuk pasangan sumber. Prepared Assignment menyediakan opaque presentation
+key; server menerjemahkan kembali sebelum validasi dan scoring.
+
 ## 29.1 Refresh
 
 Jika page refresh dan IndexedDB masih ada:
@@ -2937,6 +2941,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-28 | 1.4 | Jadwal Ujian Phase 5A | Jadwal MAIN akademik, BUKA/TAHAN, waktu, durasi, tampilkan nilai, dan selection_count per tipe Bank mulai diimplementasikan; structural edit hanya pada Kegiatan DRAFT | Memisahkan komposisi Bank dari jumlah soal yang benar-benar diberikan ke peserta | UI/API/JadwalService/jadwal_type_selection |
 | 2026-09-28 | 1.5 | Jadwal Ujian Phase 5B | Susulan N kali, target FIRST_ATTEMPT/REPLACEMENT, cancel target, idempotency create, perpanjang Batas Mulai, result visibility lock, dan Tambah Waktu Attempt ACTIVE | Menyelesaikan kontrol operasional Jadwal sebelum Preparation | UI/API/SusulanService/JadwalOperationalService/jadwal_operations |
 | 2026-09-28 | 1.6 | Preparation Phase 5C | Prepared Assignment akademik dibuat sebelum START secara chunked; selection_count, shuffle stabil, pin revision, media manifest, fingerprint, preflight peserta, dan selective rebuild diaktifkan | Menghilangkan pekerjaan berat dari peak START peserta | PreparationService/prepared_assignment/item/media/API/UI |
+| 2026-09-29 | 1.7 | Attempt Engine Phase 6 | START/RESUME, one-active-attempt/client, bootstrap tanpa answer key, IndexedDB local-first, Answer Sync revision-safe, timer authority, duplicate-tab guard, timeout/submit/finalize, dan opaque key Menjodohkan diaktifkan | Menjadikan runtime peserta durable sebelum Monitoring/Token operasional | Participant Attempt API/services + Dexie exam runtime |
 | 2026-09-29 | 1.7 | Attempt Engine Phase 6 | START/RESUME atomic, one-active-attempt/client, bootstrap tanpa answer key, IndexedDB local-first, sync revision/idempotent mutation, timer deadline authority, offline timeout pending, duplicate-tab guard, media prefetch, finalize + result snapshot akademik | Menjadikan Prepared Assignment sebagai runtime ujian peserta yang durable dan recoverable | Participant API/services/workspace/Dexie/result snapshot |
 
 ---

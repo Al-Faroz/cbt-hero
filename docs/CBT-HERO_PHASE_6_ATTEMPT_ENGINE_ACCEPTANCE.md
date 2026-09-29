@@ -50,6 +50,11 @@ FINALIZE. Mutation jawaban tetap memakai `mutation_id + client_revision`.
 
 Server menghitung skor sendiri. Client tidak pernah mengirim skor/kunci.
 
+Khusus Menjodohkan, `left_key/right_key` internal tidak dikirim ke participant.
+Preparation membuat opaque presentation key acak untuk sisi kiri/kanan dan Answer
+Sync menerjemahkannya kembali di server sebelum validasi/scoring. Pergantian kontrak
+ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
+
 ## Acceptance tersimpan
 
 | ID | Langkah | Hasil yang diharapkan |
@@ -62,7 +67,7 @@ Server menghitung skor sendiri. Client tidak pernah mengirim skor/kunci.
 | E06 | Token ON dengan token salah. | START/RESUME ditolak TOKEN_INVALID. |
 | E07 | Exam Browser required tanpa proof. | Ditolak EXAM_BROWSER_REQUIRED. |
 | E08 | Bootstrap setelah START. | Package berisi soal assignment, snapshot peserta, timer, answers ACK, media manifest. |
-| E09 | Audit bootstrap package. | Tidak ada is_correct, point_value PG Bertingkat, accepted answer, rubric rahasia, atau pasangan benar Matching. |
+| E09 | Audit bootstrap package. | Tidak ada is_correct, point_value PG Bertingkat, accepted answer, rubric rahasia, atau pasangan benar Matching. Key internal pasangan Matching tidak dikirim; client memakai opaque presentation key. |
 | E10 | PG/PGK/PGB dikerjakan. | Payload lokal sesuai tipe dan server melakukan validasi sendiri. |
 | E11 | Menjodohkan dengan gambar/rumus pada sisi kanan. | Daftar pasangan kanan tetap dapat dilihat; satu pilihan kanan tidak dapat dipakai dua kali. |
 | E12 | Isian teks/numeric dan Uraian dikerjakan. | Nilai disimpan lokal dan tersinkron sesuai matcher/server contract. |

@@ -49,7 +49,7 @@ class AnswerSyncService
             }
             $itemIds = array_values(array_unique(array_filter($itemIds, static fn(int $id): bool => $id > 0)));
             $itemRows = $itemIds ? $db->table('prepared_assignment_item AS pai')
-                ->select('pai.id AS item_id, pai.soal_revision_id, sr.question_type, sr.max_point, sr.scoring_mode, '
+                ->select('pai.id AS item_id, pai.soal_revision_id, pai.mapping_json, sr.question_type, sr.max_point, sr.scoring_mode, '
                     . 'sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance')
                 ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
                 ->where('pai.prepared_assignment_id', (int) $attempt['prepared_assignment_id'])
@@ -136,7 +136,13 @@ class AnswerSyncService
             return $baseAck + ['server_revision_after' => $serverRevision];
         }
 
-        $validated = $answerService->validate($db, $item, $mutation['answer_payload'] ?? null);
+        $normalizedPayload = $this->normalizeClientPayload($item, $mutation['answer_payload'] ?? null);
+        if (!($normalizedPayload['ok'] ?? false)) {
+            $baseAck['reason'] = 'ANSWER_INVALID';
+            return $baseAck + ['server_revision_after' => $serverRevision];
+        }
+
+        $validated = $answerService->validate($db, $item, $normalizedPayload['payload']);
         if (!($validated['ok'] ?? false)) {
             $baseAck['reason'] = 'ANSWER_INVALID';
             return $baseAck + ['server_revision_after' => $serverRevision];
@@ -179,7 +185,9 @@ class AnswerSyncService
 
     private function withinAuthority(array $attempt, array $mutation): bool
     {
-        if (time() <= strtotime((string) $attempt['deadline_at'])) return true;
+        $ownership = new AttemptOwnershipService();
+        $deadline = new DateTimeImmutable((string) $attempt['deadline_at'], $ownership->timezone());
+        if ($ownership->now()->getTimestamp() <= $deadline->getTimestamp()) return true;
 
         $elapsed = is_scalar($mutation['client_elapsed_ms'] ?? null)
             ? (int) $mutation['client_elapsed_ms'] : -1;
@@ -190,8 +198,46 @@ class AnswerSyncService
         if ($elapsed > $limitMs + 5000) return false;
 
         $answeredAt = $mutation['answered_at_client'] ?? null;
-        if (!is_string($answeredAt) || strtotime($answeredAt) === false) return false;
-        return strtotime($answeredAt) <= strtotime((string) $attempt['deadline_at']) + 5;
+        if (!is_string($answeredAt) || trim($answeredAt) === '') return false;
+        try {
+            $answered = new DateTimeImmutable($answeredAt);
+            $start = new DateTimeImmutable((string) $attempt['start_at'], $ownership->timezone());
+        } catch (\Throwable) {
+            return false;
+        }
+        if ($answered->getTimestamp() < $start->getTimestamp() - 5) return false;
+        return $answered->getTimestamp() <= $deadline->getTimestamp() + 5;
+    }
+
+    private function normalizeClientPayload(array $item, mixed $payload): array
+    {
+        if ((string) ($item['question_type'] ?? '') !== 'MATCHING')
+            return ['ok' => true, 'payload' => $payload];
+        if ($payload === null) return ['ok' => true, 'payload' => null];
+        if (!is_array($payload) || !is_array($payload['pairs'] ?? null)
+            || array_diff(array_keys($payload), ['pairs']) !== [])
+            return ['ok' => false];
+
+        $mapping = json_decode((string) ($item['mapping_json'] ?? ''), true);
+        if (!is_array($mapping)) return ['ok' => false];
+        $leftAlias = is_array($mapping['left_alias'] ?? null) ? $mapping['left_alias'] : [];
+        $rightAlias = is_array($mapping['right_alias'] ?? null) ? $mapping['right_alias'] : [];
+        if (!$leftAlias || !$rightAlias) return ['ok' => false];
+
+        $leftRaw = array_flip(array_map('strval', $leftAlias));
+        $rightRaw = array_flip(array_map('strval', $rightAlias));
+        $pairs = [];
+        foreach ($payload['pairs'] as $publicLeft => $publicRight) {
+            if (!is_string($publicLeft) || !isset($leftRaw[$publicLeft])) return ['ok' => false];
+            $rawLeft = (string) $leftRaw[$publicLeft];
+            if ($publicRight === null || $publicRight === '') {
+                $pairs[$rawLeft] = null;
+                continue;
+            }
+            if (!is_string($publicRight) || !isset($rightRaw[$publicRight])) return ['ok' => false];
+            $pairs[$rawLeft] = (string) $rightRaw[$publicRight];
+        }
+        return ['ok' => true, 'payload' => ['pairs' => $pairs]];
     }
 
     private function clientDate(mixed $value): ?string

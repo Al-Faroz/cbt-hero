@@ -19,13 +19,21 @@ class AttemptBootstrapService
             return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
 
         $items = $this->items($db, $attemptId, (int) $attempt['prepared_assignment_id']);
-        $responses = $db->table('attempt_response')
-            ->select('prepared_assignment_item_id, answer_payload, client_revision, server_revision, is_flagged')
-            ->where('attempt_id', $attemptId)->get()->getResultArray();
+        $responses = $db->table('attempt_response AS ar')
+            ->select('ar.prepared_assignment_item_id, ar.answer_payload, ar.client_revision, ar.server_revision, ar.is_flagged, '
+                . 'pai.mapping_json, sr.question_type')
+            ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
+            ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
+            ->where('ar.attempt_id', $attemptId)->get()->getResultArray();
         $answers = [];
         foreach ($responses as $row) {
+            $payload = $row['answer_payload'] === null
+                ? null
+                : json_decode((string) $row['answer_payload'], true);
+            if ($row['question_type'] === 'MATCHING')
+                $payload = $this->matchingPayloadForClient($payload, (string) ($row['mapping_json'] ?? ''));
             $answers[(int) $row['prepared_assignment_item_id']] = [
-                'answer_payload' => $row['answer_payload'] === null ? null : json_decode((string) $row['answer_payload'], true),
+                'answer_payload' => $payload,
                 'client_revision' => (int) $row['client_revision'],
                 'server_revision' => (int) $row['server_revision'],
                 'is_flagged' => (bool) $row['is_flagged'],
@@ -162,12 +170,24 @@ class AttemptBootstrapService
                 $mapping = json_decode((string) ($row['mapping_json'] ?? ''), true);
                 $leftOrder = is_array($mapping['left_order'] ?? null) ? $mapping['left_order'] : array_keys($leftMap);
                 $rightOrder = is_array($mapping['right_order'] ?? null) ? $mapping['right_order'] : array_keys($rightMap);
+                $leftAlias = is_array($mapping['left_alias'] ?? null) ? $mapping['left_alias'] : [];
+                $rightAlias = is_array($mapping['right_alias'] ?? null) ? $mapping['right_alias'] : [];
                 $item['matching_left'] = [];
-                foreach ($leftOrder as $key) if (isset($leftMap[$key]))
-                    $item['matching_left'][] = ['key' => $key, 'content_text' => $leftMap[$key]];
+                foreach ($leftOrder as $key) {
+                    if (!isset($leftMap[$key], $leftAlias[$key])) continue;
+                    $item['matching_left'][] = [
+                        'key' => (string) $leftAlias[$key],
+                        'content_text' => $leftMap[$key],
+                    ];
+                }
                 $item['matching_right'] = [];
-                foreach ($rightOrder as $key) if (isset($rightMap[$key]))
-                    $item['matching_right'][] = ['key' => $key, 'content_text' => $rightMap[$key]];
+                foreach ($rightOrder as $key) {
+                    if (!isset($rightMap[$key], $rightAlias[$key])) continue;
+                    $item['matching_right'][] = [
+                        'key' => (string) $rightAlias[$key],
+                        'content_text' => $rightMap[$key],
+                    ];
+                }
             } elseif ($row['question_type'] === 'ISIAN_SINGKAT') {
                 $item['short_answer_mode'] = (string) $row['short_answer_mode'];
             }
@@ -175,6 +195,24 @@ class AttemptBootstrapService
             $result[] = $item;
         }
         return $result;
+    }
+
+    private function matchingPayloadForClient(mixed $payload, string $mappingJson): mixed
+    {
+        if (!is_array($payload) || !is_array($payload['pairs'] ?? null)) return $payload;
+        $mapping = json_decode($mappingJson, true);
+        if (!is_array($mapping)) return ['pairs' => []];
+        $leftAlias = is_array($mapping['left_alias'] ?? null) ? $mapping['left_alias'] : [];
+        $rightAlias = is_array($mapping['right_alias'] ?? null) ? $mapping['right_alias'] : [];
+        $pairs = [];
+        foreach ($payload['pairs'] as $left => $right) {
+            if (!is_string($left) || !isset($leftAlias[$left])) continue;
+            $publicLeft = (string) $leftAlias[$left];
+            $pairs[$publicLeft] = is_string($right) && isset($rightAlias[$right])
+                ? (string) $rightAlias[$right]
+                : null;
+        }
+        return ['pairs' => $pairs];
     }
 
     private function error(int $status, string $code, string $message): array

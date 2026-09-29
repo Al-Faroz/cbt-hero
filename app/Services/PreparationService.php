@@ -382,8 +382,17 @@ class PreparationService
                                 hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $b)
                             ));
                     }
+                    $leftAlias = [];
+                    foreach ($left as $key) $leftAlias[$key] = 'L_' . bin2hex(random_bytes(8));
+                    $rightAlias = [];
+                    foreach ($right as $key) $rightAlias[$key] = 'R_' . bin2hex(random_bytes(8));
                     $mapping = json_encode(
-                        ['left_order' => $left, 'right_order' => $right],
+                        [
+                            'left_order' => $left,
+                            'right_order' => $right,
+                            'left_alias' => $leftAlias,
+                            'right_alias' => $rightAlias,
+                        ],
                         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
                     );
                 }
@@ -591,6 +600,7 @@ class PreparationService
             'bank_soal_id' => (int) $context['bank_soal_id'],
             'bank_version' => (int) $context['bank_version'],
             'bank_fingerprint' => (string) $context['bank_fingerprint'],
+            'preparation_contract' => 'ACADEMIC_V2_MATCHING_OPAQUE_KEYS',
             'selection' => $selection,
             'config' => $config,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));

@@ -924,6 +924,8 @@ START → reject NOT_PREPARED
 
 # 10. PHASE 6 — ATTEMPT ENGINE + INDEXEDDB + SYNC + TIMER
 
+**Status implementasi akademik:** implemented. Acceptance tetap **DEFERRED** sampai checkpoint akhir Master Ujian Akademis.
+
 > **Implementation status 2026-09-29: IMPLEMENTED / ACCEPTANCE DEFERRED.**
 > START/RESUME, workspace IndexedDB, bootstrap, Answer Sync, timer, tab lock,
 > media prefetch, submit/timeout finalize, dan result snapshot akademik sudah
