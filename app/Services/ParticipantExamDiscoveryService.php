@@ -441,13 +441,7 @@ class ParticipantExamDiscoveryService
             $start = $this->timestamp((string) $row['mulai_at']);
             $latestStart = $this->timestamp((string) $row['batas_mulai_at']);
 
-            if (strtoupper((string) $row['jenis_jadwal']) === 'MAIN'
-                && strtoupper((string) $row['kegiatan_status']) !== 'BERJALAN') {
-                $availability = 'ACTIVITY_NOT_RUNNING';
-                $reason = strtoupper((string) $row['kegiatan_status']) === 'DRAFT'
-                    ? 'Jadwal hari ini tersedia. Menunggu Kegiatan dijalankan oleh pengawas.'
-                    : 'Kegiatan sudah tidak menerima START baru.';
-            } elseif ($now < $start) {
+            if ($now < $start) {
                 $availability = 'TOO_EARLY';
                 $reason = 'Ujian belum dibuka.';
             } elseif ($now > $latestStart) {
