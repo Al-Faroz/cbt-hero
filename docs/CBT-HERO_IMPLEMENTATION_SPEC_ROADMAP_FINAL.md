@@ -601,20 +601,19 @@ RuangModel
 PesertaKegiatanModel
 ```
 
-## 7.6 Lifecycle
+## 7.6 Status Kegiatan dan Lock Struktur
 
-```text
-DRAFT
-→ BERJALAN
-→ SELESAI
-```
+Kegiatan adalah container administratif dan **bukan sakelar runtime**. Tidak ada
+dependency Participant START terhadap transition DRAFT → BERJALAN.
 
-Rules:
+Lock struktur harus mengikuti dependency nyata:
 
-- DRAFT: struktur peserta/ruang/nomor masih dapat diubah;
-- BERJALAN: **tidak ada perubahan data peserta terkait pelaksanaan**;
-- SELESAI mengikuti aturan lifecycle di Acuan Utama;
-- saat action SELESAI, server tidak boleh menerima state kontradiktif seperti Attempt ACTIVE.
+- sebelum Preparation/Attempt digunakan, data terkait masih dapat disusun sesuai rule;
+- setelah first START / Attempt dependency, perubahan yang mempengaruhi pelaksanaan diblok;
+- live edit soal memakai workflow revision khusus;
+- runtime ON/OFF berada pada Jadwal melalui waktu + BUKA/TAHAN.
+
+Kolom status Kegiatan yang masih ada tidak boleh menjadi gate participant.
 
 ## 7.7 Nomor Peserta
 
@@ -871,7 +870,7 @@ PreparedAssignmentMediaModel
 - `Batas Mulai` = latest new START;
 - participant yang sudah START tetap dapat RESUME setelah Batas Mulai;
 - timer individual dimulai dari START aktual;
-- saat BERJALAN hanya perubahan operasional yang sudah diizinkan, misalnya Extend Batas Mulai dan Tambah Waktu;
+- setelah first START, perubahan struktural dilarang; perubahan operasional yang diizinkan antara lain Extend Batas Mulai dan Tambah Waktu;
 - `Tampilkan Nilai Saat Selesai` terkunci setelah Attempt pertama START.
 
 ## 9.7 Susulan
@@ -910,7 +909,9 @@ START → reject NOT_PREPARED
 
 ## 9.9 PASS
 
-- jadwal valid;
+- jadwal valid dan availability otomatis mengikuti waktu;
+- status Kegiatan tidak menjadi runtime gate;
+- status Preparation DRAFT/READY terlihat langsung pada daftar Jadwal;
 - BUKA/TAHAN hanya gate;
 - TAHAN tidak menghentikan participant yang sudah berada di workspace;
 - Susulan berulang berhasil;
@@ -1355,6 +1356,8 @@ Finished Attempt tidak dibuka kembali hanya karena Live Edit.
 
 # 13. PHASE 9 — HASIL + LAPORAN + ANALISIS + PUBLIC LIVE SCORING
 
+> Status 2026-09-29: **9A Hasil Ujian sudah diimplementasikan; Rekap Nilai, Analisis Soal, Export, dan Public Live Scoring belum selesai.** Participant finish UI sudah mulai dipoles tetapi tetap masuk regression Akademik.
+
 ## 13.1 Dependency
 
 Phase 8.
@@ -1750,7 +1753,11 @@ Reset Akses
 ## 16.7 UI Polish
 
 - cross viewport participant;
+- seluruh 6 tipe soal participant responsive;
+- matching layout final dua tabel referensi + tabel pasangan;
+- rich table renderer;
 - image zoom;
+- A-/A/A+;
 - formula responsive;
 - Arabic/RTL;
 - table horizontal scroll;
