@@ -18,6 +18,7 @@ Status yang ditunda mulai keputusan ini:
 - Phase 5C — Preparation / Prepared Assignment (implementasi selesai; acceptance tetap DEFERRED);
 - Phase 6 — Attempt Engine + IndexedDB + Sync + Timer (implementasi selesai; acceptance tetap DEFERRED);
 - Phase 7 — Pelaksanaan + Token + Monitoring + Kontrol (implementasi selesai; acceptance tetap DEFERRED);
+- Phase 8A — Scoring Akademik + Koreksi + Finalisasi (implementasi selesai; acceptance tetap DEFERRED; Live Edit Phase 8 masih berikutnya);
 - subphase Master Ujian Akademis berikutnya yang selesai sebelum checkpoint tersebut.
 
 Dokumen acceptance masing-masing tetap menjadi sumber langkah pengujian. Kata
