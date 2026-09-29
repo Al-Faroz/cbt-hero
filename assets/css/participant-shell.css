@@ -535,3 +535,46 @@ body.participant-body {
         padding: 18px 18px 16px 20px;
     }
 }
+
+
+/* Academic Final A1 — finish result cards */
+.participant-result-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+.participant-result-card{
+    display:flex;
+    min-height:150px;
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    padding:16px;
+    border:1px solid var(--cbt-line);
+    border-radius:14px;
+    background:#fff;
+    text-align:center;
+}
+.participant-result-card>span{
+    color:var(--cbt-muted);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.04em;
+}
+.participant-result-card>strong{
+    color:#101828;
+    font-size:32px;
+    line-height:1.1;
+}
+.participant-result-card>small{
+    color:var(--cbt-muted);
+    font-size:11px;
+    line-height:1.45;
+}
+.participant-result-card .participant-result-processing{
+    color:#b54708;
+    font-size:18px;
+}
+@media(max-width:575.98px){
+    .participant-result-grid{grid-template-columns:1fr}
+}
