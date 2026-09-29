@@ -191,11 +191,7 @@ class QuestionLiveEditService
                 $this->resetActiveAnswers($db, $questionId, $actor, $serverRevisions);
             }
 
-            (new BankReadinessService())->refreshFingerprintAfterLiveEdit(
-                $db,
-                $bankId,
-                (int) ($actor['user_id'] ?? 0)
-            );
+            (new BankReadinessService())->validateLiveEdit($db, $bankId);
 
             (new AuditService())->log(
                 'MANAGER',
