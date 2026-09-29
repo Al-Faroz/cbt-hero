@@ -1817,7 +1817,7 @@ Halaman berikutnya tidak mendesain ulang table, pagination, filter, modal, card,
 
 ---
 
-# 43. FORMAT ANGKA INDONESIA
+# 58. FORMAT ANGKA INDONESIA
 
 Seluruh **tampilan dan input angka kepada pengguna** mengikuti notasi Indonesia:
 
@@ -1838,7 +1838,7 @@ Aturan implementasi:
 - jangan menampilkan `12.5` kepada pengguna jika konteksnya angka desimal;
 - waktu/durasi seperti `01:20:45` bukan angka desimal dan tidak diubah.
 
-# 44. KEPADATAN KONTROL MANAGER
+# 59. KEPADATAN KONTROL MANAGER
 
 Untuk Admin/Operator, ruang vertikal diprioritaskan untuk data utama.
 
@@ -1856,7 +1856,7 @@ Monitoring, Hasil, Peserta, dan halaman tabel operasional tidak boleh menghabisk
 sebagian besar viewport hanya untuk filter dan kartu ringkasan. Metric Monitoring
 menggunakan bentuk compact strip, bukan kartu tinggi.
 
-# 45. PORTAL PESERTA — DAFTAR UJIAN HARI INI
+# 60. PORTAL PESERTA — DAFTAR UJIAN HARI INI
 
 Daftar Ujian peserta menampilkan:
 
@@ -1868,7 +1868,7 @@ Daftar Ujian peserta menampilkan:
 - ujian hari lain tidak memenuhi daftar harian peserta.
 
 
-# 46. HEADER HALAMAN MANAGER — COMPACT INLINE
+# 61. HEADER HALAMAN MANAGER — COMPACT INLINE
 
 Pada desktop, header halaman Manager menggunakan satu garis horizontal bila ruang
 mencukupi:
@@ -1885,7 +1885,7 @@ Yang berubah hanya penataan ruang:
 - tombol header memakai tinggi compact sekitar 34px;
 - mobile tetap menggunakan flow bertumpuk agar terbaca.
 
-# 47. VISIBILITAS JADWAL HARI INI PADA PESERTA
+# 62. VISIBILITAS JADWAL HARI INI PADA PESERTA
 
 Jadwal yang menjadi hak peserta dan tanggal Mulai-nya adalah hari ini tetap
 ditampilkan sebelum jam mulai.
@@ -1903,7 +1903,7 @@ START baru aktif jika seluruh gate lulus:
 Kontrol manual darurat memakai `TAHAN` pada Jadwal.
 
 
-# 58. STATUS PREPARATION PADA DAFTAR JADWAL
+# 63. STATUS PREPARATION PADA DAFTAR JADWAL
 
 Daftar Jadwal Manager wajib menampilkan kesiapan Preparation tanpa membuka modal:
 
@@ -1915,7 +1915,7 @@ READY → seluruh target siap; tinggal menunggu waktu dan access_state
 Status ini adalah **derived UI state**, bukan pengganti `prepared_assignment.status`
 dan bukan lifecycle Kegiatan.
 
-# 59. MENJODOHKAN — POLA UI FINAL
+# 64. MENJODOHKAN — POLA UI FINAL
 
 Desktop dan mobile mempertahankan struktur konseptual yang sama:
 
