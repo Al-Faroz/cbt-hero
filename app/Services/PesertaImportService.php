@@ -63,7 +63,7 @@ class PesertaImportService
         $status = is_string($query['status'] ?? null) ? strtoupper($query['status']) : '';
         $db = Database::connect();
         $builder = $db->table('import_staging_items')->where('import_job_id', $id);
-        if (in_array($status, ['VALID', 'INVALID', 'EXCLUDED'], true)) {
+        if (in_array($status, ['PENDING', 'VALID', 'INVALID', 'EXCLUDED'], true)) {
             $builder->where('validation_status', $status);
         }
         $total = $builder->countAllResults(false);
@@ -116,7 +116,7 @@ class PesertaImportService
                     'item_no' => $row['line'],
                     'source_ref' => 'Sheet 1 baris ' . $row['line'],
                     'payload_json' => json_encode($data, JSON_UNESCAPED_UNICODE),
-                    'validation_status' => 'INVALID',
+                    'validation_status' => 'PENDING',
                 ]);
             }
             $db->table('import_jobs')->where('id', $id)->update([
@@ -231,7 +231,7 @@ class PesertaImportService
         if ($action === 'EXCLUDE') {
             $status = 'EXCLUDED';
         } elseif ($action === 'INCLUDE') {
-            $status = 'INVALID';
+            $status = 'PENDING';
         } elseif ($action === 'FIX') {
             foreach (['nisn', 'nama', 'jenis_kelamin', 'rombel', 'keterangan', 'username'] as $field) {
                 if (array_key_exists($field, $changes)) {
