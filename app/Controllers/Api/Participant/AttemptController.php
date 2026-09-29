@@ -52,6 +52,23 @@ class AttemptController extends BaseController
         ));
     }
 
+    public function revisions(string $attemptId)
+    {
+        $auth = session()->get('participant_auth');
+        $since = $this->request->getGet('since');
+        $since = is_scalar($since)
+            ? filter_var($since, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])
+            : false;
+
+        return $this->respond((new AttemptRuntimeService())->revisions(
+            (int) $auth['peserta_id'],
+            (int) $attemptId,
+            $this->clientUuid(),
+            $this->clientGeneration(),
+            is_int($since) ? $since : 0
+        ));
+    }
+
     private function payload(): array
     {
         $json = $this->request->getJSON(true);
