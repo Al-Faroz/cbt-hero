@@ -11,6 +11,7 @@
     const palette = document.getElementById('examPalette');
     const toggle = document.getElementById('examPaletteToggle');
     const close = document.getElementById('examPaletteClose');
+    const backdrop = document.getElementById('examPaletteBackdrop');
 
     const refreshPalette = async () => {
         const items = runtime.bootstrap?.package?.items || [];
@@ -31,7 +32,7 @@
                 if (row?.is_flagged) button.classList.add('is-flagged');
                 button.addEventListener('click', () => {
                     window.CbtExamRenderer?.renderIndex(index);
-                    palette?.classList.remove('is-open');
+                    closePalette();
                 });
                 grid.append(button);
             });
@@ -41,8 +42,14 @@
             const row = byItem.get(Number(item.item_id));
             return count + (window.CbtExamRenderer?.isAnswered(row?.answer_payload, item.question_type) ? 1 : 0);
         }, 0);
+        const flagged = items.reduce((count, item) => {
+            const row = byItem.get(Number(item.item_id));
+            return count + (row?.is_flagged ? 1 : 0);
+        }, 0);
         const answeredNode = document.getElementById('examAnsweredCount');
+        const flaggedNode = document.getElementById('examFlaggedCount');
         if (answeredNode) answeredNode.textContent = answered + ' dijawab';
+        if (flaggedNode) flaggedNode.textContent = flagged + ' ditandai';
     };
 
     const updatePosition = () => {
@@ -65,8 +72,18 @@
         if (runtime.currentIndex < items.length - 1)
             window.CbtExamRenderer?.renderIndex(runtime.currentIndex + 1);
     });
-    toggle?.addEventListener('click', () => palette?.classList.add('is-open'));
-    close?.addEventListener('click', () => palette?.classList.remove('is-open'));
+    const openPalette = () => {
+        palette?.classList.add('is-open');
+        if (backdrop) backdrop.hidden = false;
+    };
+    const closePalette = () => {
+        palette?.classList.remove('is-open');
+        if (backdrop) backdrop.hidden = true;
+    };
+
+    toggle?.addEventListener('click', openPalette);
+    close?.addEventListener('click', closePalette);
+    backdrop?.addEventListener('click', closePalette);
 
     document.addEventListener('cbt:bootstrap-ready', updatePosition);
     document.addEventListener('cbt:question-rendered', updatePosition);
