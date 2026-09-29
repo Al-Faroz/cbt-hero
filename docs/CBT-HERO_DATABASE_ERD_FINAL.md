@@ -360,7 +360,7 @@ Aturan:
 - generated Username/Password menghindari `O I L 0 1`;
 - password auth memakai `password_hash/password_verify`;
 - `password_encrypted` hanya untuk cetak ulang credential;
-- ketika peserta terlibat Kegiatan BERJALAN, perubahan data peserta diblok Service.
+- ketika data peserta sudah terikat dependency pelaksanaan (Preparation/first START/Attempt), perubahan yang mempengaruhi ujian diblok Service; status Kegiatan bukan runtime gate.
 
 ---
 
@@ -425,7 +425,7 @@ Unique:
 (kegiatan_id, nomor_peserta)
 ```
 
-Snapshot membership mempertahankan identitas historis. Membership/ruang/no peserta dikunci ketika Kegiatan BERJALAN, kecuali workflow khusus yang memang diizinkan requirement.
+Snapshot membership mempertahankan identitas historis. Membership/ruang/no peserta dikunci ketika sudah mempunyai dependency pelaksanaan yang relevan (Preparation/first START/Attempt), kecuali workflow khusus yang memang diizinkan requirement. Status Kegiatan tidak menjadi sakelar runtime.
 `UNKNOWN` hanya dipakai untuk row lama yang dibuat sebelum asal penugasan dicatat; selector asalnya tidak dapat direkonstruksi secara pasti.
 
 ---
@@ -782,6 +782,10 @@ Pivot item revision ke `media_assets`.
 ## 9.1 `jadwal`
 
 Satu tabel untuk Jadwal utama dan seluruh Susulan.
+
+Jadwal adalah **source of truth operasional availability**. Waktu Mulai/Batas Mulai
+dan `access_state BUKA/TAHAN` menentukan akses runtime bersama Preparation/Attempt
+gate. Status Kegiatan tidak ikut menjadi runtime gate.
 
 ```text
 id
@@ -1349,7 +1353,7 @@ Satu Jadwal utama dapat memiliki N Susulan. Susulan tetap child dari MAIN, bukan
 
 # 20. LOCK DATA PESERTA
 
-Saat Kegiatan BERJALAN, Service harus menolak perubahan peserta yang terikat Kegiatan tersebut pada data yang mempengaruhi pelaksanaan:
+Setelah dependency pelaksanaan terbentuk, Service harus menolak perubahan peserta yang mempengaruhi pelaksanaan. Lock tidak bergantung pada tombol/status Kegiatan BERJALAN:
 
 - NISN/nama/JK;
 - rombel;
