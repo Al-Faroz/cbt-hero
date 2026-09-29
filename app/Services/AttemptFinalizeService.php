@@ -89,7 +89,7 @@ class AttemptFinalizeService
             }
             if ($deadlineTs !== false && $nowTs > $deadlineTs) $reason = 'TIMEOUT';
 
-            $snapshot = $this->buildSnapshot($db, $attempt);
+            $snapshot = (new AcademicScoringService())->snapshot($db, $attempt, true);
             $finishAt = date('Y-m-d H:i:s');
 
             $db->table('attempt')->where('id', $attemptId)->update([
@@ -115,8 +115,8 @@ class AttemptFinalizeService
                 'final_score' => $snapshot['final_score'],
                 'scoring_status' => $snapshot['scoring_status'],
                 'payload_json' => json_encode($snapshot['payload'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                'is_final' => $snapshot['scoring_status'] === 'COMPLETE' ? 1 : 0,
-                'finalized_at' => $snapshot['scoring_status'] === 'COMPLETE' ? $finishAt : null,
+                'is_final' => 0,
+                'finalized_at' => null,
             ]);
             $resultId = (int) $db->insertID();
 
@@ -129,9 +129,10 @@ class AttemptFinalizeService
                     'max_point' => $item['max_point'],
                     'type_weight_percent' => $item['weight_percent'],
                     'weighted_score' => $item['weighted_score'],
-                    'voided' => 0,
+                    'voided' => (int) ($item['voided'] ?? 0),
                     'payload_json' => json_encode([
                         'scoring_state' => $item['scoring_state'],
+                        'scoring_revision_id' => (int) ($item['scoring_revision_id'] ?? 0),
                     ], JSON_UNESCAPED_SLASHES),
                 ]);
             }
@@ -178,7 +179,7 @@ class AttemptFinalizeService
         if (($attempt['status'] ?? '') !== 'ACTIVE')
             throw new RuntimeException('Attempt sudah tidak aktif.');
 
-        $snapshot = $this->buildSnapshot($db, $attempt);
+        $snapshot = (new AcademicScoringService())->snapshot($db, $attempt, true);
         $finishAt = date('Y-m-d H:i:s');
 
         $db->table('attempt')->where('id', $attemptId)->update([
@@ -359,6 +360,14 @@ class AttemptFinalizeService
             ->orderBy('snapshot_version', 'DESC')->get()->getRowArray();
         $show = (int) $attempt['tampilkan_nilai_saat_selesai'] === 1
             && $attempt['psych_instrument_id'] === null;
+        $snapshotPayload = $snapshot === null
+            ? []
+            : json_decode((string) ($snapshot['payload_json'] ?? ''), true);
+        $typedState = is_array($snapshotPayload) && isset($snapshotPayload['typed_score_state'])
+            ? (string) $snapshotPayload['typed_score_state']
+            : ($snapshot === null
+                ? 'NOT_APPLICABLE'
+                : ((string) $snapshot['scoring_status'] === 'COMPLETE' ? 'COMPLETE' : 'IN_PROCESS'));
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'attempt_status' => (string) $attempt['status'],
@@ -369,9 +378,7 @@ class AttemptFinalizeService
             'click_score' => $show && $snapshot !== null ? $snapshot['click_score'] : null,
             'typed_score' => $show && $snapshot !== null ? $snapshot['typed_score'] : null,
             'final_score' => $show && $snapshot !== null ? $snapshot['final_score'] : null,
-            'typed_score_state' => $snapshot === null
-                ? 'NOT_APPLICABLE'
-                : ($snapshot['scoring_status'] === 'COMPLETE' ? 'COMPLETE' : 'IN_PROCESS'),
+            'typed_score_state' => $typedState,
             'redirect' => base_url('attempt/' . (int) $attempt['id'] . '/selesai'),
         ]];
     }
