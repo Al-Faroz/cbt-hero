@@ -171,7 +171,7 @@
             );
 
             const statusTd = document.createElement('td');
-            if (String(item.question_status) === 'VOID') statusTd.append(badge('VOID', 'warning'));
+            if (String(item.change_kind) === 'VOID' || String(item.question_status) === 'VOID') statusTd.append(badge('VOID', 'warning'));
             else if (Number(item.pending_count || 0) > 0) statusTd.append(badge('Perlu diperiksa', 'warning'));
             else statusTd.append(badge('Terskor', 'success'));
             tr.append(statusTd);
