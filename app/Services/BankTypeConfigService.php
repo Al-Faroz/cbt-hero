@@ -74,11 +74,11 @@ class BankTypeConfigService
                 || ($options && ! in_array($type, self::SHUFFLE_OPTIONS, true)))
                 return $this->error(422, 'VALIDATION_FAILED', 'Pengacakan tidak didukung pada tipe isian/uraian.');
             $mode = $input['scoring_mode'] ?? null;
-            if ($type === 'MATCHING') {
+            if (in_array($type, ['PG_KOMPLEKS', 'MATCHING'], true)) {
                 if (! in_array($mode, ['PARTIAL', 'ALL_OR_NOTHING'], true))
-                    return $this->error(422, 'VALIDATION_FAILED', 'Pilih mode penilaian Matching.');
+                    return $this->error(422, 'VALIDATION_FAILED', 'Pilih mode penilaian Partial atau All-or-Nothing.');
             } elseif ($mode !== null) {
-                return $this->error(422, 'VALIDATION_FAILED', 'Mode penilaian tingkat Bank hanya untuk Matching.');
+                return $this->error(422, 'VALIDATION_FAILED', 'Mode penilaian khusus hanya untuk PG Kompleks dan Menjodohkan.');
             }
             $items[$type] = [
                 'question_type' => $type, 'question_count' => $count,
