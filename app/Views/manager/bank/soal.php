@@ -116,6 +116,45 @@
 
                 <div id="questionSpecific"></div>
 
+                <div class="border rounded p-3 mt-3" id="questionLivePanel" hidden>
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <div class="manager-page-kicker mb-1">Live Edit</div>
+                            <strong>Catatan Revisi Saat Ujian Berjalan</strong>
+                            <div class="small text-secondary mt-1">Revisi lama tetap tersimpan. Peserta aktif menerima perubahan pada checkpoint berikutnya.</div>
+                        </div>
+                        <span class="badge text-bg-warning">Bank READY</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="cbt-form-label" for="questionLiveKind">Jenis Perubahan</label>
+                            <select class="form-select" id="questionLiveKind">
+                                <option value="CONTENT">Perbaikan Isi/Tampilan</option>
+                                <option value="KEY_WEIGHT">Kunci / Poin</option>
+                                <option value="STRUCTURAL">Struktur Jawaban</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="cbt-form-label" for="questionLiveNote">Catatan Perubahan</label>
+                            <input class="form-control" id="questionLiveNote" maxlength="500" placeholder="Jelaskan perubahan yang dilakukan">
+                        </div>
+                        <div class="col-md-5" id="questionLivePolicyWrap" hidden>
+                            <label class="cbt-form-label" for="questionLivePolicy">Jawaban Peserta Aktif</label>
+                            <select class="form-select" id="questionLivePolicy">
+                                <option value="PRESERVE">Pertahankan Jawaban</option>
+                                <option value="REANSWER">Minta Menjawab Ulang</option>
+                            </select>
+                            <div class="form-text">Menjawab ulang hanya berlaku untuk Attempt yang masih aktif. Jawaban lama tetap masuk audit.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button class="btn btn-outline-warning btn-sm" id="questionVoid" type="button">
+                            <i class="bi bi-slash-circle me-1"></i>Batalkan / VOID Soal
+                        </button>
+                        <span class="small text-secondary align-self-center">VOID tidak menghapus riwayat jawaban dan soal tidak dihitung dalam denominator nilai.</span>
+                    </div>
+                </div>
+
                 <div class="d-flex flex-wrap gap-2 mt-3">
                     <button class="btn btn-cbt-primary" id="questionSave" type="submit">Simpan Soal</button>
                     <button class="btn btn-outline-secondary" id="questionCancel" type="button">Batal</button>
