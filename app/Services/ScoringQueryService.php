@@ -53,7 +53,7 @@ class ScoringQueryService
         }
 
         $builder = $db->table('prepared_assignment_item AS pai')
-            ->select('s.id AS question_id, s.stable_key, s.status AS question_status, sr.question_type, sr.question_html')
+            ->select('s.id AS question_id, s.stable_key, s.status AS question_status, sr.question_type, sr.question_html, sr.change_kind')
             ->join('prepared_assignment AS pa', 'pa.id = pai.prepared_assignment_id')
             ->join('soal AS s', 's.id = pai.soal_id')
             ->join('soal_revision AS sr', 'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no', 'left', false);
@@ -62,7 +62,7 @@ class ScoringQueryService
         if ($bankId > 0) $builder->where('s.bank_soal_id', $bankId);
         if ($type !== '') $builder->where('sr.question_type', $type);
 
-        $items = $builder->groupBy('s.id, s.stable_key, s.status, sr.question_type, sr.question_html')
+        $items = $builder->groupBy('s.id, s.stable_key, s.status, sr.question_type, sr.question_html, sr.change_kind')
             ->orderBy('s.id', 'ASC')->get()->getResultArray();
 
         foreach ($items as &$item) {
