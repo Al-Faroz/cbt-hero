@@ -653,19 +653,26 @@
     $('questionLiveKind').addEventListener('change',()=>{
         $('questionLivePolicyWrap').hidden=$('questionLiveKind').value!=='STRUCTURAL';
     });
-    $('questionVoid').addEventListener('click',async()=>{
+    $('questionVoid').addEventListener('click',()=>{
         if(!state.liveEditing||!state.editing)return;
         const note=$('questionLiveNote').value.trim();
         if(!note){feedback('questionFormFeedback','Isi Catatan Perubahan sebelum membatalkan soal.',true);return;}
-        const button=$('questionVoid');button.disabled=true;
+        feedback('questionVoidFeedback','');
+        bootstrap.Modal.getOrCreateInstance($('questionVoidModal')).show();
+    });
+    $('questionVoidConfirm').addEventListener('click',async()=>{
+        if(!state.liveEditing||!state.editing)return;
+        const note=$('questionLiveNote').value.trim();
+        const button=$('questionVoidConfirm');button.disabled=true;
         try{
             const data=await api(base+'/'+state.editing+'/void','POST',{
                 expected_revision:state.revision,
                 change_note:note
             });
+            bootstrap.Modal.getOrCreateInstance($('questionVoidModal')).hide();
             state.liveEditing=false;$('questionEditor').hidden=true;loadTable();await refreshCounts();
             feedback('questionFeedback','Soal dibatalkan (VOID) pada revisi '+data.revision_no+'. Jawaban historis tetap tersimpan.');
-        }catch(error){feedback('questionFormFeedback',error.message,true);}
+        }catch(error){feedback('questionVoidFeedback',error.message,true);}
         finally{button.disabled=false;}
     });
 
