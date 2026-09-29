@@ -277,7 +277,6 @@ $routes->group(
         $routes->get('kegiatan/defaults', $kegiatan . 'defaults', $examFilter);
         $routes->get('kegiatan/(:num)', $kegiatan . 'show/$1', $examFilter);
         $routes->put('kegiatan/(:num)', $kegiatan . 'update/$1', $examFilter);
-        $routes->patch('kegiatan/(:num)/status', $kegiatan . 'status/$1', $examFilter);
         $routes->delete('kegiatan/(:num)', $kegiatan . 'remove/$1', $examFilter);
         $pesertaUjian = 'Api\\Manager\\Exam\\PesertaUjianController::';
         $routes->get('kegiatan/(:num)/peserta', $pesertaUjian . 'index/$1', $examFilter);
