@@ -11,6 +11,7 @@ $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
 $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang', 'exam-bank', 'exam-jadwal'], true);
 $executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring', 'execution-scoring'], true);
+$reportOpen = in_array($activeMenu, ['report-results', 'report-rekap', 'report-analysis', 'report-psych'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -135,7 +136,7 @@ $executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#navHasil"
-                aria-expanded="false"
+                aria-expanded="<?= $reportOpen ? 'true' : 'false' ?>"
                 aria-controls="navHasil"
                 title="Hasil & Laporan"
             >
@@ -144,8 +145,8 @@ $executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring
                 <span class="manager-nav-chevron"></span>
             </button>
 
-            <div class="collapse manager-subnav" id="navHasil">
-                <span class="manager-subnav-link is-unavailable">Hasil Ujian</span>
+            <div class="collapse manager-subnav<?= $reportOpen ? ' show' : '' ?>" id="navHasil">
+                <a class="manager-subnav-link<?= $active('report-results') ?>" href="<?= base_url('manager/hasil/ujian') ?>">Hasil Ujian</a>
                 <span class="manager-subnav-link is-unavailable">Rekap Nilai</span>
                 <span class="manager-subnav-link is-unavailable">Analisis Soal</span>
                 <span class="manager-subnav-link is-unavailable">Hasil Psikologis</span>
