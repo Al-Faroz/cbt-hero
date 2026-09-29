@@ -91,9 +91,9 @@
                         <th>Rombel</th>
                         <th>Ruang</th>
                         <th>Status</th>
-                        <th>Used</th>
-                        <th>Remaining</th>
-                        <th>Last Sync</th>
+                        <th>Terpakai</th>
+                        <th>Sisa Waktu</th>
+                        <th>Sinkron Terakhir</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
