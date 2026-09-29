@@ -102,7 +102,7 @@ class AttemptStartService
             }
 
             $membership = $db->query(
-                "SELECT pk.*, p.username, p.credential_revision, r.nama AS ruang, rb.tingkat AS current_tingkat
+                "SELECT pk.*, p.username, p.credential_revision, p.credential_status, r.nama AS ruang, rb.tingkat AS current_tingkat
                  FROM peserta_kegiatan pk
                  JOIN peserta p ON p.id = pk.peserta_id
                  LEFT JOIN ruang r ON r.id = pk.ruang_id
@@ -117,6 +117,15 @@ class AttemptStartService
             if ((int) $membership['current_tingkat'] !== (int) $schedule['bank_tingkat']) {
                 $db->transRollback();
                 return $this->error(403, 'LEVEL_MISMATCH', 'Jadwal tidak sesuai tingkat peserta.');
+            }
+            if (trim((string) ($membership['nomor_peserta'] ?? '')) === '') {
+                $db->transRollback();
+                return $this->error(409, 'PARTICIPANT_NUMBER_REQUIRED', 'Nomor Peserta belum tersedia.');
+            }
+            if (($membership['credential_status'] ?? '') !== 'READY'
+                || trim((string) ($membership['username'] ?? '')) === '') {
+                $db->transRollback();
+                return $this->error(409, 'CREDENTIAL_NOT_READY', 'Kredensial peserta belum siap.');
             }
 
             if ($schedule['jenis_jadwal'] === 'SUSULAN') {

@@ -35,6 +35,13 @@ class AnswerSyncService
                 return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
             }
 
+            $baseRevision = is_scalar($payload['base_server_revision'] ?? null)
+                ? max(0, (int) $payload['base_server_revision']) : 0;
+            if ($baseRevision > (int) $attempt['server_sync_revision']) {
+                $db->transRollback();
+                return $this->error(409, 'SYNC_REVISION_AHEAD', 'Revisi sync client lebih baru daripada server.');
+            }
+
             $itemIds = [];
             foreach ($mutations as $mutation) {
                 if (is_array($mutation) && is_scalar($mutation['item_id'] ?? null))
