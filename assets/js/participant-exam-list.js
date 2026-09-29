@@ -173,8 +173,8 @@
                 'a',
                 'btn btn-cbt-primary flex-grow-1',
                 item.ui_state === 'LANJUTKAN'
-                    ? 'Lihat & Lanjutkan'
-                    : 'Konfirmasi Ujian'
+                    ? 'Lanjutkan Ujian'
+                    : 'Mulai Ujian'
             );
 
             link.href = `${confirmationBase}/${item.jadwal_id}/konfirmasi`;
