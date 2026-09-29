@@ -186,8 +186,9 @@ class QuestionLiveEditService
 
             $db->table('soal')->where('id', $questionId)->update(['current_revision_no' => $next]);
             $this->refreshAssignments($db, $questionId, $revisionId, $data, $kind);
+            $serverRevisions = $this->touchActiveAttempts($db, $questionId);
             if ($kind === 'STRUCTURAL' && $policy === 'REANSWER') {
-                $this->resetActiveAnswers($db, $questionId, $actor);
+                $this->resetActiveAnswers($db, $questionId, $actor, $serverRevisions);
             }
 
             (new BankReadinessService())->refreshFingerprintAfterLiveEdit(
@@ -393,7 +394,28 @@ class QuestionLiveEditService
         }
     }
 
-    private function resetActiveAnswers($db, int $questionId, array $actor): void
+    private function touchActiveAttempts($db, int $questionId): array
+    {
+        $rows = $db->table('attempt AS a')
+            ->select('DISTINCT a.id, a.server_sync_revision', false)
+            ->join('prepared_assignment_item AS pai', 'pai.prepared_assignment_id = a.prepared_assignment_id')
+            ->where('pai.soal_id', $questionId)
+            ->where('a.status', 'ACTIVE')
+            ->get()->getResultArray();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $next = ((int) $row['server_sync_revision']) + 1;
+            $db->table('attempt')->where('id', (int) $row['id'])->update([
+                'server_sync_revision' => $next,
+                'last_sync_at' => date('Y-m-d H:i:s'),
+            ]);
+            $result[(int) $row['id']] = $next;
+        }
+        return $result;
+    }
+
+    private function resetActiveAnswers($db, int $questionId, array $actor, array $serverRevisions): void
     {
         $responses = $db->table('attempt_response AS ar')
             ->select('ar.*, a.id AS attempt_id')
@@ -406,9 +428,7 @@ class QuestionLiveEditService
 
         foreach ($responses as $row) {
             $attemptId = (int) $row['attempt_id'];
-            $attempt = $db->query('SELECT server_sync_revision FROM attempt WHERE id = ? FOR UPDATE', [$attemptId])
-                ->getRowArray();
-            $nextServer = ((int) ($attempt['server_sync_revision'] ?? 0)) + 1;
+            $nextServer = (int) ($serverRevisions[$attemptId] ?? 0);
 
             (new AuditService())->log(
                 'MANAGER',
@@ -438,10 +458,6 @@ class QuestionLiveEditService
                 'scoring_state' => 'PENDING',
                 'server_revision' => $nextServer,
                 'last_mutation_id' => null,
-            ]);
-            $db->table('attempt')->where('id', $attemptId)->update([
-                'server_sync_revision' => $nextServer,
-                'last_sync_at' => date('Y-m-d H:i:s'),
             ]);
         }
     }
