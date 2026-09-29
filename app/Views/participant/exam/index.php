@@ -11,8 +11,8 @@
         </h1>
 
         <p class="participant-page-description">
-            Pilih ujian yang tersedia. Status akses akan mengikuti jadwal,
-            persiapan ujian, dan Attempt Anda.
+            Daftar ini menampilkan ujian yang dijadwalkan untuk hari ini.
+            Ujian dapat dibuka setelah waktu mulai sesuai jadwal.
         </p>
     </div>
 
@@ -39,7 +39,7 @@
         <div>
             <h2 class="participant-section-title">Ujian Anda</h2>
             <p class="participant-section-subtitle">
-                Daftar mengikuti hak peserta dan jadwal yang tersedia.
+                Ujian hari ini tetap terlihat sebelum jam mulai, tetapi tombol masuk baru aktif ketika waktunya tiba.
             </p>
         </div>
     </div>
