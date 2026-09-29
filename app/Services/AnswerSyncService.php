@@ -70,7 +70,7 @@ class AnswerSyncService
 
             foreach ($mutations as $mutation) {
                 $ack = $this->processMutation(
-                    $db, $attempt, $items, $mutation, $answerService, $serverRevision
+                    $db, $attempt, $items, $mutation, $answerService, $serverRevision, $baseRevision
                 );
                 $serverRevision = $ack['server_revision_after'];
                 unset($ack['server_revision_after']);
@@ -106,7 +106,15 @@ class AnswerSyncService
         }
     }
 
-    private function processMutation($db, array $attempt, array $items, mixed $mutation, AcademicAnswerService $answerService, int $serverRevision): array
+    private function processMutation(
+        $db,
+        array $attempt,
+        array $items,
+        mixed $mutation,
+        AcademicAnswerService $answerService,
+        int $serverRevision,
+        int $baseRevision
+    ): array
     {
         $baseAck = [
             'mutation_id' => is_array($mutation) ? (string) ($mutation['mutation_id'] ?? '') : '',
@@ -131,6 +139,15 @@ class AnswerSyncService
 
         $existing = $db->table('attempt_response')->where('attempt_id', (int) $attempt['id'])
             ->where('prepared_assignment_item_id', $itemId)->get()->getRowArray();
+        if ($existing !== null
+            && (int) $existing['client_revision'] === 0
+            && $existing['answer_payload'] === null
+            && $existing['last_mutation_id'] === null
+            && (int) $existing['server_revision'] > $baseRevision) {
+            $baseAck['server_revision'] = (int) $existing['server_revision'];
+            $baseAck['reason'] = 'REANSWER_REQUIRED';
+            return $baseAck + ['server_revision_after' => $serverRevision];
+        }
         if ($existing !== null && (string) ($existing['last_mutation_id'] ?? '') === $mutationId) {
             $baseAck['accepted'] = true;
             $baseAck['server_revision'] = (int) $existing['server_revision'];
