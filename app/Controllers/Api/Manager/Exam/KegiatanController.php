@@ -43,16 +43,6 @@ class KegiatanController extends BaseController
         return $this->respond((new KegiatanService())->delete((int) $id, $this->actor()));
     }
 
-    public function status(string $id)
-    {
-        $payload = $this->payload();
-        return $this->respond((new KegiatanService())->changeStatus(
-            (int) $id,
-            (string) ($payload['status'] ?? ''),
-            $this->actor()
-        ));
-    }
-
     private function payload(): array
     {
         $json = $this->request->getJSON(true);
