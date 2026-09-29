@@ -135,6 +135,7 @@ class ParticipantExamDiscoveryService
         $activeAttempt = $this->activeAttempt($participantId);
 
         $items = [];
+        $today = (new DateTimeImmutable('now', new DateTimeZone($this->timezone)))->format('Y-m-d');
 
         foreach ($rows as $row) {
             $scheduleId = (int) $row['jadwal_id'];
@@ -179,6 +180,15 @@ class ParticipantExamDiscoveryService
             $participantActivityId = (int) $row['peserta_kegiatan_id'];
             $assignmentKey = $scheduleId . ':' . $participantActivityId;
             $attempt = $attempts[$scheduleId] ?? null;
+            $attemptStatus = strtoupper((string) ($attempt['status'] ?? ''));
+            $scheduleDate = substr((string) $row['mulai_at'], 0, 10);
+
+            // Portal peserta hanya menampilkan agenda ujian hari ini.
+            // Attempt yang masih ACTIVE tetap dipertahankan agar peserta tidak kehilangan akses RESUME.
+            if ($scheduleDate !== $today && $attemptStatus !== 'ACTIVE') {
+                continue;
+            }
+
             $preparedReady = isset($readyAssignments[$assignmentKey]);
 
             $items[] = $this->buildItem(
