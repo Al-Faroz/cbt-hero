@@ -191,7 +191,12 @@
         question.append(rich(currentItem.question_text || ''));
         card.append(question);
 
-        if (['PG', 'PG_BERTINGKAT'].includes(currentItem.question_type)) {
+        if (currentItem.voided) {
+            const notice = document.createElement('div');
+            notice.className = 'alert alert-warning mt-3 mb-0';
+            notice.textContent = 'Soal ini dibatalkan. Jawaban yang pernah tersimpan tetap menjadi riwayat, tetapi tidak dihitung dalam nilai.';
+            card.append(notice);
+        } else if (['PG', 'PG_BERTINGKAT'].includes(currentItem.question_type)) {
             card.append(renderChoice(currentItem, answer, false));
         } else if (currentItem.question_type === 'PG_KOMPLEKS') {
             card.append(renderChoice(currentItem, answer, true));
@@ -201,10 +206,13 @@
             card.append(renderTextAnswer(currentItem, answer));
         }
 
+        if (flagged) flagged.disabled = Boolean(currentItem.voided);
         const local = document.getElementById('examLocalStatus');
-        if (local) local.textContent = answerRow
-            ? (answerRow.server_revision > 0 ? 'Jawaban sudah tersinkron' : 'Tersimpan di perangkat')
-            : 'Belum ada jawaban';
+        if (local) local.textContent = currentItem.voided
+            ? 'Soal dibatalkan · tidak dihitung'
+            : (answerRow
+                ? (answerRow.server_revision > 0 ? 'Jawaban sudah tersinkron' : 'Tersimpan di perangkat')
+                : 'Belum ada jawaban');
 
         runtime.emit('cbt:question-rendered', {
             index,
@@ -214,7 +222,7 @@
     };
 
     flagged?.addEventListener('change', () => {
-        if (!currentItem) return;
+        if (!currentItem || currentItem.voided) return;
         store()?.save(currentItem.item_id, currentPayload, flagged.checked);
     });
 
