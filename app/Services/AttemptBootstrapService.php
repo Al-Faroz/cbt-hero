@@ -18,12 +18,13 @@ class AttemptBootstrapService
         if ($clientError !== null)
             return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
 
-        $items = $this->items($db, $attemptId, (int) $attempt['prepared_assignment_id']);
+        $items = (new QuestionRuntimeItemService())->items($db, $attemptId, (int) $attempt['prepared_assignment_id']);
         $responses = $db->table('attempt_response AS ar')
             ->select('ar.prepared_assignment_item_id, ar.answer_payload, ar.client_revision, ar.server_revision, ar.is_flagged, '
                 . 'pai.mapping_json, sr.question_type')
             ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
-            ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
+            ->join('soal AS s', 's.id = pai.soal_id')
+            ->join('soal_revision AS sr', 'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no', 'left', false)
             ->where('ar.attempt_id', $attemptId)->get()->getResultArray();
         $answers = [];
         foreach ($responses as $row) {
@@ -119,82 +120,6 @@ class AttemptBootstrapService
         if ($row === null) return $this->error(404, 'NOT_FOUND', 'Media tidak termasuk assignment.');
 
         return ['ok' => true, 'status' => 200, 'data' => $row];
-    }
-
-    private function items($db, int $attemptId, int $assignmentId): array
-    {
-        $rows = $db->table('prepared_assignment_item AS pai')
-            ->select('pai.id AS item_id, pai.sequence_no, pai.soal_revision_id, pai.option_order_json, pai.mapping_json, '
-                . 'sr.question_type, sr.stimulus_html, sr.question_html, sr.max_point, sr.short_answer_mode')
-            ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
-            ->where('pai.prepared_assignment_id', $assignmentId)
-            ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
-
-        $result = [];
-        foreach ($rows as $row) {
-            $item = [
-                'item_id' => (int) $row['item_id'],
-                'sequence_no' => (int) $row['sequence_no'],
-                'revision_id' => (int) $row['soal_revision_id'],
-                'question_type' => (string) $row['question_type'],
-                'stimulus_text' => (string) ($row['stimulus_html'] ?? ''),
-                'question_text' => (string) $row['question_html'],
-                'max_point' => (float) $row['max_point'],
-            ];
-
-            if (in_array($row['question_type'], ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)) {
-                $options = $db->table('soal_opsi')->select('option_key, content_html, sort_order')
-                    ->where('soal_revision_id', (int) $row['soal_revision_id'])
-                    ->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')->get()->getResultArray();
-                $byKey = array_column($options, null, 'option_key');
-                $order = json_decode((string) ($row['option_order_json'] ?? ''), true);
-                if (!is_array($order)) $order = array_keys($byKey);
-                $item['options'] = [];
-                foreach ($order as $key) {
-                    if (!is_string($key) || !isset($byKey[$key])) continue;
-                    $item['options'][] = [
-                        'option_key' => $key,
-                        'content_text' => (string) $byKey[$key]['content_html'],
-                    ];
-                }
-            } elseif ($row['question_type'] === 'MATCHING') {
-                $pairs = $db->table('soal_matching_pair')
-                    ->select('left_key, left_html, right_key, right_html, sort_order')
-                    ->where('soal_revision_id', (int) $row['soal_revision_id'])
-                    ->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')->get()->getResultArray();
-                $leftMap = []; $rightMap = [];
-                foreach ($pairs as $pair) {
-                    $leftMap[(string) $pair['left_key']] = (string) $pair['left_html'];
-                    $rightMap[(string) $pair['right_key']] = (string) $pair['right_html'];
-                }
-                $mapping = json_decode((string) ($row['mapping_json'] ?? ''), true);
-                $leftOrder = is_array($mapping['left_order'] ?? null) ? $mapping['left_order'] : array_keys($leftMap);
-                $rightOrder = is_array($mapping['right_order'] ?? null) ? $mapping['right_order'] : array_keys($rightMap);
-                $leftAlias = is_array($mapping['left_alias'] ?? null) ? $mapping['left_alias'] : [];
-                $rightAlias = is_array($mapping['right_alias'] ?? null) ? $mapping['right_alias'] : [];
-                $item['matching_left'] = [];
-                foreach ($leftOrder as $key) {
-                    if (!isset($leftMap[$key], $leftAlias[$key])) continue;
-                    $item['matching_left'][] = [
-                        'key' => (string) $leftAlias[$key],
-                        'content_text' => $leftMap[$key],
-                    ];
-                }
-                $item['matching_right'] = [];
-                foreach ($rightOrder as $key) {
-                    if (!isset($rightMap[$key], $rightAlias[$key])) continue;
-                    $item['matching_right'][] = [
-                        'key' => (string) $rightAlias[$key],
-                        'content_text' => $rightMap[$key],
-                    ];
-                }
-            } elseif ($row['question_type'] === 'ISIAN_SINGKAT') {
-                $item['short_answer_mode'] = (string) $row['short_answer_mode'];
-            }
-
-            $result[] = $item;
-        }
-        return $result;
     }
 
     private function matchingPayloadForClient(mixed $payload, string $mappingJson): mixed
