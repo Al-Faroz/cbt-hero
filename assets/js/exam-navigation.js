@@ -73,6 +73,7 @@
             window.CbtExamRenderer?.renderIndex(runtime.currentIndex + 1);
     });
     const openPalette = () => {
+        if (!window.matchMedia('(max-width: 991.98px)').matches) return;
         palette?.classList.add('is-open');
         if (backdrop) backdrop.hidden = false;
     };
