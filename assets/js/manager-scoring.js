@@ -283,8 +283,8 @@
         const row = state.responses.find(item => Number(item.response_id) === Number(responseId));
         if (!row) return;
         $('manualResponseId').value = String(responseId);
-        $('manualScoreValue').max = String(row.max_point ?? '');
-        $('manualScoreValue').value = row.manual_score ?? row.effective_score ?? '';
+        $('manualScoreValue').value = window.CbtNumber?.format(row.manual_score ?? row.effective_score ?? '', 4)
+            ?? (row.manual_score ?? row.effective_score ?? '');
         $('manualScoreReason').value = '';
         $('manualScoreLimit').textContent = 'Rentang nilai: 0 sampai ' + numberText(row.max_point) + '.';
         $('manualScoreTitle').textContent = 'Nilai Manual · ' + (row.nama_snapshot || row.nomor_peserta_snapshot || '');
@@ -369,7 +369,7 @@
     $('manualScoreForm').addEventListener('submit', async event => {
         event.preventDefault();
         const responseId = Number($('manualResponseId').value || 0);
-        const score = $('manualScoreValue').value;
+        const score = window.CbtNumber?.parse($('manualScoreValue').value) ?? Number(String($('manualScoreValue').value).replace(',', '.'));
         const reason = $('manualScoreReason').value.trim();
         if (!responseId || score === '' || !reason) {
             feedback('manualScoreFeedback', 'Nilai dan alasan koreksi wajib diisi.', true);
