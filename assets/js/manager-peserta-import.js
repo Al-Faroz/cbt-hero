@@ -5,6 +5,23 @@
     const $ = (id) => document.getElementById(id);
     const base = app.dataset.api;
     const state = {job: null, page: 1, pages: 1, editing: null, pendingCommit: null};
+
+    const clearCurrentJob = ({keepFeedback = false} = {}) => {
+        state.job = null;
+        state.page = 1;
+        state.pages = 1;
+        state.editing = null;
+        state.pendingCommit = null;
+        localStorage.removeItem('cbthero.import.peserta.job');
+        $('importJobCard').hidden = true;
+        $('importEditCard').hidden = true;
+        $('importRows').replaceChildren();
+        $('importStatusFilter').value = '';
+        $('importPageInfo').textContent = '';
+        if (!keepFeedback) {
+            feedback('importActionFeedback', '');
+        }
+    };
     const feedback = (id, message, error = false) => {
         const node = $(id);
         node.textContent = message;
@@ -108,7 +125,9 @@
             const data = await request(base, 'POST', form);
             state.job = data.job; state.page = 1; state.pendingCommit = null;
             localStorage.setItem('cbthero.import.peserta.job', String(data.job.id));
-            await refresh(); feedback('importFeedback', 'Upload berhasil. Klik Parse.');
+            await refresh();
+            $('importFile').value = '';
+            feedback('importFeedback', 'Upload berhasil. Klik Parse.');
         } catch (error) { feedback('importFeedback', error.message, true); }
     });
     $('importParse').addEventListener('click', () => action(base + '/' + state.job.id + '/parse', 'POST'));
@@ -117,8 +136,13 @@
         if (!window.confirm('Commit ' + state.job.valid_items + ' Peserta valid ke database?')) return;
         const key = state.pendingCommit ?? crypto.randomUUID().replaceAll('-', '');
         state.pendingCommit = key;
-        await action(base + '/' + state.job.id + '/commit', 'POST', {}, key);
-        if (state.job?.status === 'COMMITTED') state.pendingCommit = null;
+        const committed = await action(base + '/' + state.job.id + '/commit', 'POST', {}, key);
+        if (committed && state.job?.status === 'COMMITTED') {
+            const summary = 'Import selesai. ' + Number(state.job.valid_items || 0)
+                + ' Peserta berhasil diproses. Halaman siap untuk import berikutnya.';
+            clearCurrentJob({keepFeedback: true});
+            feedback('importFeedback', summary);
+        }
     });
     $('importStatusFilter').addEventListener('change', () => {state.page = 1; loadItems().catch((e) => feedback('importActionFeedback', e.message, true));});
     $('importPrevious').addEventListener('click', () => {if (state.page > 1) {state.page--; loadItems();}});
@@ -139,6 +163,12 @@
     const last = Number(localStorage.getItem('cbthero.import.peserta.job'));
     if (Number.isSafeInteger(last) && last > 0) {
         state.job = {id: last};
-        refresh().catch(() => {state.job = null; localStorage.removeItem('cbthero.import.peserta.job');});
+        refresh()
+            .then(() => {
+                if (['COMMITTED', 'FAILED'].includes(String(state.job?.status || ''))) {
+                    clearCurrentJob();
+                }
+            })
+            .catch(() => clearCurrentJob());
     }
 })();
