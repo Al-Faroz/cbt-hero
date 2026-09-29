@@ -257,6 +257,6 @@
     });
 
     setOnlineState();
-    setInterval(checkStatus, 10000);
+    setInterval(checkStatus, 30000);
     window.CbtExamSync = {syncOnce, drain, postEvent, checkStatus, applyRevisionChanges};
 })();
