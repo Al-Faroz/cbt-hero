@@ -22,10 +22,43 @@ class DashboardController extends BaseController
         $ready = (int) $db->table('peserta')->where('status', 'ACTIVE')
             ->where('credential_status', 'READY')->countAllResults();
 
-        $activities = $db->table('kegiatan')
-            ->select('id, nama, status, tahun_pelajaran, semester, created_at')
-            ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->limit(5)
+        $scheduleRows = $db->table('jadwal AS j')
+            ->select('j.id, j.kegiatan_id, j.mulai_at, j.batas_mulai_at, j.durasi_seconds, j.access_state, '
+                . 'j.first_attempt_started_at, j.results_finalized_at, '
+                . 'k.nama AS kegiatan_nama, b.nama_bank, b.tingkat, m.nama_mapel')
+            ->join('kegiatan AS k', 'k.id = j.kegiatan_id')
+            ->join('bank_soal AS b', 'b.id = j.bank_soal_id', 'left')
+            ->join('mata_pelajaran AS m', 'm.id = b.mapel_id', 'left')
+            ->where('j.jenis_jadwal', 'MAIN')
+            ->where('j.parent_jadwal_id', null)
+            ->orderBy('j.mulai_at', 'DESC')
+            ->orderBy('j.id', 'DESC')
+            ->limit(6)
             ->get()->getResultArray();
+
+        $preparationService = new \App\Services\PreparationService();
+        foreach ($scheduleRows as &$scheduleRow) {
+            $prep = $preparationService->status((int) $scheduleRow['id']);
+            $prepData = ($prep['ok'] ?? false) ? ($prep['data'] ?? []) : [];
+            $scheduleRow['preparation_state'] = ($prepData['can_start'] ?? false) ? 'READY' : 'DRAFT';
+
+            $now = new DateTimeImmutable('now', $tz);
+            $start = new DateTimeImmutable((string) $scheduleRow['mulai_at'], $tz);
+            $latest = new DateTimeImmutable((string) $scheduleRow['batas_mulai_at'], $tz);
+
+            if ($scheduleRow['results_finalized_at'] !== null) {
+                $scheduleRow['operational_state'] = 'SELESAI';
+            } elseif ($scheduleRow['access_state'] === 'TAHAN') {
+                $scheduleRow['operational_state'] = 'DITAHAN';
+            } elseif ($now < $start) {
+                $scheduleRow['operational_state'] = 'MENUNGGU_WAKTU';
+            } elseif ($now <= $latest) {
+                $scheduleRow['operational_state'] = 'SEDANG_BERJALAN';
+            } else {
+                $scheduleRow['operational_state'] = 'BATAS_MULAI_LEWAT';
+            }
+        }
+        unset($scheduleRow);
 
         $todaySchedules = (int) $db->table('jadwal')
             ->where('mulai_at >=', $todayStart)
@@ -65,7 +98,7 @@ class DashboardController extends BaseController
                 'subjects' => (int) $db->table('mata_pelajaran')->where('status', 'ACTIVE')->countAllResults(),
                 'activities' => (int) $db->table('kegiatan')->countAllResults(),
                 'drafts' => (int) $db->table('kegiatan')->where('status', 'DRAFT')->countAllResults(),
-                'running_activities' => (int) $db->table('kegiatan')->where('status', 'BERJALAN')->countAllResults(),
+                'running_activities' => 0,
                 'today_schedules' => $todaySchedules,
                 'active_attempts' => $activeAttempts,
                 'finished_today' => $finishedToday,
@@ -73,7 +106,7 @@ class DashboardController extends BaseController
                 'ready_assignments' => $readyAssignments,
                 'finalized_schedules' => $finalizedSchedules,
             ],
-            'recentActivities' => $activities,
+            'recentSchedules' => $scheduleRows,
         ]);
     }
 }
