@@ -6,7 +6,7 @@ use Config\Database;
 
 class AttemptRuntimeService
 {
-    public function status(int $participantId, int $attemptId, string $clientUuid, int $generation): array
+    public function status(int $participantId, int $attemptId, string $clientUuid, int $generation, int $since = 0): array
     {
         $db = Database::connect();
         $ownership = new AttemptOwnershipService();
