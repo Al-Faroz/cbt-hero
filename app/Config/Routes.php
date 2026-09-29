@@ -373,6 +373,11 @@ $routes->group(
         $finalization = 'Api\\Manager\\Scoring\\FinalizationController::';
         $routes->post('results/jadwal/(:num)/finalize', $finalization . 'finalize/$1', $examFilter);
 
+        $liveEdit = 'Api\\Manager\\Scoring\\LiveEditController::';
+        $routes->get('bank-soal/(:num)/soal/(:num)/revisions', $liveEdit . 'revisions/$1/$2', $examFilter);
+        $routes->post('bank-soal/(:num)/soal/(:num)/revision', $liveEdit . 'revision/$1/$2', $examFilter);
+        $routes->post('bank-soal/(:num)/soal/(:num)/void', $liveEdit . 'void/$1/$2', $examFilter);
+
         $routes->get(
             'users',
             'Manager\\System\\ManagerUserController::list',
