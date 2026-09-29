@@ -144,3 +144,72 @@ html[data-bs-theme="dark"] .dashboard-progress .progress-bar { background: #82e6
 .dashboard-readiness .btn { margin-top: auto; font-size: 12px; }
 @media (max-width: 575.98px) { .dashboard-metric { min-height: 138px; } .dashboard-activity-list li { gap: 8px; } }
 @media (prefers-reduced-motion: reduce) { .dashboard-metric { transition: none; } .dashboard-metric:hover { transform: none; } }
+
+
+/* Academic Final — compact operational dashboard */
+.dashboard-operational-grid{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:8px;
+}
+.dashboard-operational-grid .dashboard-metric{
+    min-height:112px;
+    padding:10px 11px;
+    border-radius:13px;
+}
+.dashboard-operational-grid .dashboard-metric-icon{
+    width:30px;
+    height:30px;
+    border-radius:9px;
+    font-size:15px;
+}
+.dashboard-operational-grid .dashboard-metric-label{
+    margin-top:7px;
+    font-size:10px;
+}
+.dashboard-operational-grid .dashboard-metric-number{
+    font-size:23px;
+}
+.dashboard-operational-grid .dashboard-metric-detail{
+    font-size:9.5px;
+}
+.dashboard-quick-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+}
+.dashboard-quick-grid a{
+    display:flex;
+    min-width:0;
+    align-items:center;
+    gap:7px;
+    padding:9px 10px;
+    border:1px solid var(--manager-border);
+    border-radius:10px;
+    color:var(--manager-heading);
+    background:var(--manager-raised);
+    font-size:11px;
+    font-weight:700;
+    text-decoration:none;
+}
+.dashboard-quick-grid a:hover{
+    border-color:var(--cbt-primary);
+}
+.dashboard-quick-grid i{
+    color:var(--cbt-primary);
+    font-size:14px;
+}
+.dashboard-panel-header h2{
+    font-size:13px;
+}
+.dashboard-readiness-value strong{
+    font-size:25px;
+}
+
+@media(max-width:1399.98px){
+    .dashboard-operational-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:767.98px){
+    .dashboard-operational-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .dashboard-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
