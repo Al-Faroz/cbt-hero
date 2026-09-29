@@ -110,11 +110,7 @@ class VoidService
 
             $db->table('soal')->where('id', $questionId)->update(['current_revision_no' => $next]);
             $this->touchActiveAttempts($db, $questionId);
-            (new BankReadinessService())->refreshFingerprintAfterLiveEdit(
-                $db,
-                $bankId,
-                (int) ($actor['user_id'] ?? 0)
-            );
+            (new BankReadinessService())->validateLiveEdit($db, $bankId);
 
             (new AuditService())->log(
                 'MANAGER',
