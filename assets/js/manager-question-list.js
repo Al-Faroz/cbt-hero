@@ -188,8 +188,12 @@
         return result.data;
     };
     const esc = value => String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    const parseDecimal = value => window.CbtNumber?.parse(value) ?? Number(String(value ?? '').replace(',', '.'));
     const numberLabel = value => {
-        const n=Number(value); return Number.isFinite(n)?n.toFixed(4).replace(/\.?0+$/,''):String(value??'');
+        const n=Number(value);
+        return Number.isFinite(n)
+            ? (window.CbtNumber?.format(n,4) ?? new Intl.NumberFormat('id-ID',{maximumFractionDigits:4}).format(n))
+            : String(value??'');
     };
     const summaryText = value => String(value??'')
         .replace(/\[\[media:[^\]]+\]\]/g,'[Gambar]')
@@ -224,7 +228,7 @@
             const data={
                 question_type:type, question_text:state.richQuestion?.getValue()||'',
                 stimulus_text:type==='PG'?'':state.richStimulus?.getValue()||'',
-                max_point:$('questionPoint').value,
+                max_point:parseDecimal($('questionPoint').value),
                 media:{...state.media,...(window.CbtMediaPreview||{})},
             };
             if(type==='PG') data.options=state.options.map((o,i)=>({option_key:String.fromCharCode(65+i),content_text:o.text,is_correct:o.correct?1:0}));
@@ -272,8 +276,8 @@
                     lab.append(input,text); side.append(lab);
                 } else {
                     const lab=document.createElement('label'); lab.className='cbt-form-label'; lab.textContent='Poin pilihan';
-                    const input=document.createElement('input'); input.className='form-control'; input.type='number'; input.min='0'; input.max='1000'; input.step='0.0001';
-                    input.value=item.point_value??'0'; input.disabled=!editorEditable();
+                    const input=document.createElement('input'); input.className='form-control'; input.type='text'; input.inputMode='decimal'; input.setAttribute('pattern','[0-9.,]+');
+                    input.value=numberLabel(item.point_value??'0'); input.disabled=!editorEditable();
                     input.addEventListener('input',()=>{item.point_value=input.value;preview();});
                     lab.append(input); side.append(lab);
                 }
@@ -318,8 +322,8 @@
                 for(const spec of [['Angka harapan','expected'],['Toleransi absolut','tolerance']]){
                     const col=document.createElement('div'); col.className='col-md-4';
                     const label=document.createElement('label'); label.className='cbt-form-label'; label.textContent=spec[0];
-                    const input=document.createElement('input'); input.className='form-control'; input.type='number'; input.step='0.00000001';
-                    input.value=state[spec[1]]|| (spec[1]==='tolerance'?'0':''); input.disabled=!editorEditable();
+                    const input=document.createElement('input'); input.className='form-control'; input.type='text'; input.inputMode='decimal'; input.setAttribute('pattern','[0-9.,-]+');
+                    input.value=state[spec[1]]!==''?numberLabel(state[spec[1]]):(spec[1]==='tolerance'?'0':''); input.disabled=!editorEditable();
                     input.addEventListener('input',()=>{state[spec[1]]=input.value;preview();}); label.append(input); col.append(label); row.append(col);
                 }
                 target.append(row);
@@ -339,7 +343,7 @@
         $('questionTypeLabel').value=labels[type]||type;
         $('questionStimulusGroup').hidden=type==='PG';
         $('questionPoint').disabled=!editable;
-        $('questionPoint').value=item?.max_point??'1';
+        $('questionPoint').value=numberLabel(item?.max_point??'1');
         if(['PG','PG_KOMPLEKS'].includes(type) && !item) $('questionPoint').value='1';
 
         state.richQuestion.setValue(item?.question_text||'',state.media);
@@ -350,7 +354,7 @@
         const count=Number(config.option_count)||4;
         state.options=(item?.options||Array.from({length:count},()=>({}))).map((o,i)=>({
             text:o.content_text||'', correct:type==='PG'?Number(o.is_correct)===1:Boolean(Number(o.is_correct)),
-            point_value:o.point_value??'0'
+            point_value:numberLabel(o.point_value??'0')
         }));
         state.pairs=(item?.pairs||Array.from({length:count},()=>({}))).map(p=>({left:p.left_text||'',right:p.right_text||''}));
         state.answers=item?.accepted_values?.length?[...item.accepted_values]:[''];
@@ -375,19 +379,19 @@
 
     const currentPayload = () => {
         const type=state.activeType;
-        const data={question_text:state.richQuestion.getValue(),max_point:$('questionPoint').value};
+        const data={question_text:state.richQuestion.getValue(),max_point:parseDecimal($('questionPoint').value)};
         if(type!=='PG'||state.liveEditing){data.question_type=type;}
         if(type!=='PG'){data.stimulus_text=state.richStimulus.getValue();}
         if(type==='PG'){
             data.correct_key=String.fromCharCode(65+Math.max(0,state.options.findIndex(o=>o.correct)));
             data.options=state.options.map(o=>({text:o.text}));
         } else if(type==='PG_KOMPLEKS') data.options=state.options.map(o=>({text:o.text,correct:Boolean(o.correct)}));
-        else if(type==='PG_BERTINGKAT') data.options=state.options.map(o=>({text:o.text,point_value:o.point_value}));
+        else if(type==='PG_BERTINGKAT') data.options=state.options.map(o=>({text:o.text,point_value:parseDecimal(o.point_value)}));
         else if(type==='MATCHING'){data.pairs=state.pairs.map(p=>({left:p.left,right:p.right}));data.scoring_mode=state.configMap.get(type)?.scoring_mode||'PARTIAL';}
         else if(type==='ISIAN_SINGKAT'){
             data.short_answer_mode=state.mode;
             if(state.mode==='TEXT') data.accepted_values=state.answers;
-            else {data.expected_numeric=state.expected;data.numeric_tolerance=state.tolerance||'0';}
+            else {data.expected_numeric=parseDecimal(state.expected);data.numeric_tolerance=parseDecimal(state.tolerance||'0');}
         } else if(type==='URAIAN') data.rubric_text=state.rubric;
         if(state.editing!==null) data.expected_revision=state.revision;
         return data;
