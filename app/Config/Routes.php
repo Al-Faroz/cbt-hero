@@ -94,6 +94,7 @@ $routes->group(
     static function (RouteCollection $routes): void {
         $routes->post('(:num)/resume', 'Api\\Participant\\AttemptController::resume/$1');
         $routes->get('(:num)/status', 'Api\\Participant\\AttemptController::status/$1');
+        $routes->get('(:num)/revisions', 'Api\\Participant\\AttemptController::revisions/$1');
         $routes->get('(:num)/bootstrap', 'Api\\Participant\\BootstrapController::show/$1');
         $routes->get('(:num)/media/(:num)', 'Api\\Participant\\BootstrapController::media/$1/$2');
         $routes->post('(:num)/sync', 'Api\\Participant\\AnswerSyncController::sync/$1');
