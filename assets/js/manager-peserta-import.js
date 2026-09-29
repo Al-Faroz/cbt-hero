@@ -40,6 +40,13 @@
         }
         return result.data;
     };
+    const validationLabel = status => ({
+        PENDING: 'BELUM DIVALIDASI',
+        VALID: 'VALID',
+        INVALID: 'TIDAK VALID',
+        EXCLUDED: 'DIKELUARKAN'
+    }[String(status || '').toUpperCase()] || String(status || '-'));
+
     const btn = (label, className, callback) => {
         const node = document.createElement('button');
         node.type = 'button'; node.className = className; node.textContent = label;
@@ -68,7 +75,7 @@
             const tr = document.createElement('tr');
             const values = [item.item_no, item.payload.nisn, item.payload.nama,
                 item.payload.jenis_kelamin, item.payload.rombel, item.payload.username || '-',
-                item.password_set ? 'Diisi' : '-', item.validation_status +
+                item.password_set ? 'Diisi' : '-', validationLabel(item.validation_status) +
                     (Object.keys(item.errors).length ? ': ' + Object.values(item.errors).join('; ') : '')];
             for (const value of values) {
                 const td = document.createElement('td'); td.textContent = String(value ?? ''); tr.append(td);
@@ -89,7 +96,7 @@
                     $('importEditNisn').focus();
                 }));
                 const excluded = item.validation_status === 'EXCLUDED';
-                actions.append(btn(excluded ? 'Sertakan' : 'Exclude', 'btn btn-outline-secondary btn-sm',
+                actions.append(btn(excluded ? 'Sertakan' : 'Keluarkan', 'btn btn-outline-secondary btn-sm',
                     () => action(base + '/' + state.job.id + '/items/' + item.id + '/' +
                         (excluded ? 'include' : 'exclude'), 'POST')));
             }
