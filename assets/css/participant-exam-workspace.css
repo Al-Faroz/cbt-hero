@@ -23,3 +23,145 @@
 .exam-workspace.is-input-locked .exam-question-card input,.exam-workspace.is-input-locked .exam-question-card textarea,.exam-workspace.is-input-locked .exam-question-card select,.exam-workspace.is-input-locked #examFlagged{pointer-events:none;opacity:.65}
 @media(max-width:991.98px){.exam-layout{grid-template-columns:1fr}.exam-palette{position:fixed;inset:auto 0 0 0;z-index:1070;border-radius:18px 18px 0 0;max-height:70vh;overflow:auto;transform:translateY(105%);transition:transform .18s ease;padding:1rem}.exam-palette.is-open{transform:translateY(0)}.exam-palette-grid{grid-template-columns:repeat(8,1fr)}}
 @media(max-width:575.98px){.exam-workspace-bar{align-items:flex-start}.exam-runtime-badges{flex-direction:column;align-items:flex-end}.exam-progress-strip{flex-wrap:wrap}.exam-question-panel{padding:.8rem}.exam-palette-grid{grid-template-columns:repeat(6,1fr)}.exam-matching-row{grid-template-columns:1fr}.exam-answer-status{align-items:flex-start;flex-direction:column}}
+
+
+/* Academic Final A1 — participant workspace polish */
+body.participant-exam-mode .participant-main{
+    width:min(100% - 24px,1480px);
+    padding-top:12px;
+}
+body.participant-exam-mode .participant-topbar-inner{
+    width:min(100%,1480px);
+}
+.exam-progress-counts{
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+    color:var(--bs-secondary-color);
+}
+.exam-palette-backdrop{
+    position:fixed;
+    inset:0;
+    z-index:1065;
+    border:0;
+    background:rgba(15,23,42,.42);
+}
+.exam-submit-summary{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.65rem;
+}
+.exam-submit-summary>div{
+    display:flex;
+    flex-direction:column;
+    gap:.2rem;
+    padding:.8rem;
+    border:1px solid var(--bs-border-color);
+    border-radius:12px;
+    background:var(--bs-tertiary-bg);
+}
+.exam-submit-summary span{
+    color:var(--bs-secondary-color);
+    font-size:.76rem;
+}
+.exam-submit-summary strong{
+    font-size:1.35rem;
+    line-height:1;
+}
+.participant-result-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.75rem;
+}
+.participant-result-card{
+    display:flex;
+    flex-direction:column;
+    gap:.35rem;
+    min-height:150px;
+    justify-content:center;
+    padding:1rem;
+    border:1px solid var(--cbt-line);
+    border-radius:14px;
+    background:#fff;
+    text-align:center;
+}
+.participant-result-card>span{
+    color:var(--cbt-muted);
+    font-size:.72rem;
+    font-weight:800;
+    letter-spacing:.04em;
+}
+.participant-result-card>strong{
+    color:#101828;
+    font-size:2rem;
+    line-height:1.1;
+}
+.participant-result-card>small{
+    color:var(--cbt-muted);
+    line-height:1.45;
+}
+.participant-result-card .participant-result-processing{
+    color:#b54708;
+    font-size:1.15rem;
+}
+
+@media(max-width:991.98px){
+    body.participant-exam-mode .participant-main{
+        width:min(100% - 16px,1480px);
+        padding-top:8px;
+        padding-bottom:88px;
+    }
+    .exam-question-panel{
+        padding-bottom:4.9rem;
+    }
+    .exam-navigation{
+        position:fixed;
+        left:8px;
+        right:8px;
+        bottom:8px;
+        z-index:1050;
+        margin:0;
+        padding:.55rem;
+        border:1px solid var(--bs-border-color);
+        border-radius:14px;
+        background:rgba(var(--bs-body-bg-rgb),.96);
+        box-shadow:0 10px 30px rgba(15,23,42,.16);
+        backdrop-filter:blur(10px);
+    }
+    .exam-navigation .btn{
+        min-height:44px;
+        flex:1;
+    }
+}
+
+@media(max-width:575.98px){
+    body.participant-exam-mode .participant-topbar-inner{
+        min-height:54px;
+        padding:6px 10px;
+    }
+    body.participant-exam-mode .participant-brand img{
+        width:116px;
+    }
+    .exam-workspace-bar,.exam-progress-strip{
+        padding:.65rem .7rem;
+        border-radius:11px;
+    }
+    .exam-runtime-badges{
+        gap:.3rem;
+    }
+    .exam-sync-state{
+        max-width:130px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-size:.68rem;
+    }
+    .exam-timer{
+        min-width:84px;
+        font-size:.9rem;
+    }
+    .exam-submit-summary,
+    .participant-result-grid{
+        grid-template-columns:1fr;
+    }
+}
