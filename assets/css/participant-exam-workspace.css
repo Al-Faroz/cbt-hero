@@ -292,3 +292,272 @@ body.participant-exam-mode .participant-topbar-inner{
         grid-column:2;
     }
 }
+
+
+/* Academic Final — rich content tables */
+.cbt-rich-table-wrap{
+    width:100%;
+    overflow-x:auto;
+    margin:.7rem 0 1rem;
+    -webkit-overflow-scrolling:touch;
+}
+.cbt-rich-table{
+    width:auto;
+    min-width:260px;
+    border-collapse:collapse;
+    background:var(--bs-body-bg);
+    font-size:.9rem;
+}
+.cbt-rich-table th,
+.cbt-rich-table td{
+    min-width:58px;
+    padding:.5rem .65rem;
+    border:1px solid var(--bs-border-color);
+    text-align:center;
+    vertical-align:middle;
+    white-space:normal;
+}
+.cbt-rich-table th{
+    background:var(--bs-tertiary-bg);
+    font-weight:700;
+}
+.cbt-rich-table .cbt-rich-table-label{
+    min-width:90px;
+    background:var(--bs-tertiary-bg);
+    font-weight:700;
+    text-align:left;
+}
+
+/* Better rich media inside exam content */
+.exam-question-card img{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:.75rem auto;
+    border-radius:8px;
+}
+.exam-question-card .katex-display{
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:.25rem 0;
+}
+.exam-question-card .cbt-drive-media{
+    max-width:760px;
+}
+.exam-question-card iframe{
+    max-width:100%;
+}
+
+/* Choices: PG / PG Kompleks / PG Bertingkat */
+.exam-option{
+    min-height:48px;
+}
+.exam-option strong{
+    flex:0 0 auto;
+}
+.exam-option-content>div{
+    white-space:normal!important;
+}
+.exam-text-answer input.form-control{
+    min-height:44px;
+}
+
+/* Matching v2 — mirrors paper-style matching but remains interactive */
+.exam-matching-v2{
+    margin-top:.25rem;
+}
+.exam-matching-reference-scroll{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+}
+.exam-matching-reference{
+    display:grid;
+    grid-template-columns:minmax(280px,1fr) minmax(280px,1fr);
+    gap:.75rem;
+    min-width:580px;
+}
+.exam-match-ref-table{
+    overflow:hidden;
+    border:1px solid var(--bs-border-color);
+    border-radius:10px;
+    background:var(--bs-body-bg);
+}
+.exam-match-ref-header{
+    padding:.5rem .65rem;
+    border-bottom:1px solid var(--bs-border-color);
+    background:var(--bs-tertiary-bg);
+    text-align:center;
+    font-size:.82rem;
+    font-weight:700;
+}
+.exam-match-ref-row{
+    display:grid;
+    grid-template-columns:34px minmax(0,1fr);
+    gap:.55rem;
+    align-items:center;
+    min-height:48px;
+    padding:.45rem .6rem;
+    border-bottom:1px solid var(--bs-border-color);
+}
+.exam-match-ref-row:last-child{
+    border-bottom:0;
+}
+.exam-match-badge{
+    display:grid;
+    place-items:center;
+    width:27px;
+    height:27px;
+    border-radius:50%;
+    font-size:.78rem;
+    font-weight:800;
+    line-height:1;
+}
+.exam-match-badge.left{
+    color:#fff;
+    background:var(--bs-primary);
+}
+.exam-match-badge.right{
+    color:#fff;
+    background:var(--bs-success);
+}
+.exam-match-ref-content{
+    min-width:0;
+}
+.exam-match-ref-content>div{
+    white-space:normal!important;
+}
+.exam-match-answer-title{
+    margin:.9rem 0 .45rem;
+    font-weight:700;
+}
+.exam-match-answer-table{
+    width:min(100%,540px);
+    overflow:hidden;
+    border:1px solid var(--bs-border-color);
+    border-radius:10px;
+}
+.exam-match-answer-row{
+    display:grid;
+    grid-template-columns:44px 70px minmax(0,1fr);
+    gap:.4rem;
+    align-items:center;
+    min-height:50px;
+    padding:.4rem .55rem;
+    border-bottom:1px solid var(--bs-border-color);
+}
+.exam-match-answer-row:last-child{
+    border-bottom:0;
+}
+.exam-match-connector{
+    color:var(--bs-secondary-color);
+    font-size:.8rem;
+    text-align:center;
+}
+.exam-match-select{
+    min-width:0;
+    font-size:.82rem;
+}
+.exam-match-progress{
+    margin-top:.45rem;
+    color:var(--bs-secondary-color);
+    font-size:.74rem;
+}
+
+/* Mobile: compact but readable across every question type */
+@media(max-width:767.98px){
+    .exam-question-card{
+        min-height:0;
+    }
+    .exam-question-number{
+        margin-bottom:.4rem;
+        font-size:.72rem;
+    }
+    .exam-question-text{
+        margin-bottom:.75rem;
+        font-size:.94rem;
+        line-height:1.55;
+    }
+    .exam-stimulus{
+        margin-bottom:.75rem;
+        padding-left:.6rem;
+        font-size:.9rem;
+    }
+    .exam-options{
+        gap:.45rem;
+    }
+    .exam-option{
+        gap:.5rem;
+        min-height:44px;
+        padding:.58rem .62rem;
+        border-radius:9px;
+        font-size:.9rem;
+    }
+    .exam-option input{
+        margin-top:.18rem;
+    }
+    .exam-question-hint{
+        margin-bottom:.55rem;
+        padding:.5rem .58rem;
+        font-size:.73rem;
+    }
+    .exam-answer-textarea{
+        min-height:150px;
+        font-size:.9rem;
+    }
+    .cbt-rich-table{
+        font-size:.82rem;
+    }
+    .cbt-rich-table th,
+    .cbt-rich-table td{
+        padding:.4rem .5rem;
+    }
+    .exam-question-card .cbt-drive-media{
+        padding:.5rem!important;
+    }
+    .exam-question-card .cbt-drive-media iframe{
+        min-height:180px!important;
+    }
+    .exam-match-answer-table{
+        width:100%;
+    }
+    .exam-match-answer-row{
+        grid-template-columns:36px 54px minmax(0,1fr);
+        padding:.35rem .45rem;
+    }
+    .exam-match-badge{
+        width:24px;
+        height:24px;
+        font-size:.7rem;
+    }
+    .exam-match-connector{
+        font-size:.72rem;
+    }
+    .exam-match-select{
+        min-height:38px;
+        padding-top:.35rem;
+        padding-bottom:.35rem;
+        font-size:.75rem;
+    }
+}
+
+@media(max-width:420px){
+    .exam-matching-reference{
+        grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);
+        min-width:455px;
+        gap:.45rem;
+    }
+    .exam-match-ref-row{
+        grid-template-columns:28px minmax(0,1fr);
+        gap:.4rem;
+        min-height:42px;
+        padding:.38rem .45rem;
+        font-size:.78rem;
+    }
+    .exam-match-ref-header{
+        padding:.42rem .5rem;
+        font-size:.74rem;
+    }
+}
