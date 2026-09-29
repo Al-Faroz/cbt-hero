@@ -189,6 +189,26 @@
     </div>
 </div>
 
+<div class="modal fade" id="questionVoidModal" tabindex="-1" aria-labelledby="questionVoidTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="questionVoidTitle">Batalkan / VOID Soal</h2>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Soal akan ditandai VOID pada revisi baru dan tidak lagi dihitung dalam nilai.</p>
+                <div class="alert alert-warning mb-0">Riwayat jawaban tidak dihapus. Tindakan ini memengaruhi denominator penilaian dan perlu diikuti Hitung Ulang Nilai sebelum Finalisasi Hasil.</div>
+                <div class="cbt-inline-feedback mt-2" id="questionVoidFeedback"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
+                <button class="btn btn-warning" type="button" id="questionVoidConfirm">Ya, VOID Soal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="questionDeleteModal" tabindex="-1" aria-labelledby="questionDeleteTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
