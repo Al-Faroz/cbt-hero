@@ -448,11 +448,16 @@ class QuestionLiveEditService
 
             $db->table('attempt_response')->where('id', (int) $row['id'])->update([
                 'answer_payload' => null,
+                'client_revision' => 0,
+                'server_revision' => $nextServer,
+                'client_elapsed_ms' => null,
+                'answered_at_client' => null,
+                'received_at' => date('Y-m-d H:i:s'),
+                'is_flagged' => 0,
                 'auto_score' => null,
                 'manual_score' => null,
                 'effective_score' => null,
                 'scoring_state' => 'PENDING',
-                'server_revision' => $nextServer,
                 'last_mutation_id' => null,
             ]);
         }
