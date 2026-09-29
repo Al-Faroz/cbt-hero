@@ -49,6 +49,7 @@
                         <th>Durasi</th>
                         <th>Soal Diambil</th>
                         <th>Nilai</th>
+                        <th>Preparation</th>
                         <th>Akses</th>
                         <th>Aksi</th>
                     </tr>
