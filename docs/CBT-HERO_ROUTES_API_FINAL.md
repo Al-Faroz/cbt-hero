@@ -708,6 +708,8 @@ Chunk immutable untuk Attempt/revision yang sama dan boleh diberi cache header y
 
 ## 13.3 Revision Checkpoint
 
+> **Implementation status 2026-09-29:** IMPLEMENTED. Client juga menerima revision changes melalui Sync/Status dan checkpoint ringan; interval UI participant dibuat non-agresif.
+
 Live Edit tidak membutuhkan push/WebSocket wajib.
 
 Perubahan revision dapat diinformasikan melalui response Sync atau endpoint ringan:
@@ -1516,6 +1518,8 @@ Renderer harus sama semantiknya dengan Exam renderer.
 
 # 30. LIVE EDIT SOAL API
 
+> **Implementation status 2026-09-29:** IMPLEMENTED pada Phase 8. Revision immutable, VOID, PRESERVE/REANSWER, audit, dan participant checkpoint telah terhubung. Acceptance tetap DEFERRED sampai checkpoint akhir Master Ujian Akademis.
+
 ## 30.1 Create Revision
 
 ```text
@@ -2129,7 +2133,7 @@ PG + PG Kompleks + Matching + PG Bertingkat
 
 # 41. SCORING / KOREKSI API
 
-> **Implementation status 2026-09-29:** endpoint bagian 41 dan Finalisasi Hasil bagian 42 telah diimplementasikan pada Phase 8A. Acceptance tetap DEFERRED sampai checkpoint akhir Master Ujian Akademis.
+> **Implementation status 2026-09-29:** endpoint bagian 41 dan Finalisasi Hasil bagian 42 telah diimplementasikan pada Phase 8. Acceptance tetap DEFERRED sampai checkpoint akhir Master Ujian Akademis.
 
 ## 41.1 Result Attempt Detail
 
