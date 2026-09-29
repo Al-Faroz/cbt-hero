@@ -2129,6 +2129,8 @@ PG + PG Kompleks + Matching + PG Bertingkat
 
 # 41. SCORING / KOREKSI API
 
+> **Implementation status 2026-09-29:** endpoint bagian 41 dan Finalisasi Hasil bagian 42 telah diimplementasikan pada Phase 8A. Acceptance tetap DEFERRED sampai checkpoint akhir Master Ujian Akademis.
+
 ## 41.1 Result Attempt Detail
 
 ```text
