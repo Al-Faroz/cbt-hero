@@ -49,11 +49,11 @@ class AnswerSyncService
             }
             $itemIds = array_values(array_unique(array_filter($itemIds, static fn(int $id): bool => $id > 0)));
             $itemRows = $itemIds ? $db->table('prepared_assignment_item AS pai')
-                ->select('pai.id AS item_id, pai.soal_revision_id, pai.mapping_json, sr.question_type, sr.max_point, '
+                ->select('pai.id AS item_id, sr.id AS soal_revision_id, pai.mapping_json, sr.question_type, sr.max_point, '
                     . 'COALESCE(btc.scoring_mode, sr.scoring_mode) AS scoring_mode, '
                     . 'sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance', false)
-                ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
                 ->join('soal AS s', 's.id = pai.soal_id')
+                ->join('soal_revision AS sr', 'sr.soal_id = s.id AND sr.revision_no = s.current_revision_no', 'left', false)
                 ->join(
                     'bank_type_config AS btc',
                     'btc.bank_soal_id = s.bank_soal_id AND btc.question_type = sr.question_type',
@@ -93,7 +93,11 @@ class AnswerSyncService
                 'remaining_seconds' => $ownership->remainingSeconds($fresh),
                 'server_sync_revision' => $serverRevision,
                 'acks' => $acks,
-                'revision_changes' => [],
+                'revision_changes' => (new QuestionRuntimeItemService())->revisionChanges(
+                    $db,
+                    $attemptId,
+                    (int) $attempt['prepared_assignment_id']
+                ),
             ]];
         } catch (Throwable $e) {
             $db->transRollback();
