@@ -49,9 +49,17 @@ class AnswerSyncService
             }
             $itemIds = array_values(array_unique(array_filter($itemIds, static fn(int $id): bool => $id > 0)));
             $itemRows = $itemIds ? $db->table('prepared_assignment_item AS pai')
-                ->select('pai.id AS item_id, pai.soal_revision_id, pai.mapping_json, sr.question_type, sr.max_point, sr.scoring_mode, '
-                    . 'sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance')
+                ->select('pai.id AS item_id, pai.soal_revision_id, pai.mapping_json, sr.question_type, sr.max_point, '
+                    . 'COALESCE(btc.scoring_mode, sr.scoring_mode) AS scoring_mode, '
+                    . 'sr.short_answer_mode, sr.expected_numeric, sr.numeric_tolerance', false)
                 ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id')
+                ->join('soal AS s', 's.id = pai.soal_id')
+                ->join(
+                    'bank_type_config AS btc',
+                    'btc.bank_soal_id = s.bank_soal_id AND btc.question_type = sr.question_type',
+                    'left',
+                    false
+                )
                 ->where('pai.prepared_assignment_id', (int) $attempt['prepared_assignment_id'])
                 ->whereIn('pai.id', $itemIds)->get()->getResultArray() : [];
             $items = array_column($itemRows, null, 'item_id');
