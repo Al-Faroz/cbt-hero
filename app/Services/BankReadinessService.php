@@ -61,6 +61,26 @@ class BankReadinessService
         }
     }
 
+    public function refreshFingerprintAfterLiveEdit($db, int $bankId, int $actorId): string
+    {
+        $result = $this->check($db, $bankId);
+        if (!($result['pass'] ?? false)) {
+            throw new RuntimeException(
+                'Revisi Live Edit membuat Bank tidak valid: ' . implode(' ', $result['errors'] ?? [])
+            );
+        }
+
+        $fingerprint = (string) $result['fingerprint'];
+        $db->table('bank_soal')->where('id', $bankId)
+            ->set('version_no', 'version_no + 1', false)
+            ->update([
+                'fingerprint' => $fingerprint,
+                'updated_by' => $actorId > 0 ? $actorId : null,
+            ]);
+
+        return $fingerprint;
+    }
+
     private function check($db, int $bankId): array
     {
         $configs = $db->table('bank_type_config')->select('question_type, question_count, option_count, weight_percent, scoring_mode')
