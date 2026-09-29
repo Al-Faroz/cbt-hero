@@ -17,6 +17,106 @@
     };
 
     const permanentReject = new Set(['STALE_REVISION', 'ANSWER_INVALID', 'ITEM_NOT_ASSIGNED', 'INVALID_MUTATION', 'TIME_EXPIRED']);
+    let statusChecking = false;
+
+    const applyRevisionChanges = async changes => {
+        if (!Array.isArray(changes) || !changes.length || !runtime.bootstrap?.package?.items) return false;
+        let changed = false;
+        let rerender = false;
+
+        await db.transaction('rw', db.question_cache, db.answer_store, db.sync_queue, db.media_manifest, async () => {
+            for (const change of changes) {
+                const itemId = Number(change.item_id || 0);
+                const revisionId = Number(change.revision_id || 0);
+                const index = runtime.bootstrap.package.items.findIndex(item => Number(item.item_id) === itemId);
+                if (itemId < 1 || revisionId < 1 || index < 0) continue;
+
+                const current = runtime.bootstrap.package.items[index];
+                if (Number(current.revision_id || 0) === revisionId) continue;
+
+                const media = Array.isArray(change.media_manifest) ? change.media_manifest : [];
+                const next = {...change, attempt_id: runtime.attemptId};
+                delete next.media_manifest;
+                delete next.change_kind;
+                delete next.change_note;
+                delete next.answer_policy;
+
+                runtime.bootstrap.package.items[index] = next;
+                await db.question_cache.put(next);
+
+                for (const asset of media) {
+                    const mediaId = Number(asset.id || 0);
+                    if (mediaId < 1) continue;
+                    runtime.mediaMap[String(mediaId)] = {
+                        kind: asset.kind,
+                        provider: asset.provider,
+                        url: asset.url
+                    };
+                    await db.media_manifest.put({
+                        attempt_id: runtime.attemptId,
+                        media_id: mediaId,
+                        id: mediaId,
+                        kind: asset.kind,
+                        provider: asset.provider,
+                        url: asset.url,
+                        critical: false,
+                        prefetch_order: 999999
+                    });
+                }
+
+                const policy = String(change.answer_policy || 'PRESERVE');
+                if (policy === 'REANSWER') {
+                    await db.answer_store.delete([runtime.attemptId, itemId]);
+                    await db.sync_queue.where('attempt_id').equals(runtime.attemptId)
+                        .filter(row => Number(row.item_id) === itemId).delete();
+                } else if (change.voided) {
+                    await db.sync_queue.where('attempt_id').equals(runtime.attemptId)
+                        .filter(row => Number(row.item_id) === itemId).delete();
+                }
+
+                if (index === Number(runtime.currentIndex || 0)) rerender = true;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            runtime.setSyncState('Pembaruan soal diterapkan', 'synced');
+            runtime.emit('cbt:revision-applied', {changes});
+            if (rerender) window.CbtExamRenderer?.renderIndex(runtime.currentIndex || 0);
+        }
+        return changed;
+    };
+
+    const checkStatus = async () => {
+        if (statusChecking || !navigator.onLine || runtime.tabBlocked) return;
+        statusChecking = true;
+        try {
+            const response = await fetch(runtime.apiBase + '/status', {
+                credentials: 'same-origin',
+                headers: {'Accept': 'application/json', ...runtime.clientHeaders()}
+            });
+            const result = await response.json().catch(() => null);
+            if (!response.ok || result?.ok !== true) return;
+
+            const data = result.data || {};
+            runtime.serverSyncRevision = Math.max(
+                runtime.serverSyncRevision,
+                Number(data.server_sync_revision || 0)
+            );
+            if (data.deadline_at && runtime.bootstrap?.attempt) {
+                runtime.bootstrap.attempt.deadline_at = data.deadline_at;
+                runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
+            }
+            await applyRevisionChanges(data.revision_changes || []);
+            if (String(data.status || '') !== 'ACTIVE') {
+                runtime.lockInputs('Ujian sudah selesai');
+                runtime.emit('cbt:attempt-status-changed', {status: data.status});
+            }
+        } catch (_) {
+        } finally {
+            statusChecking = false;
+        }
+    };
 
     const syncOnce = async () => {
         if (syncing || !navigator.onLine || runtime.inputLocked && runtime.bootstrap?.attempt?.status !== 'ACTIVE') return false;
@@ -90,6 +190,8 @@
                 await db.runtime_state.put(state);
             });
 
+            await applyRevisionChanges(data.revision_changes || []);
+
             retryDelay = 1000;
             const remaining = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).count();
             runtime.setSyncState(remaining ? 'Belum sinkron' : 'Tersinkron', remaining ? 'pending' : 'synced');
@@ -151,8 +253,10 @@
     document.addEventListener('cbt:bootstrap-ready', () => {
         setOnlineState();
         syncOnce();
+        checkStatus();
     });
 
     setOnlineState();
-    window.CbtExamSync = {syncOnce, drain, postEvent};
+    setInterval(checkStatus, 10000);
+    window.CbtExamSync = {syncOnce, drain, postEvent, checkStatus, applyRevisionChanges};
 })();
