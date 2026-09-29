@@ -483,30 +483,34 @@ Jenis Ujian cukup menjadi atribut Kegiatan.
 
 Kegiatan **tidak** menyimpan durasi, token, ruang, tanggal ujian, atau mapel secara langsung.
 
-## 9.2 Lifecycle
+## 9.2 Status Kegiatan — BUKAN SAKELAR OPERASIONAL
+
+Kegiatan Ujian adalah **container/atribut**. Status Kegiatan tidak boleh menjadi
+syarat peserta START/RESUME dan tidak ada tombol operasional **Jalankan Kegiatan**
+untuk menyalakan ujian.
+
+Availability participant ditentukan oleh **Jadwal**:
 
 ```text
-DRAFT → BERJALAN → SELESAI
+waktu Mulai tercapai
++ belum melewati Batas Mulai untuk START baru
++ access_state = BUKA
++ Preparation READY
++ gate participant lain lulus
+→ ujian otomatis dapat dimulai
 ```
 
-### DRAFT
+`TAHAN` pada Jadwal adalah kontrol manual ketika terjadi gangguan. TAHAN tidak
+menghentikan timer peserta yang sudah berada di workspace.
 
-- persiapan bebas;
-- peserta/bank/jadwal masih dapat disusun;
-- preparation dapat dibangun.
+Kolom status Kegiatan yang masih ada pada schema/implementasi diperlakukan sebagai
+metadata administratif/internal dan **tidak boleh digunakan sebagai gate runtime**.
+Lock data yang mempengaruhi pelaksanaan harus bertumpu pada dependency nyata
+(Preparation/Attempt/first START/finalisasi), bukan kebutuhan Operator menekan tombol
+DRAFT → BERJALAN.
 
-### BERJALAN
-
-- struktur inti dikunci;
-- data peserta terkait tidak boleh diubah;
-- live edit soal tetap dapat dilakukan dengan mekanisme khusus;
-- tindakan operasional tetap tersedia.
-
-### SELESAI
-
-Tombol SELESAI dapat digunakan ketika Jadwal/Susulan yang sudah dibuat telah melewati waktu pelaksanaannya dan tidak ada Attempt ACTIVE.
-
-Status SELESAI tidak menghapus data dan tidak memblokir kebutuhan historis/laporan.
+Status Kegiatan tidak ditampilkan sebagai indikator kesiapan operasional pada
+Dashboard. Kesiapan operasional ditampilkan dari Jadwal + Preparation.
 
 ## 9.3 Susulan sebagai Pengecualian Operasional
 
@@ -918,7 +922,7 @@ Preflight harus dapat menunjukkan kesiapan secara actionable, minimal:
 - media kritis/manifest valid;
 - tidak ada konfigurasi yang membuat START mustahil.
 
-Tombol/aksi membuat Kegiatan BERJALAN **tidak menjalankan pekerjaan berat**. Pekerjaan berat harus sudah selesai pada Preparation.
+Tidak ada tombol untuk membuat Kegiatan BERJALAN sebagai syarat pelaksanaan. Pekerjaan berat harus sudah selesai pada Preparation, dan Jadwal menjadi sumber gate operasional.
 
 ## 17.3 Incremental Preparation
 
@@ -956,6 +960,13 @@ Field utama Jadwal:
 - Durasi;
 - status akses `BUKA / TAHAN`;
 - `Tampilkan Nilai Saat Selesai` ON/OFF.
+
+UI Jadwal juga mempunyai **status Preparation turunan** (bukan kolom state baru):
+
+- `DRAFT` = target/assignment belum seluruhnya siap;
+- `READY` = Preparation dan preflight Jadwal siap sehingga tinggal menunggu gate waktu/akses.
+
+Status ini wajib terlihat langsung pada daftar Jadwal agar Operator tidak harus membuka modal Preparation hanya untuk mengetahui kesiapan.
 
 Jadwal akademik mempunyai jumlah soal yang diambil **per tipe** dari Bank yang
 dipilih. Setiap tipe aktif yang digunakan Jadwal harus mempunyai jumlah positif
@@ -1155,8 +1166,7 @@ LOGIN
 → PACKAGE + PREFETCH
 → WORKSPACE
 → SELESAI
-→ KONFIRMASI #1
-→ KONFIRMASI #2
+→ MODAL KONFIRMASI + RINGKASAN JAWABAN
 → SYNC + FINALIZE
 → HALAMAN SELESAI
 ```
@@ -1175,12 +1185,20 @@ Membuka halaman Konfirmasi tidak membuat Attempt dan tidak memulai timer.
 
 # 24. DAFTAR UJIAN PESERTA
 
-Peserta melihat seluruh ujian yang menjadi haknya dengan status seperti:
+Peserta melihat **ujian yang menjadi haknya dan dijadwalkan pada hari ini** dengan status seperti:
 
 - Belum Dibuka;
 - Bisa Dimulai;
 - Lanjutkan;
 - Selesai.
+
+Aturan:
+
+- Jadwal hari ini tetap terlihat sebelum waktu `Mulai`;
+- tombol **Mulai Ujian** aktif otomatis setelah waktu Mulai jika gate Jadwal/Preparation/Token lain lulus;
+- Attempt ACTIVE tetap terlihat untuk RESUME walaupun melewati pergantian tanggal;
+- ujian hari lain tidak memenuhi daftar harian;
+- status Kegiatan tidak menjadi gate START.
 
 Prinsip:
 
@@ -1956,7 +1974,9 @@ Peserta:
 - image zoom;
 - formula responsive;
 - Arabic RTL;
-- table horizontal scroll bila perlu;
+- tabel rich-content dirender sebagai tabel responsif dan horizontal scroll bila perlu;
+- PG Kompleks menampilkan petunjuk UI bahwa jawaban dapat lebih dari satu;
+- Menjodohkan memakai dua tabel referensi utuh (kiri bernomor, kanan berhuruf) dan tabel pasangan/dropdown di bawah;
 - player audio/video Google Drive tampil inline di workspace soal; tidak membuka tab baru.
 
 ## 40.2 Palette Soal
@@ -2953,6 +2973,11 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-29 | 1.8 | Pelaksanaan Phase 7 | Token global current/next + lazy auto-rotate, Monitoring server-side, Reset Akses, Tambah Waktu, Paksa Selesai, bulk command idempotent, dan Attempt Detail diimplementasikan | Menyediakan kontrol operasional saat ujian berjalan tanpa membebani Attempt Engine | TokenService/MonitoringService/Attempt control/UI/API |
 | 2026-09-29 | 1.9 | Scoring Akademik Phase 8A | Scoring calculator authoritative, normalisasi click/typed 0–100, manual override audited, rescore idempotent, snapshot versioned, dan Finalisasi Hasil dipisahkan dari Attempt FINISH | Menjamin Scored tidak sama dengan Final dan seluruh koreksi sebelum FINAL dapat dihitung ulang konsisten | AcademicScoringService/ResultSnapshotService/ManualOverrideService/RescoreService/ResultFinalizationService/API |
 | 2026-09-29 | 1.10 | Live Edit + UI Operasional Phase 8 | Immutable revision untuk CONTENT/KEY_WEIGHT/STRUCTURAL, policy PRESERVE/REANSWER, VOID tanpa menghapus histori, participant revision checkpoint, serta UI Penilaian Akademik dan Live Edit pada editor Bank READY | Menyelesaikan alur koreksi operasional sebelum Finalisasi tanpa membuka kembali Attempt FINISHED | QuestionLiveEditService/VoidService/QuestionRuntimeItemService/Participant runtime/Manager Scoring UI |
+| 2026-09-29 | 1.11 | Operasional Kegiatan/Jadwal | Kegiatan dikunci sebagai container dan tidak lagi menjadi sakelar START; Jadwal otomatis aktif berdasarkan waktu, Preparation dan BUKA/TAHAN | Menghindari kebutuhan tombol Jalankan Kegiatan dan menyamakan perilaku CBT operasional | Participant discovery/Attempt START/Jadwal UI/API/docs |
+| 2026-09-29 | 1.12 | Dashboard + Preparation | Dashboard berorientasi Jadwal, bukan status Kegiatan; daftar Jadwal menampilkan Preparation DRAFT/READY langsung | Operator harus dapat melihat kesiapan tanpa membuka modal Preparation | Dashboard/JadwalService/Manager UI |
+| 2026-09-29 | 1.13 | Participant UI | Daftar Ujian hanya agenda hari ini, action menjadi Mulai Ujian, submit memakai satu modal ringkasan, Halaman Selesai memisahkan nilai klik dan ketik | Menyederhanakan flow peserta dan mengurangi ambiguity | Participant discovery/list/workspace/finish |
+| 2026-09-29 | 1.14 | Renderer Akademik | Entity/line break diperbaiki; tabel rich-content responsif; PG Kompleks diberi petunjuk multi-jawaban; Menjodohkan direfactor menjadi dua tabel referensi + tabel pasangan | Memperbaiki keterbacaan desktop/mobile dan konsistensi tipe soal | Shared renderer/Exam renderer/CSS |
+| 2026-09-29 | 1.15 | Format/UI Manager | Notasi angka Indonesia dan compact Manager UI menjadi standar; header Manager inline compact pada desktop | Menyamakan output/input numerik dan memaksimalkan viewport tabel | UI standard/Manager JS/CSS |
 
 ---
 
