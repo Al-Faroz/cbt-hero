@@ -109,6 +109,7 @@ class VoidService
             }
 
             $db->table('soal')->where('id', $questionId)->update(['current_revision_no' => $next]);
+            $this->touchActiveAttempts($db, $questionId);
             (new BankReadinessService())->refreshFingerprintAfterLiveEdit(
                 $db,
                 $bankId,
@@ -145,6 +146,23 @@ class VoidService
             $db->transRollback();
             log_message('error', 'VOID Soal gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'STATE_CONFLICT', 'Soal belum dapat di-VOID.');
+        }
+    }
+
+    private function touchActiveAttempts($db, int $questionId): void
+    {
+        $rows = $db->table('attempt AS a')
+            ->select('DISTINCT a.id, a.server_sync_revision', false)
+            ->join('prepared_assignment_item AS pai', 'pai.prepared_assignment_id = a.prepared_assignment_id')
+            ->where('pai.soal_id', $questionId)
+            ->where('a.status', 'ACTIVE')
+            ->get()->getResultArray();
+
+        foreach ($rows as $row) {
+            $db->table('attempt')->where('id', (int) $row['id'])->update([
+                'server_sync_revision' => ((int) $row['server_sync_revision']) + 1,
+                'last_sync_at' => date('Y-m-d H:i:s'),
+            ]);
         }
     }
 
