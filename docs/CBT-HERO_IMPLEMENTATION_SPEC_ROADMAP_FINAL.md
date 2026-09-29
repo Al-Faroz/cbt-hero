@@ -1246,7 +1246,7 @@ Rotation tidak mengganggu participant yang sudah di workspace.
 
 # 12. PHASE 8 — SCORING AKADEMIK + LIVE EDIT + FINALISASI
 
-**Status implementasi 2026-09-29:** fondasi **Scoring + Koreksi + Finalisasi (Phase 8A) IMPLEMENTED**, acceptance **DEFERRED**. Live Edit revision/VOID command masih menjadi pekerjaan Phase 8 berikutnya sebelum Phase 8 dinyatakan selesai penuh.
+**Status implementasi 2026-09-29:** **IMPLEMENTED** — Scoring Akademik, koreksi/manual override, rescore, Live Edit immutable revision, VOID, participant revision checkpoint, dan Finalisasi Hasil telah diimplementasikan. **Acceptance tetap DEFERRED** sampai checkpoint akhir Master Ujian Akademis.
 
 ## 12.1 Dependency
 
