@@ -10,7 +10,7 @@ $active = static function (string $key) use ($activeMenu): string {
 $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
 $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang', 'exam-bank', 'exam-jadwal'], true);
-$executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring'], true);
+$executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring', 'execution-scoring'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -124,6 +124,7 @@ $executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring
             <div class="collapse manager-subnav<?= $executionOpen ? ' show' : '' ?>" id="navPelaksanaan">
                 <a class="manager-subnav-link<?= $active('execution-token') ?>" href="<?= base_url('manager/pelaksanaan/token') ?>">Token</a>
                 <a class="manager-subnav-link<?= $active('execution-monitoring') ?>" href="<?= base_url('manager/pelaksanaan/monitoring') ?>">Monitoring Ujian</a>
+                <a class="manager-subnav-link<?= $active('execution-scoring') ?>" href="<?= base_url('manager/pelaksanaan/penilaian') ?>">Penilaian Akademik</a>
                 <span class="manager-subnav-link is-unavailable">Live Scoring</span>
             </div>
 
