@@ -58,12 +58,20 @@ class JadwalService
             ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
 
         $selectionMap = $this->selectionMap($db, array_map(static fn(array $item): int => (int) $item['id'], $items));
+        $preparationService = new PreparationService();
         foreach ($items as &$item) {
             $id = (int) $item['id'];
             $item['type_selection'] = $selectionMap[$id] ?? [];
             $item['window_state'] = $this->windowState((string) $item['mulai_at'], (string) $item['batas_mulai_at']);
             $item['structural_editable'] = $item['kegiatan_status'] === 'DRAFT' && $item['first_attempt_started_at'] === null;
             $item['access_editable'] = $item['results_finalized_at'] === null;
+
+            $prep = $preparationService->status($id);
+            $prepData = ($prep['ok'] ?? false) ? ($prep['data'] ?? []) : [];
+            $item['preparation_state'] = ($prepData['can_start'] ?? false) ? 'READY' : 'DRAFT';
+            $item['preparation_progress'] = (int) ($prepData['progress'] ?? 0);
+            $item['preparation_ready'] = (int) ($prepData['ready'] ?? 0);
+            $item['preparation_total'] = (int) ($prepData['total_target'] ?? 0);
         }
         unset($item);
 
