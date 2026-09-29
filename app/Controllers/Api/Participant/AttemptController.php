@@ -48,7 +48,8 @@ class AttemptController extends BaseController
             (int) $auth['peserta_id'],
             (int) $attemptId,
             $this->clientUuid(),
-            $this->clientGeneration()
+            $this->clientGeneration(),
+            $this->sinceRevision()
         ));
     }
 
@@ -67,6 +68,15 @@ class AttemptController extends BaseController
             $this->clientGeneration(),
             is_int($since) ? $since : 0
         ));
+    }
+
+    private function sinceRevision(): int
+    {
+        $value = $this->request->getGet('since');
+        $parsed = is_scalar($value)
+            ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])
+            : false;
+        return is_int($parsed) ? $parsed : 0;
     }
 
     private function payload(): array
