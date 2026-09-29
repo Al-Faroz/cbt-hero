@@ -6,6 +6,7 @@ $participantName = (string) ($participant['nama'] ?? 'Peserta');
 $participantUsername = (string) ($participant['username'] ?? '');
 $participantRombel = (string) ($participant['rombel'] ?? '');
 $initial = mb_strtoupper(mb_substr(trim($participantName) !== '' ? trim($participantName) : 'P', 0, 1));
+$bodyClass = trim((string) ($bodyClass ?? ''));
 ?>
 <!doctype html>
 <html lang="id">
@@ -46,7 +47,7 @@ $initial = mb_strtoupper(mb_substr(trim($participantName) !== '' ? trim($partici
     <?= $this->renderSection('pageStyles') ?>
 </head>
 
-<body class="participant-body">
+<body class="participant-body<?= $bodyClass !== '' ? ' ' . esc($bodyClass, 'attr') : '' ?>">
 <header class="participant-topbar">
     <div class="participant-topbar-inner">
         <a
