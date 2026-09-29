@@ -10,6 +10,36 @@
     const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const themeKey = 'cbthero.manager.theme';
 
+    const decimalFormatter = new Intl.NumberFormat('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6
+    });
+    window.CbtNumber = {
+        format(value, maximumFractionDigits = 6) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return '';
+            return new Intl.NumberFormat('id-ID', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits
+            }).format(number);
+        },
+        formatInteger(value) {
+            const number = Number(value);
+            return Number.isFinite(number) ? new Intl.NumberFormat('id-ID', {maximumFractionDigits: 0}).format(number) : '';
+        },
+        parse(value) {
+            if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
+            const text = String(value ?? '').trim().replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+            if (text === '') return NaN;
+            const number = Number(text);
+            return Number.isFinite(number) ? number : NaN;
+        },
+        normalize(value) {
+            const number = this.parse(value);
+            return Number.isFinite(number) ? String(number) : '';
+        }
+    };
+
     const updateThemeControl = () => {
         if (! themeToggle) return;
         const dark = root.getAttribute('data-bs-theme') === 'dark';
