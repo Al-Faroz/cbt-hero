@@ -40,7 +40,8 @@ Untuk menjaga implementasi tetap konsisten tanpa memecah sumber kebenaran, Dokum
 - `CBT-HERO_AUTH_SECURITY_SESSION_FINAL.md` — authentication, session, credential, authorization, CSRF, security boundary, dan Attempt/client protection;
 - `CBT-HERO_ROUTES_API_FINAL.md` — route UI/API, method, actor, ownership, request/response, idempotency, transaction boundary, error code, dan acceptance contract;
 - `CBT-HERO_IMPLEMENTATION_SPEC_ROADMAP_FINAL.md` — urutan implementasi phase-by-phase, dependency, layer, komponen, checkpoint PASS, critical path, dan Definition of Done;
-- `CBT-HERO_SCHEMA_v1.0.sql` — baseline DDL yang harus mengikuti dokumen Database & ERD.
+- `CBT-HERO_SCHEMA_v1.0.sql` — baseline DDL yang harus mengikuti dokumen Database & ERD;
+- `CBT-HERO_DOC_SYNC_AUDIT_2026-09-29.md` — snapshot audit sinkronisasi implementasi vs dokumen, termasuk gap, status deferred, dan pekerjaan yang belum selesai. Dokumen ini bersifat audit/status, bukan sumber requirement baru.
 
 Dokumen turunan **tidak boleh membuat requirement bisnis baru**. Jika ada perbedaan, urutan otoritas adalah:
 
