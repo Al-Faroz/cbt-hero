@@ -86,13 +86,33 @@
         element.append(document.createTextNode(source.slice(cursor)));
     };
     const normalizeText = value => {
-        let source = String(value ?? '');
-        source = source.replace(/<br\s*\/?>/gi, '\n');
+        let source = String(value ?? '').replace(/<br\s*\/?>/gi, '\n');
 
-        // Decode character entities as text only; never interpret arbitrary HTML.
-        const decoder = document.createElement('textarea');
-        decoder.innerHTML = source;
-        return decoder.value;
+        const named = {
+            '&apos;': "'",
+            '&#39;': "'",
+            '&quot;': '"',
+            '&amp;': '&',
+            '&lt;': '<',
+            '&gt;': '>',
+            '&nbsp;': ' '
+        };
+        source = source.replace(/&(apos|quot|amp|lt|gt|nbsp);|&#39;/gi, token =>
+            named[token.toLowerCase()] ?? token
+        );
+        source = source.replace(/&#(\d{1,7});/g, (_, code) => {
+            const value = Number(code);
+            return Number.isInteger(value) && value >= 0 && value <= 0x10FFFF
+                ? String.fromCodePoint(value)
+                : _;
+        });
+        source = source.replace(/&#x([0-9a-f]{1,6});/gi, (_, code) => {
+            const value = Number.parseInt(code, 16);
+            return Number.isInteger(value) && value >= 0 && value <= 0x10FFFF
+                ? String.fromCodePoint(value)
+                : _;
+        });
+        return source;
     };
 
     const node = (tag, value, className = '', media = {}) => {
