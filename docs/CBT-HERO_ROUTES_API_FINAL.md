@@ -96,7 +96,7 @@ PATCH   → update sebagian field/state
 DELETE  → delete yang memang diizinkan lifecycle
 ```
 
-State transition penting seperti START, FINALIZE, Reset Akses, Finalisasi Hasil, Preparation, dan Kegiatan SELESAI menggunakan **POST command endpoint**, bukan dipaksakan menjadi CRUD generik.
+State transition penting seperti START, FINALIZE, Reset Akses, Finalisasi Hasil, dan Preparation menggunakan **POST command endpoint**, bukan dipaksakan menjadi CRUD generik. Kegiatan tidak mempunyai command ON/OFF pelaksanaan.
 
 ## 2.2 Content Type
 
@@ -1257,46 +1257,24 @@ exam_browser_required
 status
 ```
 
-## 26.2 Start Kegiatan
+## 26.2 Operasional Kegiatan
+
+Tidak ada endpoint **Start Kegiatan** atau **Selesaikan Kegiatan** sebagai sakelar
+pelaksanaan. Kegiatan adalah container administratif.
+
+Runtime participant dikendalikan oleh Jadwal:
 
 ```text
-POST /manager/api/kegiatan/{id}/start
+Mulai / Batas Mulai
++ BUKA / TAHAN
++ Preparation READY
++ Token / Exam Browser / Attempt gate
 ```
 
-Transition:
+Preflight Kegiatan tetap boleh dipakai sebagai agregat kesiapan untuk troubleshooting,
+tetapi hasilnya tidak membutuhkan command DRAFT → BERJALAN.
 
-```text
-DRAFT → BERJALAN
-```
-
-Server melakukan preflight; command tidak melakukan Preparation berat.
-
-Jika belum siap:
-
-```text
-409 PREPARATION_NOT_READY
-```
-
-## 26.3 Selesaikan Kegiatan
-
-```text
-POST /manager/api/kegiatan/{id}/finish
-```
-
-Boleh jika:
-
-- Jadwal/Susulan yang sudah dibuat telah melewati waktu pelaksanaan;
-- tidak ada Attempt ACTIVE.
-
-Transition:
-
-```text
-BERJALAN → SELESAI
-```
-
-Kegiatan SELESAI tetap boleh mendapat Susulan baru sebagai operational exception sesuai requirement; tidak ada workflow reopen Kegiatan.
-
-## 26.4 Preflight Aggregate
+## 26.3 Preflight Aggregate
 
 ```text
 GET /manager/api/kegiatan/{id}/preflight
