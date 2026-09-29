@@ -78,15 +78,6 @@ class AttemptStartService
                 return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak tersedia.');
             }
 
-            if ($schedule['jenis_jadwal'] === 'MAIN' && $schedule['kegiatan_status'] !== 'BERJALAN') {
-                $db->transRollback();
-                return $this->error(409, 'ACTIVITY_NOT_RUNNING', 'Kegiatan belum berjalan.');
-            }
-            if ($schedule['jenis_jadwal'] === 'SUSULAN'
-                && !in_array($schedule['kegiatan_status'], ['BERJALAN', 'SELESAI'], true)) {
-                $db->transRollback();
-                return $this->error(409, 'ACTIVITY_NOT_AVAILABLE', 'Kegiatan belum dapat menjalankan Susulan.');
-            }
             if ($schedule['access_state'] !== 'BUKA') {
                 $db->transRollback();
                 return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan.');
