@@ -7,7 +7,7 @@ use DateTimeZone;
 
 class ParticipantExamDiscoveryService
 {
-    private const ALLOWED_ACTIVITY_STATUS = ['BERJALAN', 'SELESAI'];
+    private const ALLOWED_ACTIVITY_STATUS = ['DRAFT', 'BERJALAN', 'SELESAI'];
 
     private string $timezone;
 
@@ -444,7 +444,9 @@ class ParticipantExamDiscoveryService
             if (strtoupper((string) $row['jenis_jadwal']) === 'MAIN'
                 && strtoupper((string) $row['kegiatan_status']) !== 'BERJALAN') {
                 $availability = 'ACTIVITY_NOT_RUNNING';
-                $reason = 'Kegiatan sudah tidak menerima START baru.';
+                $reason = strtoupper((string) $row['kegiatan_status']) === 'DRAFT'
+                    ? 'Jadwal hari ini tersedia. Menunggu Kegiatan dijalankan oleh pengawas.'
+                    : 'Kegiatan sudah tidak menerima START baru.';
             } elseif ($now < $start) {
                 $availability = 'TOO_EARLY';
                 $reason = 'Ujian belum dibuka.';
