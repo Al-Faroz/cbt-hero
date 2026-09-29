@@ -1640,7 +1640,7 @@ Print tidak membawa sidebar/topbar.
 | Jadwal | Table/Form | 25 |
 | Preparation | Status/Command | chunk/progress |
 | Token | Operational control | no DataTables |
-| Monitoring | Summary + live table | server-side 50 + delta |
+| Monitoring | Summary + live table | server-side 50 + adaptive refresh |
 | Live Scoring | Public display | full-cycle snapshot |
 | Scoring | Table/Editor | server-side/lazy |
 | Hasil Ujian | DataTables | server-side 50 |
@@ -1667,6 +1667,18 @@ fungsi backend. Temuan visual saat data nyata:
 
 Perbaikan ini **bukan blocker fungsional Phase 5** dan sengaja ditunda sampai
 checkpoint polishing Master Ujian Akademis.
+
+
+## Monitoring Ujian Phase 7
+
+Monitoring menggunakan tabel server-side dengan default 50 baris. Refresh default
+10 detik, tidak boleh overlap, dan melambat minimal 30 detik ketika tab browser
+berada di background. Checkbox bulk hanya aktif untuk Attempt ACTIVE. Aksi kritis
+Reset Akses, Tambah Waktu, dan Paksa Selesai menggunakan modal konfirmasi dan
+Idempotency-Key.
+
+Status koneksi tidak hanya bergantung warna: teks **Online**, **Tidak terdeteksi**,
+atau **Reset Akses** wajib ditampilkan.
 
 ---
 

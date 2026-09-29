@@ -10,6 +10,7 @@ $active = static function (string $key) use ($activeMenu): string {
 $systemOpen = in_array($activeMenu, ['system-users', 'system-settings'], true);
 $masterOpen = in_array($activeMenu, ['master-rombel', 'master-peserta', 'master-mapel'], true);
 $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang', 'exam-bank', 'exam-jadwal'], true);
+$executionOpen = in_array($activeMenu, ['execution-token', 'execution-monitoring'], true);
 ?>
 <aside
     class="offcanvas-lg offcanvas-start manager-sidebar"
@@ -111,7 +112,7 @@ $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang'
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#navPelaksanaan"
-                aria-expanded="false"
+                aria-expanded="<?= $executionOpen ? 'true' : 'false' ?>"
                 aria-controls="navPelaksanaan"
                 title="Pelaksanaan Ujian"
             >
@@ -120,9 +121,9 @@ $examOpen = in_array($activeMenu, ['exam-kegiatan', 'exam-peserta', 'exam-ruang'
                 <span class="manager-nav-chevron"></span>
             </button>
 
-            <div class="collapse manager-subnav" id="navPelaksanaan">
-                <span class="manager-subnav-link is-unavailable">Token</span>
-                <span class="manager-subnav-link is-unavailable">Monitoring Ujian</span>
+            <div class="collapse manager-subnav<?= $executionOpen ? ' show' : '' ?>" id="navPelaksanaan">
+                <a class="manager-subnav-link<?= $active('execution-token') ?>" href="<?= base_url('manager/pelaksanaan/token') ?>">Token</a>
+                <a class="manager-subnav-link<?= $active('execution-monitoring') ?>" href="<?= base_url('manager/pelaksanaan/monitoring') ?>">Monitoring Ujian</a>
                 <span class="manager-subnav-link is-unavailable">Live Scoring</span>
             </div>
 

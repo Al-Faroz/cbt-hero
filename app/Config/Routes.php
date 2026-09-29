@@ -172,6 +172,10 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/jadwal/(:num)/susulan', 'Manager\\Schedule\\SusulanController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/token', 'Manager\\Execution\\TokenController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/monitoring', 'Manager\\Execution\\MonitoringController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/komposisi', 'Manager\\Bank\\BankTypeConfigController::index/$1',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal', 'Manager\\Bank\\SoalController::index/$1',
@@ -335,6 +339,27 @@ $routes->group(
         $routes->post('jadwal/(:num)/prepare/rebuild', $preparation . 'rebuild/$1', $examFilter);
         $routes->get('jadwal/(:num)/prepared-assignments', $preparation . 'assignments/$1', $examFilter);
         $routes->get('prepared-assignments/(:num)', $preparation . 'detail/$1', $examFilter);
+
+        $token = 'Api\\Manager\\Execution\\TokenController::';
+        $routes->get('token', $token . 'index', $examFilter);
+        $routes->patch('token/state', $token . 'state', $examFilter);
+        $routes->post('token/rotate', $token . 'rotate', $examFilter);
+        $routes->post('token/generate', $token . 'generate', $examFilter);
+        $routes->patch('token/auto-rotate', $token . 'autoRotate', $examFilter);
+
+        $monitoring = 'Api\\Manager\\Execution\\MonitoringController::';
+        $routes->get('monitoring/options', $monitoring . 'options', $examFilter);
+        $routes->get('monitoring/summary', $monitoring . 'summary', $examFilter);
+        $routes->get('monitoring/attempts', $monitoring . 'attempts', $examFilter);
+        $routes->get('monitoring/attempts/(:num)', $monitoring . 'detail/$1', $examFilter);
+
+        $attemptControl = 'Api\\Manager\\Execution\\AttemptControlController::';
+        $routes->post('monitoring/attempts/(:num)/reset-access', $attemptControl . 'resetAccess/$1', $examFilter);
+        $routes->post('monitoring/reset-access', $attemptControl . 'resetAccess', $examFilter);
+        $routes->post('monitoring/attempts/(:num)/add-time', $attemptControl . 'addTime/$1', $examFilter);
+        $routes->post('monitoring/add-time', $attemptControl . 'addTime', $examFilter);
+        $routes->post('monitoring/attempts/(:num)/force-finish', $attemptControl . 'forceFinish/$1', $examFilter);
+        $routes->post('monitoring/force-finish', $attemptControl . 'forceFinish', $examFilter);
 
         $routes->get(
             'users',

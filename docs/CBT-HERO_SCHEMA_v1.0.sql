@@ -762,6 +762,19 @@ CREATE TABLE score_adjustment_log (
   CONSTRAINT fk_score_adjust_creator FOREIGN KEY (created_by) REFERENCES manager_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE attempt_control_operations (
+  idempotency_key VARCHAR(100) PRIMARY KEY,
+  action VARCHAR(40) NOT NULL,
+  payload_hash CHAR(64) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'IN_PROGRESS',
+  affected_count INT UNSIGNED NOT NULL DEFAULT 0,
+  created_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  finished_at DATETIME NULL,
+  KEY idx_attempt_control_action (action, created_at),
+  CONSTRAINT fk_attempt_control_actor FOREIGN KEY (created_by) REFERENCES manager_users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE result_snapshot (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   attempt_id BIGINT UNSIGNED NOT NULL,
@@ -831,6 +844,7 @@ CREATE TABLE token_control (
   id TINYINT UNSIGNED NOT NULL,
   enabled TINYINT(1) NOT NULL DEFAULT 0,
   current_token VARCHAR(32) NULL,
+  next_token VARCHAR(32) NULL,
   auto_rotate_minutes INT UNSIGNED NULL,
   rotated_at DATETIME NULL,
   next_rotate_at DATETIME NULL,

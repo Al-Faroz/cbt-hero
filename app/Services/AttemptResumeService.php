@@ -31,6 +31,9 @@ class AttemptResumeService
             'exam_proof_hash' => hash('sha256', $examProof),
         ], JSON_UNESCAPED_SLASHES));
 
+        $tokenError = (new TokenService())->validateParticipantToken($token);
+        if ($tokenError !== null) return $tokenError;
+
         $db = Database::connect(); $db->transBegin();
         try {
             $db->query('SELECT id FROM peserta WHERE id = ? FOR UPDATE', [$participantId])->getRowArray();
@@ -50,10 +53,6 @@ class AttemptResumeService
                 $db->transRollback(); return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan.');
             }
 
-            $tokenError = $this->tokenError($db, $token);
-            if ($tokenError !== null) {
-                $db->transRollback(); return $tokenError;
-            }
             if ((int) $attempt['exam_browser_required'] === 1 && $examProof === '') {
                 $db->transRollback(); return $this->error(403, 'EXAM_BROWSER_REQUIRED', 'Ujian ini wajib dibuka melalui Exam Browser.');
             }
@@ -107,16 +106,6 @@ class AttemptResumeService
             log_message('error', 'Participant RESUME gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'RESUME_FAILED', 'Ujian tidak dapat dilanjutkan.');
         }
-    }
-
-    private function tokenError($db, string $provided): ?array
-    {
-        $row = $db->table('token_control')->where('id', 1)->get()->getRowArray();
-        if ($row === null || (int) $row['enabled'] !== 1) return null;
-        $expected = mb_strtoupper(trim((string) ($row['current_token'] ?? '')), 'UTF-8');
-        if ($expected === '' || $provided === '' || !hash_equals($expected, $provided))
-            return $this->error(403, 'TOKEN_INVALID', 'Token ujian tidak sesuai.');
-        return null;
     }
 
     private function success(?array $attempt): array

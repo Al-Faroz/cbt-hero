@@ -1114,6 +1114,10 @@ Fitur halaman Token:
 
 Rotasi token tidak memengaruhi peserta yang sudah berada di dalam workspace.
 
+Implementasi Phase 7 menyimpan **token sekarang** dan **token berikutnya**. Jika
+auto-rotate aktif, START/RESUME melakukan pemeriksaan waktu rotasi secara lazy
+sehingga rotasi tetap berjalan walaupun halaman Manager Token tidak sedang dibuka.
+
 ---
 
 # 22. EXAM BROWSER
@@ -1442,6 +1446,10 @@ Paksa Selesai harus memberi warning jika masih ada pending local sync yang terde
 - refresh 5–15 detik atau adaptif;
 - query ringan/delta bila memungkinkan;
 - di bawah high load, frekuensi non-kritis dapat diturunkan.
+
+Implementasi Manager memakai polling non-overlap. Default 10 detik dan otomatis
+melambat ketika tab browser berada di background. Monitoring menggunakan Jadwal
+sebagai context utama dan pagination server-side.
 
 ---
 
@@ -2942,6 +2950,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-28 | 1.5 | Jadwal Ujian Phase 5B | Susulan N kali, target FIRST_ATTEMPT/REPLACEMENT, cancel target, idempotency create, perpanjang Batas Mulai, result visibility lock, dan Tambah Waktu Attempt ACTIVE | Menyelesaikan kontrol operasional Jadwal sebelum Preparation | UI/API/SusulanService/JadwalOperationalService/jadwal_operations |
 | 2026-09-28 | 1.6 | Preparation Phase 5C | Prepared Assignment akademik dibuat sebelum START secara chunked; selection_count, shuffle stabil, pin revision, media manifest, fingerprint, preflight peserta, dan selective rebuild diaktifkan | Menghilangkan pekerjaan berat dari peak START peserta | PreparationService/prepared_assignment/item/media/API/UI |
 | 2026-09-29 | 1.7 | Attempt Engine Phase 6 | START/RESUME atomic, one-active-attempt/client, bootstrap tanpa answer key, IndexedDB local-first, sync revision/idempotent mutation, timer deadline authority, offline timeout pending, duplicate-tab guard, media prefetch, finalize + result snapshot akademik | Menjadikan Prepared Assignment sebagai runtime ujian peserta yang durable dan recoverable | Participant API/services/workspace/Dexie/result snapshot |
+| 2026-09-29 | 1.8 | Pelaksanaan Phase 7 | Token global current/next + lazy auto-rotate, Monitoring server-side, Reset Akses, Tambah Waktu, Paksa Selesai, bulk command idempotent, dan Attempt Detail diimplementasikan | Menyediakan kontrol operasional saat ujian berjalan tanpa membebani Attempt Engine | TokenService/MonitoringService/Attempt control/UI/API |
 
 ---
 

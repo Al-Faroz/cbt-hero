@@ -158,6 +158,108 @@ class AttemptFinalizeService
         }
     }
 
+    public function forceFinishLocked($db, array $attempt): array
+    {
+        $attemptId = (int) ($attempt['id'] ?? 0);
+        if ($attemptId < 1)
+            throw new RuntimeException('Attempt tidak valid.');
+
+        if (in_array((string) ($attempt['status'] ?? ''), ['FINISHED', 'SUPERSEDED'], true)) {
+            $snapshot = $db->table('result_snapshot')
+                ->where('attempt_id', $attemptId)
+                ->orderBy('snapshot_version', 'DESC')->get()->getRowArray();
+            return [
+                'changed' => false,
+                'attempt_id' => $attemptId,
+                'result_snapshot_id' => $snapshot === null ? null : (int) $snapshot['id'],
+            ];
+        }
+
+        if (($attempt['status'] ?? '') !== 'ACTIVE')
+            throw new RuntimeException('Attempt sudah tidak aktif.');
+
+        $snapshot = $this->buildSnapshot($db, $attempt);
+        $finishAt = date('Y-m-d H:i:s');
+
+        $db->table('attempt')->where('id', $attemptId)->update([
+            'status' => 'FINISHED',
+            'finish_reason' => 'FORCE_FINISH',
+            'finish_at' => $finishAt,
+            'pause_started_at' => null,
+            'last_activity_at' => $finishAt,
+            'scoring_status' => $snapshot['scoring_status'],
+        ]);
+        $db->table('attempt_active_lock')->where('attempt_id', $attemptId)->delete();
+
+        $openPause = $db->table('attempt_pause_event')
+            ->where('attempt_id', $attemptId)->where('ended_at', null)
+            ->orderBy('id', 'DESC')->get()->getRowArray();
+        if ($openPause !== null) {
+            $started = strtotime((string) $openPause['started_at']);
+            $paused = $started === false ? 0 : max(0, time() - $started);
+            $db->table('attempt_pause_event')->where('id', (int) $openPause['id'])->update([
+                'ended_at' => $finishAt,
+                'paused_seconds' => $paused,
+            ]);
+            $db->table('attempt')->where('id', $attemptId)->set(
+                'paused_seconds',
+                'paused_seconds + ' . $paused,
+                false
+            )->update();
+        }
+
+        $versionRow = $db->table('result_snapshot')->selectMax('snapshot_version', 'max_version')
+            ->where('attempt_id', $attemptId)->get()->getRowArray();
+        $version = ((int) ($versionRow['max_version'] ?? 0)) + 1;
+
+        $db->table('result_snapshot')->insert([
+            'attempt_id' => $attemptId,
+            'jadwal_id' => (int) $attempt['jadwal_id'],
+            'snapshot_version' => $version,
+            'result_type' => 'ACADEMIC',
+            'click_score' => $snapshot['click_score'],
+            'typed_score' => $snapshot['typed_score'],
+            'final_score' => $snapshot['final_score'],
+            'scoring_status' => $snapshot['scoring_status'],
+            'payload_json' => json_encode($snapshot['payload'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'is_final' => $snapshot['scoring_status'] === 'COMPLETE' ? 1 : 0,
+            'finalized_at' => $snapshot['scoring_status'] === 'COMPLETE' ? $finishAt : null,
+        ]);
+        $resultId = (int) $db->insertID();
+
+        foreach ($snapshot['items'] as $item) {
+            $db->table('result_item_snapshot')->insert([
+                'result_snapshot_id' => $resultId,
+                'prepared_assignment_item_id' => $item['item_id'],
+                'question_type' => $item['question_type'],
+                'raw_score' => $item['raw_score'],
+                'max_point' => $item['max_point'],
+                'type_weight_percent' => $item['weight_percent'],
+                'weighted_score' => $item['weighted_score'],
+                'voided' => 0,
+                'payload_json' => json_encode([
+                    'scoring_state' => $item['scoring_state'],
+                ], JSON_UNESCAPED_SLASHES),
+            ]);
+        }
+
+        $db->query(
+            'INSERT INTO official_result_pointer
+                (root_jadwal_id, peserta_kegiatan_id, attempt_id, result_snapshot_id)
+             VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE attempt_id = VALUES(attempt_id),
+                result_snapshot_id = VALUES(result_snapshot_id), updated_at = CURRENT_TIMESTAMP',
+            [(int) $attempt['root_jadwal_id'], (int) $attempt['peserta_kegiatan_id'], $attemptId, $resultId]
+        );
+
+        return [
+            'changed' => true,
+            'attempt_id' => $attemptId,
+            'result_snapshot_id' => $resultId,
+            'scoring_status' => $snapshot['scoring_status'],
+        ];
+    }
+
     private function buildSnapshot($db, array $attempt): array
     {
         $rows = $db->table('prepared_assignment_item AS pai')

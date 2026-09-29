@@ -1865,6 +1865,14 @@ PATCH /manager/api/token/state
 POST  /manager/api/token/rotate
 POST  /manager/api/token/generate
 PATCH /manager/api/token/auto-rotate
+
+Response Manager minimum:
+
+current_token
+next_token
+auto_rotate_minutes
+rotated_at
+next_rotate_at
 ```
 
 Actor: Admin/Operator.
@@ -1886,6 +1894,7 @@ Token value tidak pernah dikirim ke public endpoint.
 ## 36.1 Summary
 
 ```text
+GET /manager/api/monitoring/options
 GET /manager/api/monitoring/summary
 ```
 
@@ -1949,6 +1958,10 @@ GET /manager/api/monitoring/delta?since={cursor}
 ```
 
 Jika implementasi delta tidak memberi manfaat nyata, server-side paginated refresh biasa tetap sah.
+
+Implementasi Phase 7 memakai server-side paginated refresh tanpa endpoint delta terlebih
+dahulu. Default UI 10 detik, request tidak overlap, dan interval melambat saat tab
+Manager berada di background.
 
 ---
 
