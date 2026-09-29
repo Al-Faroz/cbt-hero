@@ -29,12 +29,22 @@ class FinishController extends BaseController
         $showResult = (int) $attempt['tampilkan_nilai_saat_selesai'] === 1
             && $attempt['psych_instrument_id'] === null;
 
+        $snapshotPayload = is_array($snapshot)
+            ? json_decode((string) ($snapshot['payload_json'] ?? ''), true)
+            : null;
+        $typedScoreState = is_array($snapshotPayload) && isset($snapshotPayload['typed_score_state'])
+            ? (string) $snapshotPayload['typed_score_state']
+            : (is_array($snapshot) && (string) ($snapshot['scoring_status'] ?? '') === 'COMPLETE'
+                ? 'COMPLETE'
+                : 'IN_PROCESS');
+
         return view('participant/attempt/finished', [
             'auth' => $auth,
             'participant' => $participant,
             'attempt' => $attempt,
             'snapshot' => $snapshot,
             'showResult' => $showResult,
+            'typedScoreState' => $typedScoreState,
             'pageTitle' => 'Ujian Selesai',
         ]);
     }
