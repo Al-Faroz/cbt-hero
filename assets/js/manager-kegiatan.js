@@ -83,16 +83,6 @@
                     schedules.textContent = 'Jadwal'; actions.append(schedules);
                 }
                 if (item.status === 'DRAFT') {
-                    actions.append(button('Jalankan', 'btn btn-success btn-sm me-1', async () => {
-                        if (!window.confirm('Jalankan Kegiatan ' + item.nama + '? Setelah dijalankan, data inti Kegiatan akan terkunci.')) return;
-                        try {
-                            await api(base + '/' + item.id + '/status', 'PATCH', {status: 'BERJALAN'});
-                            await load();
-                            feedback('kegiatanFeedback', 'Kegiatan berhasil dijalankan. Peserta dapat START sesuai waktu Jadwal dan gate lainnya.');
-                        } catch (error) {
-                            feedback('kegiatanFeedback', error.message, true);
-                        }
-                    }));
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);
                         $('kegiatanNama').value = item.nama;
@@ -111,22 +101,8 @@
                             await load(); feedback('kegiatanFeedback', 'Kegiatan berhasil dihapus.');
                         } catch (error) { feedback('kegiatanFeedback', error.message, true); }
                     }));
-                } else if (item.status === 'BERJALAN') {
-                    actions.append(button('Selesaikan', 'btn btn-outline-danger btn-sm', async () => {
-                        if (!window.confirm('Selesaikan Kegiatan ' + item.nama + '? START baru akan ditutup.')) return;
-                        try {
-                            await api(base + '/' + item.id + '/status', 'PATCH', {status: 'SELESAI'});
-                            await load();
-                            feedback('kegiatanFeedback', 'Kegiatan telah diselesaikan.');
-                        } catch (error) {
-                            feedback('kegiatanFeedback', error.message, true);
-                        }
-                    }));
                 } else {
-                    const locked = document.createElement('span');
-                    locked.className = 'badge text-bg-secondary';
-                    locked.textContent = 'Selesai';
-                    actions.append(locked);
+                    actions.textContent = 'Terkunci';
                 }
                 row.append(actions); body.append(row);
             }
