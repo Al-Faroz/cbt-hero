@@ -6,6 +6,9 @@
     if (!runtime || !db) return;
 
     const button = document.getElementById('examSubmit');
+    const modalNode = document.getElementById('examSubmitModal');
+    const confirmButton = document.getElementById('examSubmitConfirm');
+    const submitModal = modalNode ? bootstrap.Modal.getOrCreateInstance(modalNode) : null;
     let finalizing = false;
 
     const key = () => 'finalize:' + (window.crypto?.randomUUID?.()
@@ -101,11 +104,45 @@
         }
     };
 
+    const submitSummary = async () => {
+        const items = runtime.bootstrap?.package?.items || [];
+        const answers = await db.answer_store.where('attempt_id').equals(runtime.attemptId).toArray();
+        const byItem = new Map(answers.map(row => [Number(row.item_id), row]));
+
+        let answered = 0;
+        let flagged = 0;
+        for (const item of items) {
+            const row = byItem.get(Number(item.item_id));
+            if (window.CbtExamRenderer?.isAnswered(row?.answer_payload, item.question_type)) answered++;
+            if (row?.is_flagged) flagged++;
+        }
+        const total = items.length;
+        const unanswered = Math.max(0, total - answered);
+
+        const set = (id, value) => {
+            const node = document.getElementById(id);
+            if (node) node.textContent = String(value);
+        };
+        set('examSubmitTotal', total);
+        set('examSubmitAnswered', answered);
+        set('examSubmitUnanswered', unanswered);
+        set('examSubmitFlagged', flagged);
+        const warning = document.getElementById('examSubmitWarning');
+        if (warning) warning.hidden = unanswered < 1;
+    };
+
     button?.addEventListener('click', async () => {
         if (runtime.inputLocked) return;
-        if (!window.confirm('Apakah Anda yakin ingin menyelesaikan ujian?')) return;
-        if (!window.confirm('Konfirmasi terakhir: setelah selesai, jawaban tidak dapat diubah.')) return;
+        await submitSummary();
+        submitModal?.show();
+    });
+
+    confirmButton?.addEventListener('click', async () => {
+        if (runtime.inputLocked || finalizing) return;
+        confirmButton.disabled = true;
+        submitModal?.hide();
         await finalize('SUBMIT', false);
+        confirmButton.disabled = false;
     });
 
     document.addEventListener('cbt:timeout', () => finalize('TIMEOUT', true));
