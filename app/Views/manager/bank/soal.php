@@ -100,7 +100,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="cbt-form-label" for="questionPoint">Poin Maksimum</label>
-                        <input class="form-control" id="questionPoint" type="number" min="0.0001" max="1000" step="0.0001" value="1" required>
+                        <input class="form-control" id="questionPoint" type="text" inputmode="decimal" pattern="[0-9.,]+" value="1" required>
                     </div>
                 </div>
 
