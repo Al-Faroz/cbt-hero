@@ -91,7 +91,8 @@
         if (statusChecking || !navigator.onLine || runtime.tabBlocked) return;
         statusChecking = true;
         try {
-            const response = await fetch(runtime.apiBase + '/status', {
+            const statusUrl = runtime.apiBase + '/status?since=' + encodeURIComponent(runtime.serverSyncRevision);
+            const response = await fetch(statusUrl, {
                 credentials: 'same-origin',
                 headers: {'Accept': 'application/json', ...runtime.clientHeaders()}
             });
