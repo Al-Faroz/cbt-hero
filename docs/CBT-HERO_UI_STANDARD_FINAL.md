@@ -1539,15 +1539,21 @@ Session Valid
 
 setelah modul nyata tersedia.
 
-Dashboard potensial:
+Dashboard final berorientasi **Jadwal**, bukan lifecycle Kegiatan.
 
-- Kegiatan aktif;
+Isi operasional minimum:
+
+- peserta aktif / siap login;
 - jadwal hari ini;
-- peserta terdaftar;
-- exam berjalan;
-- status preparation;
-- quick operational warning.
+- Attempt sedang berjalan;
+- Attempt selesai hari ini;
+- penilaian yang belum COMPLETE;
+- Prepared Assignment READY;
+- hasil Jadwal yang sudah difinalkan;
+- **Daftar Jadwal Ujian terbaru** dengan status Preparation `DRAFT/READY` dan status waktu/akses;
+- quick action ke Import Peserta, Kegiatan, Bank, Jadwal, Monitoring, dan Hasil.
 
+Status Kegiatan DRAFT/BERJALAN tidak dipakai sebagai indikator kesiapan pelaksanaan.
 Chart hanya jika data sudah bermakna.
 
 ---
@@ -1559,9 +1565,10 @@ Participant tidak memakai DataTables.
 Daftar ujian:
 
 - card/list;
-- jumlah item kecil sesuai membership participant;
+- hanya Jadwal yang menjadi hak peserta dan tanggal Mulai-nya hari ini;
+- Attempt ACTIVE tetap dapat muncul untuk RESUME setelah pergantian tanggal;
 - status jelas;
-- primary action jelas.
+- primary action jelas dengan label **Mulai Ujian** / **Lanjutkan Ujian**.
 
 State:
 
@@ -1594,6 +1601,18 @@ mobile  → bottom sheet
 ```
 
 Tidak membuat request server per pindah nomor soal.
+
+Renderer workspace:
+
+- PG memakai radio;
+- PG Kompleks memakai checkbox dan petunjuk **Pilih satu atau lebih jawaban yang benar**;
+- PG Bertingkat mengikuti pola opsi tunggal;
+- Menjodohkan menampilkan dua tabel referensi utuh: kiri bernomor, kanan berhuruf,
+  lalu tabel pasangan/dropdown di bawah;
+- Isian Singkat mempunyai petunjuk TEKS/ANGKA;
+- Uraian memakai textarea yang jelas;
+- tabel stimulus/rich-content harus menjadi tabel responsif;
+- gambar, rumus, audio, dan video tidak boleh merusak lebar viewport.
 
 ---
 
@@ -1869,15 +1888,53 @@ Yang berubah hanya penataan ruang:
 # 47. VISIBILITAS JADWAL HARI INI PADA PESERTA
 
 Jadwal yang menjadi hak peserta dan tanggal Mulai-nya adalah hari ini tetap
-ditampilkan walaupun Kegiatan masih DRAFT. Pada kondisi tersebut kartu bersifat
-informasi dan START tetap ditolak.
+ditampilkan sebelum jam mulai.
 
 START baru aktif jika seluruh gate lulus:
 
-- Kegiatan MAIN berstatus BERJALAN;
 - waktu telah mencapai Mulai;
-- belum melewati Batas Mulai;
-- access_state BUKA;
+- belum melewati Batas Mulai untuk START baru;
+- `access_state = BUKA`;
 - Prepared Assignment READY;
 - tidak ada Attempt aktif lain;
 - Token/Exam Browser bila diwajibkan.
+
+**Status Kegiatan tidak menjadi gate START/RESUME.** Kegiatan adalah container.
+Kontrol manual darurat memakai `TAHAN` pada Jadwal.
+
+
+# 58. STATUS PREPARATION PADA DAFTAR JADWAL
+
+Daftar Jadwal Manager wajib menampilkan kesiapan Preparation tanpa membuka modal:
+
+```text
+DRAFT → assignment/preflight belum seluruhnya siap
+READY → seluruh target siap; tinggal menunggu waktu dan access_state
+```
+
+Status ini adalah **derived UI state**, bukan pengganti `prepared_assignment.status`
+dan bukan lifecycle Kegiatan.
+
+# 59. MENJODOHKAN — POLA UI FINAL
+
+Desktop dan mobile mempertahankan struktur konseptual yang sama:
+
+```text
+[Pernyataan 1: 1,2,3...]   [Pernyataan 2: A,B,C...]
+                ↓
+1  Dengan  [A/B/C/...]
+2  Dengan  [A/B/C/...]
+3  Dengan  [A/B/C/...]
+```
+
+Aturan:
+
+- sisi kiri selalu diberi badge nomor yang jelas;
+- sisi kanan selalu diberi badge huruf yang jelas;
+- kedua tabel referensi ditampilkan utuh sebelum area jawaban;
+- pada mobile kedua tabel tetap berdampingan; bila konten terlalu lebar, hanya blok
+  referensi yang boleh horizontal-scroll;
+- dropdown menampilkan huruf + ringkasan teks pasangan;
+- satu pasangan kanan tidak boleh dipakai dua kali;
+- progress jumlah pasangan terisi ditampilkan;
+- internal/opaque matching key tidak diperlihatkan kepada peserta.
