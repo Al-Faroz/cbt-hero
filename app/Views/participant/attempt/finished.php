@@ -21,14 +21,27 @@
     </div>
 
     <?php if ($showResult && is_array($snapshot)): ?>
-        <div class="border rounded p-3 mb-3">
-            <div class="small text-secondary">Nilai</div>
-            <?php if ($snapshot['final_score'] !== null): ?>
-                <div class="display-6 fw-semibold"><?= esc(number_format((float) $snapshot['final_score'], 2, ',', '.')) ?></div>
-            <?php else: ?>
-                <div class="fw-semibold">Penilaian masih diproses</div>
-                <div class="small text-secondary">Soal yang memerlukan koreksi manual belum selesai dinilai.</div>
-            <?php endif; ?>
+        <div class="participant-result-grid mb-3">
+            <div class="participant-result-card">
+                <span>NILAI PILIHAN GANDA</span>
+                <strong>
+                    <?= $snapshot['click_score'] === null
+                        ? '—'
+                        : esc(number_format((float) $snapshot['click_score'], 2, ',', '.')) ?>
+                </strong>
+                <small>PG, PG Kompleks, PG Bertingkat, dan Menjodohkan</small>
+            </div>
+
+            <div class="participant-result-card">
+                <span>NILAI ISIAN &amp; URAIAN</span>
+                <?php if (($typedScoreState ?? 'IN_PROCESS') === 'COMPLETE' && $snapshot['typed_score'] !== null): ?>
+                    <strong><?= esc(number_format((float) $snapshot['typed_score'], 2, ',', '.')) ?></strong>
+                    <small>Penilaian bagian ketik sudah selesai.</small>
+                <?php else: ?>
+                    <strong class="participant-result-processing">DALAM PROSES</strong>
+                    <small>Bagian yang memerlukan pemeriksaan manual belum selesai dinilai.</small>
+                <?php endif; ?>
+            </div>
         </div>
     <?php endif; ?>
 
