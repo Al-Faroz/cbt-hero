@@ -35,7 +35,7 @@
         option_count: row.choice ? Number(row.choice.value) : null,
         weight_percent: row.weight.value.trim(), shuffle_questions: row.questions.checked,
         shuffle_options: row.options.checked,
-        scoring_mode: row.dataset.type === 'MATCHING' ? row.mode.value : null,
+        scoring_mode: ['PG_KOMPLEKS', 'MATCHING'].includes(row.dataset.type) ? row.mode.value : null,
     }));
     const updateTotals = () => {
         const items = current();
@@ -80,7 +80,7 @@
             questions.setAttribute('aria-label', 'Acak soal ' + labels[type]);
             options.setAttribute('aria-label', 'Acak opsi atau pasangan ' + labels[type]);
             const mode = document.createElement('select'); mode.className = 'form-select form-select-sm';
-            mode.add(new Option('Per pasangan (parsial)', 'PARTIAL'));
+            mode.add(new Option(type === 'MATCHING' ? 'Per pasangan (parsial)' : 'Parsial', 'PARTIAL'));
             mode.add(new Option('Semua benar', 'ALL_OR_NOTHING'));
             mode.value = config?.scoring_mode || 'PARTIAL'; row.mode = mode;
             const choiceCell = document.createElement('td');
@@ -93,7 +93,7 @@
                 if (choice) choice.disabled = !on;
                 questions.disabled = !on || !objective.has(type);
                 options.disabled = !on || !objective.has(type);
-                mode.disabled = !on || type !== 'MATCHING';
+                mode.disabled = !on || !['PG_KOMPLEKS', 'MATCHING'].includes(type);
                 if (!objective.has(type)) {questions.checked = false; options.checked = false;}
                 updateTotals();
             };
