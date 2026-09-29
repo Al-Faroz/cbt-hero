@@ -12,7 +12,7 @@
     data-api="<?= esc(base_url('manager/api/monitoring'), 'attr') ?>"
     data-control-api="<?= esc(base_url('manager/api/monitoring'), 'attr') ?>">
 
-    <section class="manager-section-card mb-3">
+    <section class="manager-section-card monitoring-filter-card">
         <div class="card-body">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-3 col-md-6">
@@ -61,18 +61,16 @@
         </div>
     </section>
 
-    <div class="row g-3 mb-3">
+    <div class="monitoring-summary">
         <?php foreach (['Total' => 'monitorTotal', 'Belum' => 'monitorBelum', 'Sedang' => 'monitorSedang', 'Selesai' => 'monitorSelesai', 'Tidak Terdeteksi' => 'monitorUndetected'] as $label => $id): ?>
-            <div class="col-6 col-md">
-                <div class="manager-section-card h-100"><div class="card-body py-3">
-                    <div class="small text-secondary"><?= esc($label) ?></div>
-                    <div class="fs-4 fw-semibold" id="<?= esc($id) ?>">0</div>
-                </div></div>
+            <div class="monitoring-summary-item">
+                <span><?= esc($label) ?></span>
+                <strong id="<?= esc($id) ?>">0</strong>
             </div>
         <?php endforeach; ?>
     </div>
 
-    <section class="manager-section-card">
+    <section class="manager-section-card monitoring-table-card">
         <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <strong id="monitorSelected">0 dipilih</strong>
