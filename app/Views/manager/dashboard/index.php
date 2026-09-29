@@ -8,63 +8,76 @@ $statusNames = ['DRAFT' => 'Draft', 'BERJALAN' => 'Berjalan', 'SELESAI' => 'Sele
 <section class="manager-page-header dashboard-heading">
     <div>
         <div class="manager-page-kicker">Ringkasan operasional</div>
-        <h1 class="manager-page-title">Selamat datang, <?= esc($auth['nama'] ?? 'Manager') ?></h1>
-        <p class="manager-page-description">Pantau data peserta dan siapkan kegiatan ujian dari satu tempat.</p>
+        <h1 class="manager-page-title">Dashboard CBT-HERO</h1>
+        <p class="manager-page-description">Ringkasan kesiapan data, pelaksanaan ujian hari ini, penilaian, dan hasil.</p>
     </div>
     <span class="manager-role-chip"><?= esc($auth['role'] ?? 'Manager') ?></span>
 </section>
 
-<div class="row g-3 dashboard-metrics">
-    <div class="col-sm-6 col-xl-3">
-        <a class="dashboard-metric dashboard-metric--blue" href="<?= base_url('manager/master-data/peserta') ?>">
-            <span class="dashboard-metric-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
-            <span class="dashboard-metric-label">Peserta aktif</span>
-            <strong class="dashboard-metric-number"><?= number_format($summary['participants'], 0, ',', '.') ?></strong>
-            <span class="dashboard-metric-detail"><?= number_format($summary['ready'], 0, ',', '.') ?> siap login <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a class="dashboard-metric dashboard-metric--violet" href="<?= base_url('manager/master-data/rombel') ?>">
-            <span class="dashboard-metric-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
-            <span class="dashboard-metric-label">Rombel aktif</span>
-            <strong class="dashboard-metric-number"><?= number_format($summary['classes'], 0, ',', '.') ?></strong>
-            <span class="dashboard-metric-detail">Kelola rombel <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a class="dashboard-metric dashboard-metric--teal" href="<?= base_url('manager/master-data/mapel') ?>">
-            <span class="dashboard-metric-icon"><i class="bi bi-book" aria-hidden="true"></i></span>
-            <span class="dashboard-metric-label">Mata pelajaran aktif</span>
-            <strong class="dashboard-metric-number"><?= number_format($summary['subjects'], 0, ',', '.') ?></strong>
-            <span class="dashboard-metric-detail">Kelola mata pelajaran <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a class="dashboard-metric dashboard-metric--amber" href="<?= base_url('manager/master-ujian/kegiatan') ?>">
-            <span class="dashboard-metric-icon"><i class="bi bi-clipboard-check" aria-hidden="true"></i></span>
-            <span class="dashboard-metric-label">Kegiatan ujian</span>
-            <strong class="dashboard-metric-number"><?= number_format($summary['activities'], 0, ',', '.') ?></strong>
-            <span class="dashboard-metric-detail"><?= number_format($summary['drafts'], 0, ',', '.') ?> draft <i class="bi bi-arrow-up-right" aria-hidden="true"></i></span>
-        </a>
-    </div>
+<div class="dashboard-operational-grid">
+    <a class="dashboard-metric dashboard-metric--blue" href="<?= base_url('manager/master-data/peserta') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-people"></i></span>
+        <span class="dashboard-metric-label">Peserta Aktif</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['participants'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail"><?= number_format($summary['ready'], 0, ',', '.') ?> siap login</span>
+    </a>
+    <a class="dashboard-metric dashboard-metric--violet" href="<?= base_url('manager/master-ujian/jadwal') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-calendar2-event"></i></span>
+        <span class="dashboard-metric-label">Jadwal Hari Ini</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['today_schedules'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail"><?= number_format($summary['running_activities'], 0, ',', '.') ?> kegiatan berjalan</span>
+    </a>
+    <a class="dashboard-metric dashboard-metric--teal" href="<?= base_url('manager/pelaksanaan/monitoring') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-display"></i></span>
+        <span class="dashboard-metric-label">Sedang Ujian</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['active_attempts'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail"><?= number_format($summary['finished_today'], 0, ',', '.') ?> selesai hari ini</span>
+    </a>
+    <a class="dashboard-metric dashboard-metric--amber" href="<?= base_url('manager/pelaksanaan/penilaian') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-pencil-square"></i></span>
+        <span class="dashboard-metric-label">Perlu Penilaian</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['pending_scoring'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail">Attempt belum COMPLETE</span>
+    </a>
+    <a class="dashboard-metric dashboard-metric--blue" href="<?= base_url('manager/master-ujian/jadwal') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-box-seam"></i></span>
+        <span class="dashboard-metric-label">Assignment Siap</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['ready_assignments'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail">Prepared Assignment READY</span>
+    </a>
+    <a class="dashboard-metric dashboard-metric--violet" href="<?= base_url('manager/hasil/ujian') ?>">
+        <span class="dashboard-metric-icon"><i class="bi bi-check2-circle"></i></span>
+        <span class="dashboard-metric-label">Hasil Difinalkan</span>
+        <strong class="dashboard-metric-number"><?= number_format($summary['finalized_schedules'], 0, ',', '.') ?></strong>
+        <span class="dashboard-metric-detail">Jadwal dengan hasil final</span>
+    </a>
 </div>
 
-<div class="row g-3 mt-1">
+<div class="row g-2 mt-2">
     <div class="col-xl-7">
-        <section class="manager-section-card dashboard-panel h-100" aria-labelledby="dashboard-kegiatan-heading">
+        <section class="manager-section-card dashboard-panel h-100">
             <div class="card-header dashboard-panel-header">
-                <div><h2 id="dashboard-kegiatan-heading">Kegiatan terbaru</h2><p>Lima kegiatan yang terakhir dibuat.</p></div>
-                <a href="<?= base_url('manager/master-ujian/kegiatan') ?>">Lihat semua <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <div>
+                    <h2>Kegiatan Terbaru</h2>
+                    <p>Status lima kegiatan terakhir.</p>
+                </div>
+                <a href="<?= base_url('manager/master-ujian/kegiatan') ?>">Lihat semua</a>
             </div>
             <div class="card-body dashboard-activities">
                 <?php if ($recentActivities === []): ?>
-                    <div class="dashboard-empty"><i class="bi bi-clipboard-plus" aria-hidden="true"></i><strong>Belum ada kegiatan ujian</strong><span>Mulai dengan membuat kegiatan pertama.</span><a class="btn btn-cbt-primary btn-sm" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Buka Kegiatan Ujian</a></div>
+                    <div class="dashboard-empty">
+                        <strong>Belum ada kegiatan ujian.</strong>
+                        <a class="btn btn-cbt-primary btn-sm" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Buka Kegiatan Ujian</a>
+                    </div>
                 <?php else: ?>
                     <ul class="dashboard-activity-list">
                         <?php foreach ($recentActivities as $activity): ?>
                             <li>
-                                <span class="dashboard-activity-mark" aria-hidden="true"><i class="bi bi-clipboard-check"></i></span>
-                                <div class="dashboard-activity-copy"><strong><?= esc($activity['nama']) ?></strong><span><?= esc($activity['tahun_pelajaran']) ?> · <?= esc($activity['semester']) ?></span></div>
+                                <span class="dashboard-activity-mark"><i class="bi bi-clipboard-check"></i></span>
+                                <div class="dashboard-activity-copy">
+                                    <strong><?= esc($activity['nama']) ?></strong>
+                                    <span><?= esc($activity['tahun_pelajaran']) ?> · <?= esc($activity['semester']) ?></span>
+                                </div>
                                 <span class="dashboard-status dashboard-status--<?= esc(strtolower($activity['status']), 'attr') ?>"><?= esc($statusNames[$activity['status']] ?? $activity['status']) ?></span>
                             </li>
                         <?php endforeach; ?>
@@ -73,14 +86,34 @@ $statusNames = ['DRAFT' => 'Draft', 'BERJALAN' => 'Berjalan', 'SELESAI' => 'Sele
             </div>
         </section>
     </div>
+
     <div class="col-xl-5">
-        <section class="manager-section-card dashboard-panel h-100" aria-labelledby="dashboard-readiness-heading">
-            <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-readiness-heading">Kesiapan login peserta</h2><p>Peserta aktif dengan kredensial siap.</p></div><span class="dashboard-readiness-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></span></div>
-            <div class="card-body dashboard-readiness">
-                <div class="dashboard-readiness-value"><strong><?= $readyPercentage ?>%</strong><span><?= number_format($summary['ready'], 0, ',', '.') ?> dari <?= number_format($summary['participants'], 0, ',', '.') ?> peserta aktif</span></div>
-                <div class="progress dashboard-progress" role="progressbar" aria-label="Peserta aktif siap login" aria-valuenow="<?= $readyPercentage ?>" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: <?= $readyPercentage ?>%"></div></div>
-                <p><?= $summary['participants'] === 0 ? 'Tambahkan peserta untuk mulai menyiapkan akun.' : 'Periksa peserta yang belum siap login melalui halaman Peserta.' ?></p>
-                <a class="btn btn-outline-primary" href="<?= base_url('manager/master-data/peserta') ?>">Buka data peserta <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <section class="manager-section-card dashboard-panel h-100">
+            <div class="card-header dashboard-panel-header">
+                <div>
+                    <h2>Jalur Kerja Akademik</h2>
+                    <p>Akses cepat sesuai alur operasional.</p>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="dashboard-quick-grid">
+                    <a href="<?= base_url('manager/master-data/peserta/import') ?>"><i class="bi bi-file-earmark-arrow-up"></i><span>Import Peserta</span></a>
+                    <a href="<?= base_url('manager/master-ujian/kegiatan') ?>"><i class="bi bi-clipboard2-plus"></i><span>Kegiatan</span></a>
+                    <a href="<?= base_url('manager/master-ujian/bank-soal') ?>"><i class="bi bi-journal-text"></i><span>Bank Soal</span></a>
+                    <a href="<?= base_url('manager/master-ujian/jadwal') ?>"><i class="bi bi-calendar-check"></i><span>Jadwal</span></a>
+                    <a href="<?= base_url('manager/pelaksanaan/monitoring') ?>"><i class="bi bi-display"></i><span>Monitoring</span></a>
+                    <a href="<?= base_url('manager/hasil/ujian') ?>"><i class="bi bi-bar-chart-line"></i><span>Hasil Ujian</span></a>
+                </div>
+
+                <div class="dashboard-readiness mt-3">
+                    <div class="dashboard-readiness-value">
+                        <strong><?= $readyPercentage ?>%</strong>
+                        <span><?= number_format($summary['ready'], 0, ',', '.') ?> dari <?= number_format($summary['participants'], 0, ',', '.') ?> peserta siap login</span>
+                    </div>
+                    <div class="progress dashboard-progress">
+                        <div class="progress-bar" style="width: <?= $readyPercentage ?>%"></div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
