@@ -24,6 +24,9 @@ $routes->group(
             'ujian/(:num)/konfirmasi',
             'Participant\\ParticipantExamController::confirmation/$1'
         );
+
+        $routes->get('attempt/(:num)', 'Participant\\WorkspaceController::index/$1');
+        $routes->get('attempt/(:num)/selesai', 'Participant\\FinishController::index/$1');
     }
 );
 
@@ -69,6 +72,33 @@ $routes->group(
             '(:num)/konfirmasi',
             'Api\\Participant\\ExamDiscoveryController::confirmation/$1'
         );
+        $routes->get(
+            '(:num)/eligibility',
+            'Api\\Participant\\ExamDiscoveryController::confirmation/$1'
+        );
+        $routes->post(
+            '(:num)/start',
+            'Api\\Participant\\AttemptController::start/$1'
+        );
+    }
+);
+
+/*
+|--------------------------------------------------------------------------
+| PARTICIPANT ATTEMPT API
+|--------------------------------------------------------------------------
+*/
+$routes->group(
+    'api/attempt',
+    ['filter' => 'participant-auth:api'],
+    static function (RouteCollection $routes): void {
+        $routes->post('(:num)/resume', 'Api\\Participant\\AttemptController::resume/$1');
+        $routes->get('(:num)/status', 'Api\\Participant\\AttemptController::status/$1');
+        $routes->get('(:num)/bootstrap', 'Api\\Participant\\BootstrapController::show/$1');
+        $routes->get('(:num)/media/(:num)', 'Api\\Participant\\BootstrapController::media/$1/$2');
+        $routes->post('(:num)/sync', 'Api\\Participant\\AnswerSyncController::sync/$1');
+        $routes->post('(:num)/event', 'Api\\Participant\\ClientEventController::record/$1');
+        $routes->post('(:num)/finalize', 'Api\\Participant\\FinalizeController::finalize/$1');
     }
 );
 

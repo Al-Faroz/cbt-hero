@@ -1013,6 +1013,11 @@ Selama Attempt ACTIVE:
 
 Pause hanya karena **Reset Akses oleh Operator**.
 
+Client menghitung countdown dari `deadline_at` authority + offset waktu server,
+bukan counter yang berhenti ketika browser ditutup/background. Saat mencapai 0,
+input dikunci. Mutation yang dibuat sebelum batas waktu dapat tetap disinkronkan
+setelah reconnect melalui metadata revision/elapsed, lalu server FINALIZE TIMEOUT.
+
 ## 19.3 Timeout Client
 
 Saat timer lokal mencapai 0:
@@ -1325,6 +1330,27 @@ Jika pindah device/cache hilang:
 
 - rebuild dari server ACK snapshot;
 - jawaban yang belum pernah sync dari device lama tidak dapat dipulihkan jika storage device hilang.
+
+Implementasi Phase 6 memakai Dexie object store:
+
+```text
+attempt_meta
+question_cache
+answer_store
+sync_queue
+media_manifest
+runtime_state
+```
+
+Setiap perubahan jawaban ditulis dalam satu transaksi lokal ke `answer_store` dan
+`sync_queue`. Queue per soal dikompakkan sehingga saat offline hanya mutation
+terbaru per item yang perlu dikirim. Sync dikirim batch kecil, satu request pada
+satu waktu, dengan exponential backoff + jitter agar reconnect massal tidak
+menimbulkan retry storm.
+
+Bootstrap participant tidak membawa kunci jawaban, flag benar, poin opsi
+PG Bertingkat, pasangan benar Menjodohkan, accepted answer Isian, atau Rubrik
+Uraian.
 
 ---
 
@@ -2911,6 +2937,7 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-28 | 1.4 | Jadwal Ujian Phase 5A | Jadwal MAIN akademik, BUKA/TAHAN, waktu, durasi, tampilkan nilai, dan selection_count per tipe Bank mulai diimplementasikan; structural edit hanya pada Kegiatan DRAFT | Memisahkan komposisi Bank dari jumlah soal yang benar-benar diberikan ke peserta | UI/API/JadwalService/jadwal_type_selection |
 | 2026-09-28 | 1.5 | Jadwal Ujian Phase 5B | Susulan N kali, target FIRST_ATTEMPT/REPLACEMENT, cancel target, idempotency create, perpanjang Batas Mulai, result visibility lock, dan Tambah Waktu Attempt ACTIVE | Menyelesaikan kontrol operasional Jadwal sebelum Preparation | UI/API/SusulanService/JadwalOperationalService/jadwal_operations |
 | 2026-09-28 | 1.6 | Preparation Phase 5C | Prepared Assignment akademik dibuat sebelum START secara chunked; selection_count, shuffle stabil, pin revision, media manifest, fingerprint, preflight peserta, dan selective rebuild diaktifkan | Menghilangkan pekerjaan berat dari peak START peserta | PreparationService/prepared_assignment/item/media/API/UI |
+| 2026-09-29 | 1.7 | Attempt Engine Phase 6 | START/RESUME atomic, one-active-attempt/client, bootstrap tanpa answer key, IndexedDB local-first, sync revision/idempotent mutation, timer deadline authority, offline timeout pending, duplicate-tab guard, media prefetch, finalize + result snapshot akademik | Menjadikan Prepared Assignment sebagai runtime ujian peserta yang durable dan recoverable | Participant API/services/workspace/Dexie/result snapshot |
 
 ---
 

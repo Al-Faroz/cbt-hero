@@ -503,6 +503,10 @@ Tidak boleh dipolling terus-menerus.
 
 ---
 
+> Phase 6 academic runtime mengimplementasikan participant route pada bagian 9–16.
+> Idempotency START/RESUME/FINALIZE disimpan di `participant_operations`;
+> Answer Sync memakai `mutation_id + client_revision`.
+
 # 10. START API — CRITICAL
 
 ```text
@@ -687,6 +691,10 @@ correct option flags
 psych scoring matrix
 norma internal yang tidak perlu client
 ```
+
+Untuk akademik, package Phase 6 mewujudkan urutan opsi yang sudah dipersiapkan
+tanpa mengirim flag benar/poin rahasia. Menjodohkan dikirim sebagai daftar sisi
+kiri dan daftar sisi kanan terpisah sehingga pasangan benar tidak bocor ke client.
 
 ## 13.2 Package Chunk
 

@@ -210,6 +210,38 @@ class PreparationService
         }
     }
 
+    public function readyAssignmentForStart(int $jadwalId, int $pesertaKegiatanId): ?array
+    {
+        $db = Database::connect();
+        $context = $this->context($db, $jadwalId);
+        if ($context === null || $context['bank_status'] !== 'READY') return null;
+
+        $targets = $this->targets($db, $context);
+        $target = $targets[$pesertaKegiatanId] ?? null;
+        if ($target === null) return null;
+
+        $fingerprint = $this->scheduleFingerprint($db, $context);
+        $expected = hash('sha256', implode('|', [
+            $fingerprint,
+            $pesertaKegiatanId,
+            (string) ($target['target_mode'] ?? 'MAIN'),
+            (string) ($target['supersede_attempt_id'] ?? ''),
+        ]));
+
+        $assignment = $db->table('prepared_assignment')
+            ->where('generated_for_jadwal_id', $jadwalId)
+            ->where('peserta_kegiatan_id', $pesertaKegiatanId)
+            ->where('status', 'READY')
+            ->orderBy('assignment_seq', 'DESC')
+            ->get()->getRowArray();
+
+        if ($assignment === null || !hash_equals((string) $assignment['fingerprint'], $expected)) return null;
+
+        $assignment['target_mode'] = (string) ($target['target_mode'] ?? 'MAIN');
+        $assignment['supersede_attempt_id'] = $target['supersede_attempt_id'] ?? null;
+        return $assignment;
+    }
+
     public function assignments(int $jadwalId): array
     {
         $db = Database::connect();
@@ -497,8 +529,10 @@ class PreparationService
             $rows = $db->table('peserta_kegiatan AS pk')
                 ->select('pk.id AS peserta_kegiatan_id, pk.peserta_id')
                 ->join('peserta AS p', 'p.id = pk.peserta_id')
+                ->join('rombel AS rb', 'rb.id = p.rombel_id')
                 ->where('pk.kegiatan_id', (int) $context['kegiatan_id'])
                 ->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE')
+                ->where('rb.tingkat', (int) $context['tingkat'])
                 ->get()->getResultArray();
             foreach ($rows as &$row) {
                 $row['target_mode'] = 'MAIN';

@@ -307,6 +307,7 @@ class ParticipantExamDiscoveryService
                 'start_at',
                 'finish_at',
                 'deadline_at',
+                'client_generation',
             ])
             ->where('peserta_id', $participantId)
             ->whereIn('jadwal_id', $scheduleIds)
@@ -474,6 +475,9 @@ class ParticipantExamDiscoveryService
             'availability_message' => $reason,
             'action_enabled' => $actionEnabled,
             'attempt_id' => $attemptId,
+            'client_generation' => $attemptStatus === 'ACTIVE'
+                ? (int) ($attempt['client_generation'] ?? 1)
+                : null,
             'nomor_peserta' => $row['nomor_peserta'] === null
                 ? null
                 : (string) $row['nomor_peserta'],

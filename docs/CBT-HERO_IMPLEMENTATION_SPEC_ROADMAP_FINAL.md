@@ -924,6 +924,12 @@ START → reject NOT_PREPARED
 
 # 10. PHASE 6 — ATTEMPT ENGINE + INDEXEDDB + SYNC + TIMER
 
+> **Implementation status 2026-09-29: IMPLEMENTED / ACCEPTANCE DEFERRED.**
+> START/RESUME, workspace IndexedDB, bootstrap, Answer Sync, timer, tab lock,
+> media prefetch, submit/timeout finalize, dan result snapshot akademik sudah
+> diimplementasikan. Acceptance dijalankan pada checkpoint akhir Master Ujian
+> Akademis sebelum Master Ujian Psikologi.
+
 ## 10.1 Tujuan
 
 Ini adalah **core engine CBT-HERO**. Phase ini harus ditangani sebagai prioritas tertinggi kualitas dan testing.

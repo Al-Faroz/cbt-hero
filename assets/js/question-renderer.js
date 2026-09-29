@@ -151,5 +151,11 @@
         }
         return article;
     };
-    window.CbtQuestionRenderer = Object.freeze({render, renderPg: render});
+    window.CbtQuestionRenderer = Object.freeze({
+        render,
+        renderPg: render,
+        renderContent(value, media = {}, className = '') {
+            return node('div', value, className, media);
+        }
+    });
 })();
