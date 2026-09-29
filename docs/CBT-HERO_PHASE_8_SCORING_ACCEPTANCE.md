@@ -1,4 +1,4 @@
-# CBT-HERO — PHASE 8A Scoring Akademik + Koreksi + Finalisasi Acceptance
+# CBT-HERO — PHASE 8 Scoring Akademik + Live Edit + Finalisasi Acceptance
 
 Tanggal baseline: 2026-09-29
 
@@ -6,10 +6,9 @@ Tanggal baseline: 2026-09-29
 > Acceptance dijalankan bersama regression Master Ujian Akademis sebelum Master
 > Ujian Psikologi. DEFERRED bukan PASS.
 
-## Cakupan Phase 8A
+## Cakupan Phase 8
 
-Phase 8A menyelesaikan fondasi scoring akademik yang dipakai oleh Attempt FINISH,
-koreksi Manager, rescore, dan finalisasi hasil:
+Phase 8 menyelesaikan scoring akademik, koreksi operasional, Live Edit, VOID, dan finalisasi hasil:
 
 - satu calculator authoritative untuk enam tipe soal akademik;
 - nilai kelompok klik dinormalisasi 0–100;
@@ -21,11 +20,16 @@ koreksi Manager, rescore, dan finalisasi hasil:
 - bobot tipe aktif dinormalisasi kembali bila suatu tipe seluruhnya VOID;
 - snapshot hasil versioned;
 - Attempt FINISHED tidak sama dengan Result FINAL;
-- finalisasi hasil idempotent dan immutable.
+- finalisasi hasil idempotent dan immutable;
+- Live Edit membuat revision baru tanpa menimpa revision lama;
+- CONTENT / KEY_WEIGHT / STRUCTURAL divalidasi terpisah;
+- STRUCTURAL mendukung PRESERVE atau REANSWER untuk Attempt aktif;
+- jawaban lama pada REANSWER masuk audit sebelum response aktif dikosongkan;
+- VOID tidak menghapus response historis;
+- Bootstrap, Sync, Status, dan revision checkpoint membaca revision aktif;
+- UI Manager menyediakan Penilaian Akademik dan Live Edit dari Daftar Soal.
 
-Live Edit revision/VOID command lengkap tetap dilanjutkan sebagai bagian Phase 8 berikutnya.
-
-## Kontrak API Phase 8A
+## Kontrak API Phase 8
 
 ```text
 GET  /manager/api/results/attempts/{attemptId}
@@ -72,10 +76,20 @@ Mutation rescore dan finalisasi wajib memakai `Idempotency-Key`.
 | S26 | Nilai Isian & Uraian pada bobot typed 40. | Ditampilkan sebagai normalized 0–100 saat complete. |
 | S27 | Nilai akhir. | Sama dengan total weighted contribution semua tipe, bukan rata-rata click dan typed. |
 | S28 | Buka detail Attempt hasil. | Manager melihat snapshot/item/response tanpa mengubah histori. |
+| S29 | Live Edit CONTENT pada Bank READY. | Revision baru terbentuk; revision lama tetap immutable; jawaban aktif dipertahankan. |
+| S30 | Live Edit CONTENT mencoba mengubah kunci/poin/struktur. | Ditolak CHANGE_KIND_MISMATCH. |
+| S31 | Live Edit KEY_WEIGHT. | Kunci/poin dapat berubah tanpa mengubah struktur; rescore memakai revision aktif. |
+| S32 | Live Edit STRUCTURAL + PRESERVE saat ada Attempt ACTIVE. | Client menerima revision baru dan jawaban lama dipertahankan jika masih kompatibel. |
+| S33 | Live Edit STRUCTURAL + REANSWER saat ada Attempt ACTIVE. | Jawaban aktif dikosongkan, jawaban lama tercatat di audit, peserta diminta menjawab ulang. |
+| S34 | VOID melalui Live Edit. | Revision VOID baru terbentuk, respons historis tetap ada, soal tidak dapat dijawab lagi dan dikeluarkan dari denominator. |
+| S35 | Participant sedang idle saat Live Edit dilakukan. | Revision diterima melalui checkpoint Status/Revisions tanpa WebSocket dan cache IndexedDB diperbarui. |
+| S36 | Live Edit menambahkan media pada revision baru. | Media baru masuk prepared assignment media dan dapat diakses participant yang berhak. |
+| S37 | Live Edit setelah Attempt FINISHED tetapi sebelum FINAL. | Attempt FINISHED tidak dibuka kembali; hasil berubah hanya melalui rescore/snapshot baru. |
+| S38 | Buka halaman Penilaian Akademik. | Operator dapat memilih Jadwal, melihat soal/respons, memberi nilai manual, rescore, dan finalisasi melalui UI Manager. |
+| S39 | Buka Daftar Soal pada Bank READY. | Aksi Live Edit tersedia; editor meminta jenis perubahan, catatan, policy struktural, dan menyediakan VOID. |
 
 ## Status
 
-**DEFERRED — implementasi Phase 8A selesai, acceptance belum dijalankan.**
+**DEFERRED — implementasi Phase 8 selesai, acceptance belum dijalankan.**
 
-Phase 8 belum dinyatakan selesai penuh sebelum Live Edit revision/VOID command dan
-checkpoint Master Ujian Akademis selesai.
+Phase 8 belum dinyatakan PASS sampai regression checkpoint akhir Master Ujian Akademis selesai.
