@@ -3,7 +3,13 @@
 <?php
 $readyPercentage = $summary['participants'] > 0
     ? min(100, (int) round($summary['ready'] * 100 / $summary['participants'])) : 0;
-$statusNames = ['DRAFT' => 'Draft', 'BERJALAN' => 'Berjalan', 'SELESAI' => 'Selesai'];
+$scheduleStatusNames = [
+    'MENUNGGU_WAKTU' => 'Menunggu Waktu',
+    'SEDANG_BERJALAN' => 'Sedang Berjalan',
+    'DITAHAN' => 'Ditahan',
+    'BATAS_MULAI_LEWAT' => 'Batas Mulai Lewat',
+    'SELESAI' => 'Selesai',
+];
 ?>
 <section class="manager-page-header dashboard-heading">
     <div>
@@ -25,7 +31,7 @@ $statusNames = ['DRAFT' => 'Draft', 'BERJALAN' => 'Berjalan', 'SELESAI' => 'Sele
         <span class="dashboard-metric-icon"><i class="bi bi-calendar2-event"></i></span>
         <span class="dashboard-metric-label">Jadwal Hari Ini</span>
         <strong class="dashboard-metric-number"><?= number_format($summary['today_schedules'], 0, ',', '.') ?></strong>
-        <span class="dashboard-metric-detail"><?= number_format($summary['running_activities'], 0, ',', '.') ?> kegiatan berjalan</span>
+        <span class="dashboard-metric-detail">Jadwal utama pada tanggal hari ini</span>
     </a>
     <a class="dashboard-metric dashboard-metric--teal" href="<?= base_url('manager/pelaksanaan/monitoring') ?>">
         <span class="dashboard-metric-icon"><i class="bi bi-display"></i></span>
@@ -58,27 +64,37 @@ $statusNames = ['DRAFT' => 'Draft', 'BERJALAN' => 'Berjalan', 'SELESAI' => 'Sele
         <section class="manager-section-card dashboard-panel h-100">
             <div class="card-header dashboard-panel-header">
                 <div>
-                    <h2>Kegiatan Terbaru</h2>
-                    <p>Status lima kegiatan terakhir.</p>
+                    <h2>Daftar Jadwal Ujian</h2>
+                    <p>Kesiapan Preparation dan status operasional jadwal terbaru.</p>
                 </div>
-                <a href="<?= base_url('manager/master-ujian/kegiatan') ?>">Lihat semua</a>
+                <a href="<?= base_url('manager/master-ujian/jadwal') ?>">Lihat semua</a>
             </div>
             <div class="card-body dashboard-activities">
-                <?php if ($recentActivities === []): ?>
+                <?php if ($recentSchedules === []): ?>
                     <div class="dashboard-empty">
-                        <strong>Belum ada kegiatan ujian.</strong>
-                        <a class="btn btn-cbt-primary btn-sm" href="<?= base_url('manager/master-ujian/kegiatan') ?>">Buka Kegiatan Ujian</a>
+                        <strong>Belum ada Jadwal Ujian.</strong>
+                        <a class="btn btn-cbt-primary btn-sm" href="<?= base_url('manager/master-ujian/jadwal') ?>">Buka Jadwal Ujian</a>
                     </div>
                 <?php else: ?>
                     <ul class="dashboard-activity-list">
-                        <?php foreach ($recentActivities as $activity): ?>
+                        <?php foreach ($recentSchedules as $schedule): ?>
                             <li>
-                                <span class="dashboard-activity-mark"><i class="bi bi-clipboard-check"></i></span>
+                                <span class="dashboard-activity-mark"><i class="bi bi-calendar-check"></i></span>
                                 <div class="dashboard-activity-copy">
-                                    <strong><?= esc($activity['nama']) ?></strong>
-                                    <span><?= esc($activity['tahun_pelajaran']) ?> · <?= esc($activity['semester']) ?></span>
+                                    <strong><?= esc($schedule['nama_mapel'] ?: $schedule['nama_bank']) ?></strong>
+                                    <span>
+                                        <?= esc($schedule['kegiatan_nama']) ?> · Tingkat <?= esc((string) ($schedule['tingkat'] ?? '-')) ?>
+                                        · <?= esc(date('d-m-Y H:i', strtotime((string) $schedule['mulai_at']))) ?>
+                                    </span>
                                 </div>
-                                <span class="dashboard-status dashboard-status--<?= esc(strtolower($activity['status']), 'attr') ?>"><?= esc($statusNames[$activity['status']] ?? $activity['status']) ?></span>
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge <?= $schedule['preparation_state'] === 'READY' ? 'text-bg-success' : 'text-bg-secondary' ?>">
+                                        <?= esc($schedule['preparation_state']) ?>
+                                    </span>
+                                    <span class="small text-secondary">
+                                        <?= esc($scheduleStatusNames[$schedule['operational_state']] ?? $schedule['operational_state']) ?>
+                                    </span>
+                                </div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
