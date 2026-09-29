@@ -165,3 +165,8 @@ body.participant-exam-mode .participant-topbar-inner{
         grid-template-columns:1fr;
     }
 }
+
+@media(min-width:992px){
+    #examPaletteToggle{display:none}
+    .exam-palette-backdrop{display:none!important}
+}
