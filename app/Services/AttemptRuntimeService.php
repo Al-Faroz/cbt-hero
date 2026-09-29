@@ -32,6 +32,7 @@ class AttemptRuntimeService
                 ? null : $ownership->iso((string) $attempt['last_sync_at']),
             'scoring_status' => (string) $attempt['scoring_status'],
             'revision_changes' => $attempt['status'] === 'ACTIVE'
+                && (int) $attempt['server_sync_revision'] > max(0, $since)
                 ? (new QuestionRuntimeItemService())->revisionChanges(
                     $db,
                     $attemptId,
