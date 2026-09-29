@@ -64,7 +64,17 @@ class AcademicAnswerService
         ));
         $correctSelected = count(array_intersect($selected, $correct));
         $wrongSelected = count(array_diff($selected, $correct));
-        $ratio = count($correct) > 0 ? max(0.0, ($correctSelected - $wrongSelected) / count($correct)) : 0.0;
+        $mode = (string) ($item['scoring_mode'] ?? 'PARTIAL');
+        if ($mode === 'ALL_OR_NOTHING') {
+            $ratio = count($selected) === count($correct)
+                && count(array_diff($selected, $correct)) === 0
+                && count(array_diff($correct, $selected)) === 0
+                ? 1.0 : 0.0;
+        } else {
+            $ratio = count($correct) > 0
+                ? max(0.0, ($correctSelected - $wrongSelected) / count($correct))
+                : 0.0;
+        }
         $score = $ratio * (float) $item['max_point'];
 
         sort($selected);
