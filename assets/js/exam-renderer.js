@@ -86,142 +86,183 @@
         return wrap;
     };
 
+    const plainText = value => String(value ?? '')
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/\[\[media:[^\]]+\]\]/gi, 'Gambar')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/\$\$?([^$]+)\$\$?/g, '$1')
+        .replace(/&apos;|&#39;/gi, "'")
+        .replace(/&quot;/gi, '"')
+        .replace(/&amp;/gi, '&')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
     const renderMatching = (item, answer) => {
         const wrap = document.createElement('div');
-        wrap.className = 'exam-matching';
+        wrap.className = 'exam-matching-v2';
 
         const current = answer?.pairs && typeof answer.pairs === 'object' ? {...answer.pairs} : {};
         const leftItems = item.matching_left || [];
         const rightChoices = item.matching_right || [];
-        const labels = new Map();
-
-        rightChoices.forEach((right, index) => {
-            labels.set(right.key, String.fromCharCode(65 + index));
-        });
+        const rightLabels = new Map(
+            rightChoices.map((right, index) => [String(right.key), String.fromCharCode(65 + index)])
+        );
 
         const hint = document.createElement('div');
         hint.className = 'exam-question-hint';
-        hint.innerHTML = '<i class="bi bi-diagram-3" aria-hidden="true"></i><span>Pasangkan setiap pernyataan di sebelah kiri dengan satu jawaban di sebelah kanan.</span>';
+        hint.innerHTML = '<i class="bi bi-diagram-3" aria-hidden="true"></i><span>Pasangkan setiap item bernomor dengan item berhuruf yang paling sesuai.</span>';
         wrap.append(hint);
 
-        const grid = document.createElement('div');
-        grid.className = 'exam-matching-grid';
+        const referenceScroll = document.createElement('div');
+        referenceScroll.className = 'exam-matching-reference-scroll';
 
-        const leftPanel = document.createElement('section');
-        leftPanel.className = 'exam-matching-panel';
-        const leftTitle = document.createElement('div');
-        leftTitle.className = 'exam-matching-panel-title';
-        leftTitle.textContent = 'Pernyataan';
-        leftPanel.append(leftTitle);
+        const reference = document.createElement('div');
+        reference.className = 'exam-matching-reference';
 
-        const rightPanel = document.createElement('section');
-        rightPanel.className = 'exam-matching-panel';
-        const rightTitle = document.createElement('div');
-        rightTitle.className = 'exam-matching-panel-title';
-        rightTitle.textContent = 'Pilihan Jawaban';
-        rightPanel.append(rightTitle);
+        const makeReferenceTable = (title, rows, side) => {
+            const table = document.createElement('section');
+            table.className = 'exam-match-ref-table ' + side;
 
-        rightChoices.forEach((right) => {
-            const answerRow = document.createElement('div');
-            answerRow.className = 'exam-matching-answer';
-            answerRow.dataset.rightKey = String(right.key);
+            const header = document.createElement('div');
+            header.className = 'exam-match-ref-header';
+            header.textContent = title;
+            table.append(header);
 
-            const badge = document.createElement('span');
-            badge.className = 'exam-matching-answer-key';
-            badge.textContent = labels.get(right.key) || String(right.key);
+            rows.forEach((row, index) => {
+                const line = document.createElement('div');
+                line.className = 'exam-match-ref-row';
 
-            const content = document.createElement('div');
-            content.className = 'exam-matching-answer-text';
-            content.append(rich(right.content_text || ''));
+                const badge = document.createElement('span');
+                badge.className = 'exam-match-badge ' + side;
+                badge.textContent = side === 'left'
+                    ? String(index + 1)
+                    : String.fromCharCode(65 + index);
 
-            answerRow.append(badge, content);
-            rightPanel.append(answerRow);
-        });
+                const content = document.createElement('div');
+                content.className = 'exam-match-ref-content';
+                content.append(rich(row.content_text || ''));
+
+                line.append(badge, content);
+                table.append(line);
+            });
+            return table;
+        };
+
+        reference.append(
+            makeReferenceTable('Pernyataan 1', leftItems, 'left'),
+            makeReferenceTable('Pernyataan 2', rightChoices, 'right')
+        );
+        referenceScroll.append(reference);
+        wrap.append(referenceScroll);
+
+        const instruction = document.createElement('div');
+        instruction.className = 'exam-match-answer-title';
+        instruction.textContent = 'Pasangkan item di atas dengan benar';
+        wrap.append(instruction);
+
+        const answerTable = document.createElement('div');
+        answerTable.className = 'exam-match-answer-table';
 
         leftItems.forEach((left, index) => {
             const row = document.createElement('div');
-            row.className = 'exam-matching-question';
+            row.className = 'exam-match-answer-row';
 
             const number = document.createElement('span');
-            number.className = 'exam-matching-question-number';
+            number.className = 'exam-match-badge left';
             number.textContent = String(index + 1);
 
-            const content = document.createElement('div');
-            content.className = 'exam-matching-question-text';
-            content.append(rich(left.content_text || ''));
+            const connector = document.createElement('span');
+            connector.className = 'exam-match-connector';
+            connector.textContent = 'Dengan';
 
             const select = document.createElement('select');
-            select.className = 'form-select exam-matching-select';
+            select.className = 'form-select exam-match-select';
             select.dataset.leftKey = String(left.key);
-            select.setAttribute('aria-label', 'Pilih pasangan untuk pernyataan ' + (index + 1));
-            select.append(new Option('Pilih jawaban', ''));
+            select.setAttribute('aria-label', 'Pasangan untuk item ' + (index + 1));
+            select.append(new Option('Pilih', ''));
 
-            for (const right of rightChoices) {
-                const label = labels.get(right.key) || String(right.key);
-                const optionText = label + ' — ' + String(right.content_text || '').replace(/<br\s*\/?>/gi, ' ').replace(/\s+/g, ' ').trim();
-                select.append(new Option(optionText, right.key));
-            }
-
-            select.value = String(current[left.key] || '');
-            select.addEventListener('change', () => {
-                const chosen = select.value || null;
-
-                if (chosen) {
-                    for (const [otherLeft, otherRight] of Object.entries(current)) {
-                        if (otherLeft !== String(left.key) && String(otherRight || '') === chosen) {
-                            current[otherLeft] = null;
-                        }
-                    }
-
-                    for (const otherSelect of wrap.querySelectorAll('select[data-left-key]')) {
-                        if (otherSelect !== select && otherSelect.value === chosen) {
-                            otherSelect.value = '';
-                        }
-                    }
-                }
-
-                current[left.key] = chosen;
-                scheduleSave({pairs: {...current}});
-
-                for (const answerNode of rightPanel.querySelectorAll('.exam-matching-answer')) {
-                    answerNode.classList.toggle(
-                        'is-used',
-                        Object.values(current).some(value => String(value || '') === answerNode.dataset.rightKey)
-                    );
-                }
+            rightChoices.forEach((right, rightIndex) => {
+                const letter = String.fromCharCode(65 + rightIndex);
+                const text = plainText(right.content_text || '');
+                select.append(new Option(letter + (text ? ' — ' + text : ''), right.key));
             });
 
-            row.append(number, content, select);
-            leftPanel.append(row);
+            select.value = String(current[left.key] || '');
+
+            const syncUsed = () => {
+                const used = new Set(
+                    Object.values(current).filter(Boolean).map(value => String(value))
+                );
+                for (const other of answerTable.querySelectorAll('select[data-left-key]')) {
+                    const own = String(other.value || '');
+                    for (const option of other.options) {
+                        if (!option.value) continue;
+                        option.disabled = used.has(String(option.value)) && String(option.value) !== own;
+                    }
+                }
+            };
+
+            select.addEventListener('change', () => {
+                current[left.key] = select.value || null;
+                scheduleSave({pairs: {...current}});
+                syncUsed();
+                updateProgress();
+            });
+
+            row.append(number, connector, select);
+            answerTable.append(row);
         });
 
-        for (const answerNode of rightPanel.querySelectorAll('.exam-matching-answer')) {
-            answerNode.classList.toggle(
-                'is-used',
-                Object.values(current).some(value => String(value || '') === answerNode.dataset.rightKey)
-            );
+        const progress = document.createElement('div');
+        progress.className = 'exam-match-progress';
+
+        const updateProgress = () => {
+            const filled = leftItems.filter(left => Boolean(current[left.key])).length;
+            progress.textContent = filled + ' dari ' + leftItems.length + ' pasangan sudah diisi';
+        };
+
+        wrap.append(answerTable, progress);
+
+        // Initial disabled-state and progress.
+        const used = new Set(Object.values(current).filter(Boolean).map(value => String(value)));
+        for (const other of answerTable.querySelectorAll('select[data-left-key]')) {
+            const own = String(other.value || '');
+            for (const option of other.options) {
+                if (!option.value) continue;
+                option.disabled = used.has(String(option.value)) && String(option.value) !== own;
+            }
         }
-
-        grid.append(leftPanel, rightPanel);
-        wrap.append(grid);
-
-        const note = document.createElement('div');
-        note.className = 'exam-matching-note';
-        note.textContent = 'Setiap pilihan jawaban hanya dapat digunakan satu kali.';
-        wrap.append(note);
+        updateProgress();
 
         return wrap;
     };
 
     const renderTextAnswer = (item, answer) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'exam-text-answer';
+
         if (item.question_type === 'URAIAN') {
+            const hint = document.createElement('div');
+            hint.className = 'exam-question-hint';
+            hint.innerHTML = '<i class="bi bi-pencil-square" aria-hidden="true"></i><span>Tuliskan jawaban secara jelas pada kotak jawaban.</span>';
+            wrap.append(hint);
             const area = document.createElement('textarea');
             area.className = 'form-control exam-answer-textarea';
             area.placeholder = 'Tulis jawaban Anda di sini...';
             area.value = String(answer?.text ?? '');
             area.addEventListener('input', () => scheduleSave({text: area.value}, false));
-            return area;
+            wrap.append(area);
+            return wrap;
         }
+
+        const hint = document.createElement('div');
+        hint.className = 'exam-question-hint';
+        hint.innerHTML = item.short_answer_mode === 'NUMERIC'
+            ? '<i class="bi bi-123" aria-hidden="true"></i><span>Masukkan jawaban berupa angka. Desimal dapat ditulis menggunakan koma.</span>'
+            : '<i class="bi bi-input-cursor-text" aria-hidden="true"></i><span>Masukkan jawaban singkat pada kolom berikut.</span>';
+        wrap.append(hint);
 
         const input = document.createElement('input');
         input.className = 'form-control';
@@ -231,7 +272,8 @@
         input.placeholder = item.short_answer_mode === 'NUMERIC' ? 'Masukkan angka' : 'Masukkan jawaban singkat';
         input.value = String(answer?.value ?? '');
         input.addEventListener('input', () => scheduleSave({value: input.value}, false));
-        return input;
+        wrap.append(input);
+        return wrap;
     };
 
     const renderIndex = async index => {
