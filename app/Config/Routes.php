@@ -361,6 +361,18 @@ $routes->group(
         $routes->post('monitoring/attempts/(:num)/force-finish', $attemptControl . 'forceFinish/$1', $examFilter);
         $routes->post('monitoring/force-finish', $attemptControl . 'forceFinish', $examFilter);
 
+        $scoring = 'Api\\Manager\\Scoring\\ScoringController::';
+        $routes->get('results/attempts/(:num)', $scoring . 'attempt/$1', $examFilter);
+        $routes->get('scoring/questions', $scoring . 'questions', $examFilter);
+        $routes->get('scoring/questions/(:num)/responses', $scoring . 'responses/$1', $examFilter);
+
+        $correction = 'Api\\Manager\\Scoring\\CorrectionController::';
+        $routes->post('scoring/responses/(:num)/manual-score', $correction . 'manualScore/$1', $examFilter);
+        $routes->post('scoring/jadwal/(:num)/rescore', $correction . 'rescore/$1', $examFilter);
+
+        $finalization = 'Api\\Manager\\Scoring\\FinalizationController::';
+        $routes->post('results/jadwal/(:num)/finalize', $finalization . 'finalize/$1', $examFilter);
+
         $routes->get(
             'users',
             'Manager\\System\\ManagerUserController::list',
