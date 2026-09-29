@@ -121,21 +121,41 @@
         const lines = normalizeText(value).split('\n');
         for (let i = 0; i < lines.length;) {
             if (/^\s*\|.*\|\s*$/.test(lines[i])) {
-                const table = document.createElement('table'); table.className = 'table table-bordered table-sm w-auto my-2';
-                let rowNumber = 0;
+                const rawRows = [];
                 while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
-                    const pieces = lines[i].trim().replace(/^\|/, '').replace(/\|$/, '').split('|');
-                    if (!pieces.every(piece => /^\s*:?-{3,}:?\s*$/.test(piece))) {
-                        const row = document.createElement('tr');
-                        for (const piece of pieces) {
-                            const cell = document.createElement(rowNumber === 0 ? 'th' : 'td');
-                            appendInline(cell, piece.trim(), media); row.append(cell);
-                        }
-                        table.append(row); rowNumber++;
-                    }
+                    rawRows.push(
+                        lines[i].trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(piece => piece.trim())
+                    );
                     i++;
                 }
-                element.append(table);
+
+                const separatorAt = rawRows.findIndex(row =>
+                    row.length > 0 && row.every(piece => /^:?-{3,}:?$/.test(piece))
+                );
+                const hasHeader = separatorAt === 1;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'cbt-rich-table-wrap';
+
+                const table = document.createElement('table');
+                table.className = 'cbt-rich-table';
+
+                rawRows.forEach((pieces, rowIndex) => {
+                    if (pieces.every(piece => /^:?-{3,}:?$/.test(piece))) return;
+
+                    const tr = document.createElement('tr');
+                    pieces.forEach((piece, colIndex) => {
+                        const tag = hasHeader && rowIndex === 0 ? 'th' : 'td';
+                        const td = document.createElement(tag);
+                        if (!hasHeader && colIndex === 0) td.classList.add('cbt-rich-table-label');
+                        appendInline(td, piece, media);
+                        tr.append(td);
+                    });
+                    table.append(tr);
+                });
+
+                wrapper.append(table);
+                element.append(wrapper);
             } else {
                 appendInline(element, lines[i], media); i++;
                 if (i < lines.length) element.append(document.createTextNode('\n'));
