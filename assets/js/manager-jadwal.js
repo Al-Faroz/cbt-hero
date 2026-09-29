@@ -120,7 +120,7 @@
             const title = document.createElement('div'); title.className = 'fw-semibold'; title.textContent = type.label;
             const detail = document.createElement('div'); detail.className = 'small text-secondary mb-2';
             detail.textContent = 'Tersedia ' + type.available + ' soal · Bobot Bank '
-                + Number(type.weight_percent).toFixed(3).replace(/\.?0+$/, '') + '%';
+                + (window.CbtNumber?.format(type.weight_percent, 3) ?? new Intl.NumberFormat('id-ID',{maximumFractionDigits:3}).format(Number(type.weight_percent))) + '%';
             const label = document.createElement('label'); label.className = 'cbt-form-label';
             label.htmlFor = 'jadwalSelect_' + type.question_type; label.textContent = 'Diambil untuk peserta';
             const input = document.createElement('input'); input.type = 'number'; input.className = 'form-control';
