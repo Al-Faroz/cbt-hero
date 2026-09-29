@@ -21,7 +21,7 @@ Phase 6 akademik mencakup:
 - recovery refresh/offline;
 - duplicate-tab guard;
 - media manifest/prefetch gambar kritis;
-- submit dua konfirmasi;
+- submit melalui satu modal konfirmasi final yang menampilkan ringkasan jawaban;
 - timeout offline → TIMEOUT_PENDING → reconnect → sync → finalize;
 - finalize idempotent;
 - provisional/complete academic result snapshot.
@@ -80,7 +80,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E19 | Tutup browser 5 menit lalu buka kembali. | Timer berkurang 5 menit; browser close tidak pause. |
 | E20 | Putus jaringan sampai timer 0. | Input lock, TIMEOUT_PENDING lokal, jawaban pending sebelum timeout tetap tersimpan. |
 | E21 | Koneksi kembali setelah E20. | Pending valid disync lalu FINALIZE TIMEOUT. |
-| E22 | Klik Selesai. | Konfirmasi dua tahap → drain queue → FINALIZE SUBMIT. |
+| E22 | Klik Selesai. | Modal menampilkan total/dijawab/belum dijawab/ditandai → konfirmasi final → drain queue → FINALIZE SUBMIT. |
 | E23 | Finalize request diulang dengan Idempotency-Key sama. | State FINISHED sama dikembalikan; snapshot tidak digandakan destruktif. |
 | E24 | Setelah FINISHED. | `attempt_active_lock` dilepas dan peserta dapat membuka ujian lain. |
 | E25 | Refresh workspace setelah FINISHED. | Dialihkan ke halaman selesai. |
