@@ -736,7 +736,7 @@ Rule final yang harus diterapkan sederhana:
 
 > **TIDAK ADA PERUBAHAN DATA PESERTA JIKA UJIAN SUDAH BERJALAN.**
 
-Untuk peserta yang terikat Kegiatan BERJALAN, blok perubahan yang mempengaruhi pelaksanaan, termasuk:
+Untuk peserta yang sedang mempunyai Attempt ACTIVE, blok perubahan master yang mempengaruhi pelaksanaan. Untuk membership/ruang/nomor peserta, lock mengikuti dependency pelaksanaan Kegiatan/first START, bukan status Kegiatan. Yang diblok termasuk:
 
 - identitas peserta;
 - NISN;
@@ -1052,7 +1052,7 @@ Baseline final:
 ✓ One Attempt = One Active Client
 ✓ Duplicate-tab = local lock ringan
 ✓ Reset Akses = invalidate client + pause timer, bukan reset Attempt
-✓ Tidak ada perubahan data peserta saat Kegiatan BERJALAN
+✓ Tidak ada perubahan data peserta saat Attempt ACTIVE / dependency pelaksanaan terkunci
 ✓ Browser biasa tidak dibuat pseudo-Exam Browser
 ✓ Exam Browser = Phase 2
 ✓ Audit hanya untuk event penting
