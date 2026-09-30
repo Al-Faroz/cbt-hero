@@ -23,7 +23,7 @@ class DashboardController extends BaseController
             ->where('credential_status', 'READY')->countAllResults();
 
         $scheduleRows = $db->table('jadwal AS j')
-            ->select('j.id, j.kegiatan_id, j.mulai_at, j.batas_mulai_at, j.durasi_seconds, j.access_state, '
+            ->select('j.id, j.kegiatan_id, j.urutan_ujian, j.mulai_at, j.batas_mulai_at, j.durasi_seconds, j.access_state, '
                 . 'j.first_attempt_started_at, j.results_finalized_at, '
                 . 'k.nama AS kegiatan_nama, b.nama_bank, b.tingkat, m.nama_mapel')
             ->join('kegiatan AS k', 'k.id = j.kegiatan_id')
