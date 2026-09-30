@@ -79,6 +79,8 @@ Implementasi yang sudah masuk sebelum acceptance manual:
 - long content memakai wrapping agar tidak memaksa page overflow;
 - tabel rich-content memakai wrapper horizontal-scroll;
 - cell tabel memakai direction auto;
+- rumus inline maupun block diberi containment/scroll lokal agar formula panjang tidak
+  melebarkan halaman utama;
 - player Drive dibedakan audio/video; audio compact dan video responsif;
 - banner offline pada mobile dipindah di atas fixed navigation;
 - palette mobile ditutup sebelum modal submit agar tidak menutupi konfirmasi;
