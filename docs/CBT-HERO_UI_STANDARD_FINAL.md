@@ -1574,10 +1574,14 @@ State:
 
 ```text
 BELUM DIBUKA
+MENUNGGU URUTAN
 BISA DIMULAI
 LANJUTKAN
 SELESAI
 ```
+
+Card menampilkan **Urutan Ujian**. Default 1. Jika `ORDER_LOCKED`, UI menjelaskan
+ujian urutan berapa/nama ujian apa yang harus diselesaikan terlebih dahulu.
 
 ---
 
@@ -1903,7 +1907,7 @@ START baru aktif jika seluruh gate lulus:
 Kontrol manual darurat memakai `TAHAN` pada Jadwal.
 
 
-# 63. STATUS PREPARATION PADA DAFTAR JADWAL
+# 63. STATUS PREPARATION DAN URUTAN PADA DAFTAR JADWAL
 
 Daftar Jadwal Manager wajib menampilkan kesiapan Preparation tanpa membuka modal:
 
@@ -1914,6 +1918,10 @@ READY → seluruh target siap; tinggal menunggu waktu dan access_state
 
 Status ini adalah **derived UI state**, bukan pengganti `prepared_assignment.status`
 dan bukan lifecycle Kegiatan.
+
+Daftar Jadwal juga wajib menampilkan kolom **Urutan**. Form Jadwal menyediakan
+`Urutan Ujian` default 1 dengan bantuan singkat bahwa nilai lebih besar menunggu
+ujian berurutan lebih kecil pada slot waktu yang sama.
 
 # 64. MENJODOHKAN — POLA UI FINAL
 
