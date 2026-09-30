@@ -191,6 +191,8 @@ Audit kode 2026-09-30 menemukan dan memperbaiki beberapa gap penting:
 - label dropdown Matching menormalisasi entity dan marker media agar tidak memanjang;
 - long content dan tabel dicegah membuat halaman utama overflow;
 - cell tabel memakai direction auto;
+- rumus inline/block memakai containment scroll lokal agar formula panjang tidak
+  melebarkan workspace;
 - audio/video Google Drive dipisahkan sizing-nya agar audio tetap compact dan video
   responsif;
 - banner offline mobile tidak lagi menutup fixed navigation;
