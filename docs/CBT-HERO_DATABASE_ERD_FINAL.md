@@ -794,6 +794,7 @@ bank_soal_id nullable
 psych_instrument_id nullable
 parent_jadwal_id nullable
 jenis_jadwal          MAIN / SUSULAN
+urutan_ujian           TINYINT UNSIGNED DEFAULT 1
 mulai_at
 batas_mulai_at
 durasi_seconds
@@ -812,7 +813,8 @@ Aturan:
 
 - tepat satu dari `bank_soal_id` atau `psych_instrument_id` terisi;
 - `parent_jadwal_id` NULL untuk MAIN;
-- Susulan menunjuk Jadwal utama;
+- `urutan_ujian` default 1; MAIN pada slot waktu sama dapat memakai 1..N untuk gate berurutan per peserta;
+- Susulan menunjuk Jadwal utama dan mewarisi urutan MAIN;
 - jumlah Susulan tidak dibatasi artificial;
 - Susulan dapat dibuat sebagai pengecualian operasional walaupun Kegiatan sudah SELESAI;
 - setting `Tampilkan Nilai Saat Selesai` terkunci setelah Attempt pertama START;
@@ -1387,6 +1389,7 @@ peserta_kegiatan(kegiatan_id, nomor_peserta) UNIQUE
 peserta_kegiatan(kegiatan_id, ruang_id)
 peserta_kegiatan(kegiatan_id, assignment_source, assignment_scope)
 jadwal(kegiatan_id, mulai_at)
+jadwal(kegiatan_id, mulai_at, batas_mulai_at, urutan_ujian)
 jadwal(parent_jadwal_id)
 jadwal_peserta_target(jadwal_id, peserta_kegiatan_id) UNIQUE
 ```
