@@ -164,9 +164,9 @@ lokal dan modal zoom gambar dengan +/−/reset serta pan/wheel.
 
 Status: **IMPLEMENTED, BELUM PASS MOBILE/REGRESSION**.
 
-## 2.5 Audit mobile seluruh tipe soal belum PASS
+## 2.5 Audit mobile seluruh tipe soal — code hardening IMPLEMENTED
 
-CSS responsive sedang direfactor, tetapi belum ada acceptance nyata untuk:
+Scope tetap:
 - PG;
 - PG Kompleks;
 - PG Bertingkat;
@@ -179,7 +179,24 @@ CSS responsive sedang direfactor, tetapi belum ada acceptance nyata untuk:
 - audio;
 - video.
 
-Status: **SEDANG DIKERJAKAN / BELUM PASS**.
+Audit kode 2026-09-30 menemukan dan memperbaiki beberapa gap penting:
+- debounce Isian/Uraian sebelumnya dapat dibatalkan saat peserta cepat pindah soal;
+- write jawaban cepat sekarang diserialisasi agar revision lokal tidak berlomba;
+- pending text di-flush sebelum navigasi, submit, page hide, dan timeout;
+- flush dari input yang sudah terjadi sebelum timeout tetap dapat dipersist walau
+  workspace sudah input-locked;
+- line break rich-content opsi/Matching dipertahankan;
+- long content dan tabel dicegah membuat halaman utama overflow;
+- cell tabel memakai direction auto;
+- audio/video Google Drive dipisahkan sizing-nya agar audio tetap compact dan video
+  responsif;
+- banner offline mobile tidak lagi menutup fixed navigation;
+- touch/input size Matching dan Isian/Uraian diperkuat.
+
+Acceptance khusus dibuat pada:
+`docs/CBT-HERO_PARTICIPANT_RENDERER_MOBILE_ACCEPTANCE.md` dengan PRM01–PRM20.
+
+Status: **IMPLEMENTED / BELUM PASS DEVICE REGRESSION**.
 
 ## 2.6 Exam Browser proof konkret
 
