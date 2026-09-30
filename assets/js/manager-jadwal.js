@@ -73,15 +73,15 @@
     const populateFilter = () => {
         const current = $('jadwalKegiatanFilter').value;
         $('jadwalKegiatanFilter').replaceChildren(new Option('Semua Kegiatan', ''),
-            ...state.options.kegiatan.map(item => new Option(item.nama + ' · ' + item.status, item.id)));
+            ...state.options.kegiatan.map(item => new Option(item.nama, item.id)));
         if ([...$('jadwalKegiatanFilter').options].some(option => option.value === current))
             $('jadwalKegiatanFilter').value = current;
     };
 
     const populateKegiatanForm = selected => {
-        const drafts = state.options.kegiatan.filter(item => item.status === 'DRAFT');
+        const activities = state.options.kegiatan;
         $('jadwalKegiatan').replaceChildren(new Option('Pilih Kegiatan', ''),
-            ...drafts.map(item => new Option(item.nama + ' · ' + item.tahun_pelajaran + ' · ' + item.semester, item.id)));
+            ...activities.map(item => new Option(item.nama + ' · ' + item.tahun_pelajaran + ' · ' + item.semester, item.id)));
         if (selected != null) $('jadwalKegiatan').value = String(selected);
     };
 
@@ -143,6 +143,7 @@
     const resetForm = () => {
         state.editing = null;
         $('jadwalForm').reset();
+        $('jadwalUrutan').value = '1';
         $('jadwalDurasi').value = '90';
         $('jadwalAccess').value = 'BUKA';
         $('jadwalModalTitle').textContent = 'Tambah Jadwal';
@@ -165,6 +166,7 @@
             $('jadwalBank').value = String(item.bank_soal_id);
             $('jadwalMulai').value = inputDate(item.mulai_at);
             $('jadwalBatasMulai').value = inputDate(item.batas_mulai_at);
+            $('jadwalUrutan').value = String(Math.max(1, Number(item.urutan_ujian) || 1));
             $('jadwalDurasi').value = String(Math.max(1, Math.round(Number(item.durasi_seconds) / 60)));
             $('jadwalAccess').value = item.access_state;
             $('jadwalShowScore').checked = Number(item.tampilkan_nilai_saat_selesai) === 1;
@@ -372,6 +374,7 @@
                     cell(item.kegiatan_nama),
                     bankCell,
                     startCell,
+                    cell(item.urutan_ujian || 1, 'text-center fw-semibold'),
                     cell(displayDate(item.batas_mulai_at), 'text-nowrap'),
                     cell(durationLabel(item.durasi_seconds), 'text-nowrap'),
                     cell(selectionLabel(item.type_selection)),
@@ -386,7 +389,7 @@
             if (!data.items.length) {
                 const row = document.createElement('tr');
                 const td = cell('Belum ada Jadwal sesuai filter.');
-                td.colSpan = 10;
+                td.colSpan = 11;
                 td.className = 'text-center text-secondary py-4';
                 row.append(td);
                 body.append(row);
@@ -431,6 +434,7 @@
                     bank_soal_id: Number($('jadwalBank').value),
                     mulai_at: $('jadwalMulai').value,
                     batas_mulai_at: $('jadwalBatasMulai').value,
+                    urutan_ujian: Number($('jadwalUrutan').value || 1),
                     durasi_seconds: Math.round(durationMinutes * 60),
                     access_state: $('jadwalAccess').value,
                     tampilkan_nilai_saat_selesai: $('jadwalShowScore').checked,
