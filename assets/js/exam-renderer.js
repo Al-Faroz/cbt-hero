@@ -12,6 +12,7 @@
     let currentItem = null;
     let textTimer = null;
     let pendingTextSave = null;
+    let writeChain = Promise.resolve();
 
     const rich = (value, className = '') =>
         window.CbtQuestionRenderer?.renderContent
@@ -28,16 +29,26 @@
         return false;
     };
 
-    const persistSnapshot = (snapshot, options = {}) =>
-        store()?.save(snapshot.itemId, snapshot.payload, snapshot.isFlagged, options);
+    const persistSnapshot = snapshot => {
+        const run = writeChain
+            .catch(() => undefined)
+            .then(() => store()?.save(
+                snapshot.itemId,
+                snapshot.payload,
+                snapshot.isFlagged,
+                {allowLocked: true}
+            ));
+        writeChain = run;
+        return run;
+    };
 
     const flushPending = async () => {
         clearTimeout(textTimer);
         textTimer = null;
         const pending = pendingTextSave;
         pendingTextSave = null;
-        if (!pending) return true;
-        await persistSnapshot(pending, {allowLocked: true});
+        if (pending) persistSnapshot(pending);
+        await writeChain;
         return true;
     };
 
