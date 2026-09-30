@@ -102,7 +102,7 @@ INVALID hanya hasil setelah Validation benar-benar gagal.
 
 # 2. Requirement terlewat / implementation gap
 
-## 2.1 Decoupling Kegiatan belum selesai 100% di service
+## 2.1 Decoupling Kegiatan dari runtime gate
 
 Runtime participant sudah tidak memakai Kegiatan BERJALAN sebagai gate.
 
@@ -124,7 +124,7 @@ Status 2026-09-30: **DIKERJAKAN**. Ditambahkan `ExecutionDependencyService`; Jad
 Kegiatan, membership, Ruang, Nomor Peserta, Peserta master, dan Bank mulai dipindah
 ke dependency nyata. Tetap harus diverifikasi pada regression.
 
-## 2.2 No Urut Ujian pada slot waktu yang sama
+## 2.2 No Urut Ujian pada slot waktu yang sama — IMPLEMENTED
 
 Requirement baru dari pengujian lapangan belum ada pada schema/API lama.
 
