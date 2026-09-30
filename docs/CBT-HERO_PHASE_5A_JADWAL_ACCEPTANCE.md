@@ -64,5 +64,5 @@ Preparation. Bobot dan aturan penilaian tetap berasal dari Bank.
 
 ## PASS
 
-Phase 5A PASS bila J01–J16 sesuai. Setelah PASS lanjut ke Preparation/Prepared
+Phase 5A PASS bila J01–J20 sesuai. Setelah PASS lanjut ke Preparation/Prepared
 Assignment sebelum Attempt Engine; START tidak boleh melakukan randomisasi berat.
