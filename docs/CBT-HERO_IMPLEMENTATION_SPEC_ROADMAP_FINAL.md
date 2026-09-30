@@ -654,10 +654,10 @@ rombel
 - assign ruang bulk;
 - generate/regenerate Nomor Peserta;
 - duplicate membership ditolak;
-- data lock saat BERJALAN server-side;
+- data lock berbasis first START/dependency pelaksanaan server-side;
 - kartu print konsisten dan credential mudah dibedakan;
 - preflight menampilkan credential/ruang/membership yang belum lengkap;
-- tidak ada perubahan peserta saat Kegiatan BERJALAN.
+- tidak ada perubahan data yang mempengaruhi pelaksanaan setelah dependency lock terbentuk.
 
 ---
 
