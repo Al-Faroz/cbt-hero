@@ -133,6 +133,23 @@ class AttemptStartService
                 }
             }
 
+            $orderBlocker = (new JadwalOrderService())->blockerForStart(
+                $db,
+                $schedule,
+                $participantId,
+                (int) $membership['id'],
+                (int) $membership['current_tingkat']
+            );
+            if ($orderBlocker !== null) {
+                $db->transRollback();
+                return $this->error(
+                    409,
+                    'EXAM_ORDER_LOCKED',
+                    'Selesaikan Ujian Urutan ' . (int) $orderBlocker['urutan_ujian']
+                        . ' (' . (string) $orderBlocker['nama_ujian'] . ') terlebih dahulu.'
+                );
+            }
+
             if ((int) $schedule['exam_browser_required'] === 1 && $examProof === '') {
                 $db->transRollback();
                 return $this->error(403, 'EXAM_BROWSER_REQUIRED', 'Ujian ini wajib dibuka melalui Exam Browser.');
