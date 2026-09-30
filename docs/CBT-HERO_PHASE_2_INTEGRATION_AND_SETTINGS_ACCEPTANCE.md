@@ -15,7 +15,7 @@ Basis kode: `d53d4ca` (Phase 2E). Jalankan pada instalasi PHP/MySQL setelah migr
 | I07 | Buat Mapel, ubah urutan/status, cari/filter, lalu hapus Mapel yang belum dipakai. | Urutan dan status tetap setelah refresh; Mapel terhapus. Penolakan hapus Mapel yang dipakai Bank Soal diuji saat Bank Soal tersedia. |
 | I08 | Periksa UI pada desktop dan mobile, termasuk tabel Peserta, modal, dan tabel staging. | Kontrol dapat digunakan; tidak ada teks sisa sebelum checkbox/tombol; tabel dapat digulir. |
 
-Pagination lintas halaman diuji menggunakan volume data nyata saat melebihi ukuran halaman. Kunci data pada Kegiatan BERJALAN dan relasi Bank Soal diuji saat modul pemakai tersedia. Catat hasil I01–I08 sebelum menyatakan Phase 2 terintegrasi.
+Pagination lintas halaman diuji menggunakan volume data nyata saat melebihi ukuran halaman. Kunci data berbasis Attempt ACTIVE/first START/dependency pelaksanaan dan relasi Bank Soal diuji saat modul pemakai tersedia. Catat hasil I01–I08 sebelum menyatakan Phase 2 terintegrasi.
 
 ## B. Settings akademik (dependency Phase 3)
 
