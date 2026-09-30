@@ -44,8 +44,8 @@ class NomorPesertaService
         try {
             $kegiatan = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
             if ($kegiatan === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.'); }
-            if ($kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Nomor Peserta hanya dapat diubah saat Kegiatan DRAFT.');
+            if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Nomor Peserta terkunci karena pelaksanaan ujian sudah pernah dimulai.');
             }
             $rows = $db->query('SELECT id, nomor_peserta, rombel_snapshot FROM peserta_kegiatan WHERE kegiatan_id = ? ORDER BY rombel_snapshot, nama_snapshot, id FOR UPDATE',
                 [$kegiatanId])->getResultArray();
