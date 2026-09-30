@@ -120,7 +120,9 @@ nyata:
 
 bukan menunggu status Kegiatan yang tidak mempunyai tombol runtime.
 
-Status: **BLOCKER DESAIN MENJELANG REGRESSION**.
+Status 2026-09-30: **DIKERJAKAN**. Ditambahkan `ExecutionDependencyService`; Jadwal,
+Kegiatan, membership, Ruang, Nomor Peserta, Peserta master, dan Bank mulai dipindah
+ke dependency nyata. Tetap harus diverifikasi pada regression.
 
 ## 2.2 No Urut Ujian pada slot waktu yang sama
 
@@ -135,15 +137,17 @@ Konsep yang sedang diusulkan:
 - rule harus participant-aware;
 - TAHAN tetap override manual.
 
-Belum ada:
-- kolom schema;
-- upgrade SQL;
-- form Jadwal;
-- list Jadwal;
-- eligibility participant;
-- acceptance test.
+Implementasi 2026-09-30:
+- kolom `jadwal.urutan_ujian` default 1 pada baseline schema;
+- upgrade SQL `CBT-HERO_ACADEMIC_FINAL_JADWAL_ORDER_UPGRADE.sql`;
+- form dan kolom daftar Jadwal;
+- kartu participant menampilkan Urutan;
+- discovery participant memakai state `ORDER_LOCKED`;
+- START backend mengulang gate secara authoritative;
+- Susulan mewarisi urutan MAIN;
+- acceptance J17–J20 ditambahkan.
 
-Status: **BELUM DIIMPLEMENTASIKAN / PERLU DIKUNCI**.
+Status: **IMPLEMENTED, BELUM PASS**.
 
 ## 2.3 Participant A-/A/A+ belum tersedia
 
@@ -359,8 +363,8 @@ Acceptance sebagai sumber utama sampai file Test Acceptance Final dikonsolidasik
 
 ```text
 A. Selesaikan Participant Renderer + Mobile
-B. Refactor sisa dependency Kegiatan DRAFT → dependency nyata
-C. Putuskan & implementasikan No Urut Ujian
+B. Verifikasi regression dependency-lock baru
+C. Verifikasi regression No Urut Ujian
 D. Selesaikan Phase 9:
    Hasil → Rekap → Analisis → Export → Live Scoring
 E. Rapikan Dashboard/Monitoring/Manager final
