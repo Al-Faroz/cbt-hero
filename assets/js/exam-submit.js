@@ -136,6 +136,7 @@
         if (runtime.inputLocked) return;
         await window.CbtExamRenderer?.flushPending?.();
         await submitSummary();
+        window.CbtExamNavigation?.closePalette?.();
         submitModal?.show();
     });
 
