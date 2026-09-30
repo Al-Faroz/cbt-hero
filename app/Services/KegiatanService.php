@@ -102,9 +102,9 @@ class KegiatanService
                 $db->transRollback();
                 return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
-            if ($old !== null && $old['status'] !== 'DRAFT') {
+            if ($old !== null && (new ExecutionDependencyService())->activityStructureLocked($db, (int) $old['id'])) {
                 $db->transRollback();
-                return $this->error(423, 'DATA_LOCKED', 'Kegiatan yang sudah berjalan tidak dapat diubah.');
+                return $this->error(423, 'DATA_LOCKED', 'Kegiatan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
             }
             if ($old !== null && $old['jenis'] !== $jenis
                 && $db->table('bank_soal')->where('kegiatan_id', $id)->countAllResults() > 0) {
@@ -143,10 +143,6 @@ class KegiatanService
             if ($old === null) {
                 $db->transRollback();
                 return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
-            }
-            if ($old['status'] !== 'DRAFT') {
-                $db->transRollback();
-                return $this->error(423, 'DATA_LOCKED', 'Hanya Kegiatan DRAFT yang dapat dihapus.');
             }
             foreach (['peserta_kegiatan', 'bank_soal', 'psych_instrument', 'jadwal'] as $table) {
                 if ($db->table($table)->where('kegiatan_id', $id)->countAllResults() > 0) {
