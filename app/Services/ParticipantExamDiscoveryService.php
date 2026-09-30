@@ -76,6 +76,7 @@ class ParticipantExamDiscoveryService
                 'j.kegiatan_id',
                 'j.parent_jadwal_id',
                 'j.jenis_jadwal',
+                'j.urutan_ujian',
                 'j.mulai_at',
                 'j.batas_mulai_at',
                 'j.durasi_seconds',
@@ -190,12 +191,20 @@ class ParticipantExamDiscoveryService
             }
 
             $preparedReady = isset($readyAssignments[$assignmentKey]);
+            $orderBlocker = (new JadwalOrderService())->blockerForStart(
+                $db,
+                $row,
+                $participantId,
+                $participantActivityId,
+                (int) $participant['tingkat']
+            );
 
             $items[] = $this->buildItem(
                 $row,
                 $attempt,
                 $preparedReady,
-                $activeAttempt
+                $activeAttempt,
+                $orderBlocker
             );
         }
 
@@ -401,7 +410,8 @@ class ParticipantExamDiscoveryService
         array $row,
         ?array $attempt,
         bool $preparedReady,
-        ?array $activeAttempt
+        ?array $activeAttempt,
+        ?array $orderBlocker
     ): array {
         $scheduleId = (int) $row['jadwal_id'];
 
@@ -450,6 +460,10 @@ class ParticipantExamDiscoveryService
             } elseif ($scheduleAccess !== 'BUKA') {
                 $availability = 'HELD';
                 $reason = 'Akses ujian sedang ditahan.';
+            } elseif ($orderBlocker !== null) {
+                $availability = 'ORDER_LOCKED';
+                $reason = 'Selesaikan Ujian Urutan ' . (int) $orderBlocker['urutan_ujian']
+                    . ' (' . (string) $orderBlocker['nama_ujian'] . ') terlebih dahulu.';
             } elseif (! $preparedReady) {
                 $availability = 'PREPARATION_NOT_READY';
                 $reason = 'Ujian sedang dipersiapkan.';
@@ -476,6 +490,7 @@ class ParticipantExamDiscoveryService
             'nama_ujian' => $subject,
             'tipe' => $type,
             'jenis_jadwal' => strtoupper((string) $row['jenis_jadwal']),
+            'urutan_ujian' => max(1, (int) ($row['urutan_ujian'] ?? 1)),
             'mulai_at' => $this->isoDate((string) $row['mulai_at']),
             'batas_mulai_at' => $this->isoDate((string) $row['batas_mulai_at']),
             'durasi_seconds' => (int) $row['durasi_seconds'],
@@ -483,6 +498,7 @@ class ParticipantExamDiscoveryService
             'ui_state' => $uiState,
             'availability' => $availability,
             'availability_message' => $reason,
+            'order_blocked_by' => $orderBlocker,
             'action_enabled' => $actionEnabled,
             'attempt_id' => $attemptId,
             'client_generation' => $attemptStatus === 'ACTIVE'
