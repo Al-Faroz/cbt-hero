@@ -70,9 +70,12 @@ Implementasi yang sudah masuk sebelum acceptance manual:
 - write jawaban dari renderer diserialisasi agar klik/input cepat tidak berlomba pada
   revision lokal;
 - debounce Isian/Uraian di-flush sebelum pindah soal, submit, page hide, dan timeout;
+- waktu input + elapsed time ikut di-snapshot saat peserta mengetik/memilih sehingga
+  flush sesudah lock tetap dapat dibuktikan sebagai input sebelum deadline;
 - flush yang berasal dari input sebelum timeout tetap boleh menyelesaikan persist lokal
   walau workspace sudah masuk state input-locked;
 - line break rich-content pada opsi dan sisi Menjodohkan dipertahankan;
+- label dropdown Menjodohkan menormalisasi entity dan meringkas marker Audio/Video;
 - long content memakai wrapping agar tidak memaksa page overflow;
 - tabel rich-content memakai wrapper horizontal-scroll;
 - cell tabel memakai direction auto;
