@@ -46,8 +46,7 @@
         const sequence = ++state.sequence;
         feedback('kegiatanFeedback', 'Memuat Kegiatan...');
         const params = new URLSearchParams({page: state.page, per_page: $('kegiatanPageSize').value,
-            q: $('kegiatanSearch').value.trim(), jenis: $('kegiatanJenisFilter').value,
-            status: $('kegiatanStatusFilter').value});
+            q: $('kegiatanSearch').value.trim(), jenis: $('kegiatanJenisFilter').value});
         try {
             const data = await api(base + '?' + params);
             if (sequence !== state.sequence) return;
@@ -57,8 +56,7 @@
                 row.append(cell(item.nama), cell(item.jenis === 'AKADEMIK' ? 'Akademik' : 'Psikologis'),
                     cell(item.tahun_pelajaran), cell(item.semester === 'GANJIL' ? 'Ganjil' : 'Genap'),
                     cell(item.keterangan),
-                    cell(Number(item.exam_browser_required) === 1 ? 'Wajib' : 'Tidak'),
-                    cell(item.status));
+                    cell(Number(item.exam_browser_required) === 1 ? 'Wajib' : 'Tidak'));
                 const actions = document.createElement('td'); actions.className = 'text-nowrap';
                 const members = document.createElement('a');
                 members.className = 'btn btn-outline-primary btn-sm me-1';
@@ -82,7 +80,7 @@
                     schedules.href = app.dataset.jadwalBase + '?kegiatan_id=' + item.id;
                     schedules.textContent = 'Jadwal'; actions.append(schedules);
                 }
-                if (item.status === 'DRAFT') {
+                if (item.structural_editable === true) {
                     actions.append(button('Edit', 'btn btn-outline-primary btn-sm me-1', () => {
                         state.editing = Number(item.id);
                         $('kegiatanNama').value = item.nama;
@@ -108,7 +106,7 @@
             }
             if (!data.items.length) {
                 const row = document.createElement('tr'), td = cell('Tidak ada Kegiatan sesuai filter.');
-                td.colSpan = 8; td.className = 'text-center text-secondary py-4';
+                td.colSpan = 7; td.className = 'text-center text-secondary py-4';
                 row.append(td); body.append(row);
             }
             state.page = Number(data.pagination.page); state.pages = Number(data.pagination.pages);
@@ -152,12 +150,12 @@
         clearTimeout(debounce);
         debounce = setTimeout(() => {state.page = 1; load();}, 300);
     });
-    for (const id of ['kegiatanJenisFilter', 'kegiatanStatusFilter', 'kegiatanPageSize']) {
+    for (const id of ['kegiatanJenisFilter', 'kegiatanPageSize']) {
         $(id).addEventListener('change', () => {state.page = 1; load();});
     }
     $('kegiatanReset').addEventListener('click', () => {
         $('kegiatanSearch').value = ''; $('kegiatanJenisFilter').value = '';
-        $('kegiatanStatusFilter').value = ''; $('kegiatanPageSize').value = '25';
+        $('kegiatanPageSize').value = '25';
         state.page = 1; load();
     });
     $('kegiatanPrevious').addEventListener('click', () => {if (state.page > 1) {state.page--; load();}});
