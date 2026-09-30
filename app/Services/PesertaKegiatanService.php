@@ -113,9 +113,9 @@ class PesertaKegiatanService
                 $db->transRollback();
                 return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
-            if ($kegiatan['status'] !== 'DRAFT') {
+            if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
                 $db->transRollback();
-                return $this->error(423, 'DATA_LOCKED', 'Keanggotaan hanya dapat diubah ketika Kegiatan DRAFT.');
+                return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian pada Kegiatan ini sudah pernah dimulai.');
             }
             $builder = $db->table('peserta AS p')->join('rombel AS r', 'r.id = p.rombel_id')
                 ->select('p.id, p.nisn, p.nama, p.jenis_kelamin, r.display_name')
@@ -180,13 +180,17 @@ class PesertaKegiatanService
             if ($kegiatan === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
-            if ($kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan sudah terkunci.');
+            if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
             }
             $row = $db->query('SELECT id FROM peserta_kegiatan WHERE id = ? AND kegiatan_id = ? FOR UPDATE',
                 [$membershipId, $kegiatanId])->getRowArray();
             if ($row === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Keanggotaan tidak ditemukan.');
+            }
+            if ((new ExecutionDependencyService())->membershipsHavePreparation($db, [$membershipId])) {
+                $db->transRollback();
+                return $this->error(409, 'DEPENDENCY_EXISTS', 'Keanggotaan sudah mempunyai Prepared Assignment. Batalkan/rebuild dependency sebelum menghapus anggota.');
             }
             $db->table('peserta_kegiatan')->where('id', $membershipId)->delete();
             $this->audit($kegiatanId, 'REMOVE', 1, $actor);
@@ -223,8 +227,8 @@ class PesertaKegiatanService
             if ($kegiatan === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
-            if ($kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan sudah terkunci.');
+            if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
             }
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $rows = $db->query('SELECT id FROM peserta_kegiatan WHERE kegiatan_id = ? AND id IN (' . $placeholders . ') ORDER BY id FOR UPDATE',
@@ -232,6 +236,10 @@ class PesertaKegiatanService
             if (count($rows) !== count($ids)) {
                 $db->transRollback();
                 return $this->error(409, 'STATE_CONFLICT', 'Ada anggota yang sudah tidak tersedia pada Kegiatan ini. Muat ulang daftar.');
+            }
+            if ((new ExecutionDependencyService())->membershipsHavePreparation($db, $ids)) {
+                $db->transRollback();
+                return $this->error(409, 'DEPENDENCY_EXISTS', 'Sebagian anggota sudah mempunyai Prepared Assignment dan tidak dapat dihapus langsung.');
             }
             $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->whereIn('id', $ids)->delete();
             $this->audit($kegiatanId, 'BULK_REMOVE', count($ids), $actor);
