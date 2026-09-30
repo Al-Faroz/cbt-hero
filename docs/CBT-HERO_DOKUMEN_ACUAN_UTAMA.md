@@ -959,6 +959,7 @@ Field utama Jadwal:
 - Mulai;
 - Batas Mulai;
 - Durasi;
+- **Urutan Ujian** (default `1`);
 - status akses `BUKA / TAHAN`;
 - `Tampilkan Nilai Saat Selesai` ON/OFF.
 
@@ -1002,6 +1003,42 @@ Tambah Waktu diterapkan pada Attempt ACTIVE dengan menambah `added_seconds` dan
 `deadline_at`; Attempt yang telah selesai tidak ditulis ulang.
 
 Semua diaudit.
+
+
+## 18.4 Urutan Ujian pada Slot Waktu Sama
+
+Setiap Jadwal MAIN memiliki `urutan_ujian` dengan default `1`.
+
+Definisi slot yang sama pada V1:
+
+```text
+kegiatan_id sama
++ mulai_at sama
++ batas_mulai_at sama
++ jenis_jadwal = MAIN
+```
+
+Aturan participant:
+
+- jika seluruh Jadwal yang menjadi hak peserta pada slot tersebut bernilai `1`, peserta bebas memilih urutan pengerjaan;
+- jika ada Jadwal urutan `1, 2, 3, ...`, Jadwal dengan urutan lebih besar baru dapat START setelah **seluruh Jadwal berurutan lebih kecil yang memang menjadi hak peserta** selesai;
+- rule bersifat participant-aware: Jadwal yang bukan target/hak peserta tidak mengunci;
+- Attempt `FINISHED` atau `SUPERSEDED` dianggap telah menyelesaikan tahap urutan tersebut;
+- `TAHAN` tetap menjadi override akses manual per Jadwal;
+- Susulan mewarisi `urutan_ujian` Jadwal MAIN induknya, tetapi gate berurutan diterapkan pada Jadwal MAIN dalam slot utama.
+
+Contoh:
+
+```text
+Akidah      urutan 1
+Matematika  urutan 1
+→ bebas memilih
+
+Akidah      urutan 1
+Matematika  urutan 2
+→ Matematika menunggu Akidah selesai
+```
+
 
 ---
 
@@ -2440,6 +2477,7 @@ Norm/category/interpretation data yang diberikan instrumen.
 - mulai;
 - batas_mulai;
 - durasi;
+- urutan_ujian default 1;
 - access_state BUKA/TAHAN;
 - tampilkan_nilai_saat_selesai;
 - visibility setting lock after first start;
@@ -2979,6 +3017,8 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-29 | 1.13 | Participant UI | Daftar Ujian hanya agenda hari ini, action menjadi Mulai Ujian, submit memakai satu modal ringkasan, Halaman Selesai memisahkan nilai klik dan ketik | Menyederhanakan flow peserta dan mengurangi ambiguity | Participant discovery/list/workspace/finish |
 | 2026-09-29 | 1.14 | Renderer Akademik | Entity/line break diperbaiki; tabel rich-content responsif; PG Kompleks diberi petunjuk multi-jawaban; Menjodohkan direfactor menjadi dua tabel referensi + tabel pasangan | Memperbaiki keterbacaan desktop/mobile dan konsistensi tipe soal | Shared renderer/Exam renderer/CSS |
 | 2026-09-29 | 1.15 | Format/UI Manager | Notasi angka Indonesia dan compact Manager UI menjadi standar; header Manager inline compact pada desktop | Menyamakan output/input numerik dan memaksimalkan viewport tabel | UI standard/Manager JS/CSS |
+| 2026-09-30 | 1.16 | Dependency Lock | Lock Kegiatan/Peserta/Ruang/Nomor/Jadwal dipindah dari status Kegiatan ke dependency pelaksanaan nyata | Kegiatan bukan sakelar runtime dan status administratif tidak boleh memblokir workflow | ExecutionDependencyService + services terkait |
+| 2026-09-30 | 1.17 | Urutan Ujian | Jadwal MAIN mendapat urutan_ujian default 1; START urutan lebih besar menunggu ujian urutan lebih kecil yang menjadi hak peserta pada slot sama | Mendukung beberapa ujian pada slot waktu sama tanpa memaksa urutan jika seluruhnya bernilai 1 | Schema/Jadwal/Participant/Attempt/UI |
 
 ---
 
