@@ -8,13 +8,13 @@ Perubahan ini dapat diperiksa **setelah R01–R07 Phase 3B selesai** agar hasil 
 - Atlassian Design, *Color*: kontras teks kecil sekurangnya 4,5:1, elemen visual penting sekurangnya 3:1. https://atlassian.design/foundations/color
 - IBM Carbon, *Color*: permukaan gelap berlapis dan token warna yang berubah sesuai tema. https://carbondesignsystem.com/elements/color/overview/
 
-Dashboard memakai empat aksen warna yang masing-masing tetap memiliki judul dan ikon. Warna status kegiatan selalu disertai teks. Satu keluarga font Ubuntu disimpan di `assets/fonts/ubuntu/` untuk halaman aplikasi; berkas `UFL.txt` memuat lisensinya.
+Dashboard memakai aksen warna yang masing-masing tetap memiliki judul dan ikon. Status operasional Jadwal/Preparation selalu disertai teks. Satu keluarga font Ubuntu disimpan di `assets/fonts/ubuntu/` untuk halaman aplikasi; berkas `UFL.txt` memuat lisensinya.
 
 | ID | Langkah | Harapan |
 | --- | --- | --- |
 | UI01 | Buka `manager/dashboard`, bandingkan angka peserta aktif, rombel aktif, mata pelajaran aktif, dan total kegiatan dengan data Master. | Angka sesuai data, bukan indikator teknis placeholder. |
 | UI02 | Buka dashboard ketika belum ada kegiatan. | Panel menyatakan belum ada kegiatan dan memberi tautan ke Kegiatan Ujian. |
-| UI03 | Buka dashboard setelah membuat Kegiatan DRAFT; kemudian muat ulang. | Kegiatan muncul dalam lima terbaru, berlabel Draft, dan jumlah kegiatan/draft bertambah. |
+| UI03 | Buka dashboard setelah membuat Jadwal dan menjalankan Preparation; kemudian muat ulang. | Daftar Jadwal terbaru tampil dengan status Preparation DRAFT/READY dan status waktu/akses yang sesuai. |
 | UI04 | Klik tombol **Tema gelap** di header lalu kunjungi Peserta, Kegiatan Ujian, dan modal formulir. | Latar, panel, tabel, formulir, menu, dan modal tetap terbaca; tombol berubah menjadi **Tema terang**. |
 | UI05 | Muat ulang halaman dan berpindah ke halaman Manager lain, lalu klik **Tema terang**. | Pilihan tema bertahan selama navigasi dan setelah muat ulang. |
 | UI06 | Periksa Dashboard pada lebar ponsel dan desktop; buka beberapa halaman Manager. | Kartu turun menjadi kolom sesuai lebar, tombol tema dapat dipakai, satu keluarga font Ubuntu digunakan pada teks dan kontrol. |
