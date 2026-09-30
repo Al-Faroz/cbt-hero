@@ -68,7 +68,9 @@
                         ? 'Waktu Mulai Berakhir'
                         : item.availability === 'HELD'
                             ? 'Ditahan'
-                            : 'Belum Dibuka',
+                            : item.availability === 'ORDER_LOCKED'
+                                ? 'Menunggu Urutan'
+                                : 'Belum Dibuka',
                     className: ''
                 };
         }
