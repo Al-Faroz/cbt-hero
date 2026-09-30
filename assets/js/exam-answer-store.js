@@ -8,8 +8,8 @@
     const uuid = () => window.crypto?.randomUUID?.()
         ?? ('mut-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 
-    const save = async (itemId, answerPayload, isFlagged) => {
-        if (runtime.inputLocked) return;
+    const save = async (itemId, answerPayload, isFlagged, options = {}) => {
+        if (runtime.inputLocked && options.allowLocked !== true) return;
         const attemptId = runtime.attemptId;
 
         const row = await db.transaction('rw', db.answer_store, db.sync_queue, async () => {
