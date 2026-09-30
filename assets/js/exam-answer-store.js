@@ -37,8 +37,12 @@
                 client_revision: revision,
                 answer_payload: answerPayload,
                 is_flagged: Boolean(isFlagged),
-                answered_at_client: new Date(runtime.serverNowMs()).toISOString(),
-                client_elapsed_ms: runtime.elapsedMs(),
+                answered_at_client: typeof options.answeredAtClient === 'string'
+                    ? options.answeredAtClient
+                    : new Date(runtime.serverNowMs()).toISOString(),
+                client_elapsed_ms: Number.isFinite(Number(options.clientElapsedMs))
+                    ? Math.max(0, Number(options.clientElapsedMs))
+                    : runtime.elapsedMs(),
                 queued_at: Date.now()
             });
             return answer;
