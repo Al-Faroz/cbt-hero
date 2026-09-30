@@ -818,7 +818,7 @@ Aturan:
 - jumlah Susulan tidak dibatasi artificial;
 - Susulan dapat dibuat sebagai pengecualian operasional walaupun Kegiatan sudah SELESAI;
 - setting `Tampilkan Nilai Saat Selesai` terkunci setelah Attempt pertama START;
-- selama BERJALAN hanya extension `batas_mulai_at` dan penambahan waktu yang diizinkan sesuai requirement;
+- setelah first START, perubahan struktural normal dikunci; extension `batas_mulai_at` dan penambahan waktu tetap melalui command operasional;
 - `results_finalized_at` mengunci perubahan scoring normal untuk Jadwal tersebut, tanpa menghalangi histori/official result dari Susulan lain.
 
 ## 9.1a `jadwal_type_selection`
