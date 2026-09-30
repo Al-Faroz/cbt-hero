@@ -561,3 +561,90 @@ body.participant-exam-mode .participant-topbar-inner{
         font-size:.74rem;
     }
 }
+
+
+/* Academic Final — participant text size controls */
+.exam-text-controls{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+}
+.exam-text-controls .btn{
+    min-width:32px;
+    min-height:32px;
+    padding:.25rem .4rem;
+    font-weight:700;
+}
+.exam-text-controls .btn.is-active{
+    border-color:var(--bs-primary);
+    background:var(--bs-primary-bg-subtle);
+    color:var(--bs-primary);
+}
+
+.exam-question-card{
+    --exam-font-scale:1;
+}
+.exam-question-card.exam-font-small{--exam-font-scale:.90}
+.exam-question-card.exam-font-normal{--exam-font-scale:1}
+.exam-question-card.exam-font-large{--exam-font-scale:1.15}
+
+.exam-question-card .exam-question-text{
+    font-size:calc(1rem * var(--exam-font-scale))!important;
+}
+.exam-question-card .exam-stimulus,
+.exam-question-card .exam-option,
+.exam-question-card .exam-question-hint,
+.exam-question-card .exam-match-ref-row,
+.exam-question-card .exam-match-select,
+.exam-question-card .exam-text-answer input,
+.exam-question-card .exam-text-answer textarea{
+    font-size:calc(.9rem * var(--exam-font-scale))!important;
+}
+.exam-question-card .cbt-rich-table{
+    font-size:calc(.88rem * var(--exam-font-scale))!important;
+}
+
+/* Click/tap any question image to zoom. */
+.exam-question-card img{
+    cursor:zoom-in;
+}
+.exam-image-modal-content{
+    min-height:min(86vh,820px);
+}
+.exam-image-stage{
+    display:grid;
+    place-items:center;
+    min-height:60vh;
+    overflow:hidden;
+    background:var(--bs-tertiary-bg);
+    touch-action:none;
+}
+.exam-image-stage img{
+    display:block;
+    max-width:100%;
+    max-height:68vh;
+    width:auto;
+    height:auto;
+    user-select:none;
+    -webkit-user-drag:none;
+    cursor:grab;
+}
+.exam-image-stage img:active{
+    cursor:grabbing;
+}
+
+@media(max-width:767.98px){
+    .exam-text-controls .btn{
+        min-width:30px;
+        min-height:30px;
+        padding:.2rem .32rem;
+        font-size:.72rem;
+    }
+    .exam-image-modal-content{
+        min-height:78vh;
+    }
+    .exam-image-stage{
+        min-height:56vh;
+        padding:.5rem;
+    }
+}
