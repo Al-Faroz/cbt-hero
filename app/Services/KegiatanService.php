@@ -46,6 +46,11 @@ class KegiatanService
         $page = min($page, $pages);
         $items = $builder->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')
             ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
+        $dependency = new ExecutionDependencyService();
+        foreach ($items as &$item) {
+            $item['structural_editable'] = ! $dependency->activityStructureLocked($db, (int) $item['id']);
+        }
+        unset($item);
         return ['items' => $items, 'pagination' => [
             'page' => $page, 'per_page' => $perPage, 'pages' => $pages,
             'total' => $total, 'filtered' => $filtered,
