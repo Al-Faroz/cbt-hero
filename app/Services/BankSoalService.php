@@ -81,8 +81,8 @@ class BankSoalService
             if ($old !== null && (int) $old['kegiatan_id'] !== $kegiatanId) {
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Bank tidak dapat dipindah ke Kegiatan lain.');
             }
-            if ($kegiatan['status'] !== 'DRAFT' || ($old !== null && $old['status'] !== 'DRAFT')) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan sudah terkunci.');
+            if ($old !== null && $old['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui edit struktural biasa.');
             }
             $mapel = $db->table('mata_pelajaran')->select('id, status')->where('id', $mapelId)->get()->getRowArray();
             if ($mapel === null || ($mapel['status'] !== 'ACTIVE' && (int) ($old['mapel_id'] ?? 0) !== $mapelId)) {
@@ -118,14 +118,12 @@ class BankSoalService
         try {
             $bank = $id > 0 ? $db->table('bank_soal')->select('kegiatan_id')->where('id', $id)->get()->getRowArray() : null;
             if ($bank === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
-                [$bank['kegiatan_id']])->getRowArray();
             $old = $db->query('SELECT * FROM bank_soal WHERE id = ? FOR UPDATE', [$id])->getRowArray();
-            if ($old === null || $kegiatan === null) {
+            if ($old === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
             }
-            if ($kegiatan['status'] !== 'DRAFT' || $old['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan sudah terkunci.');
+            if ($old['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Hanya Bank DRAFT tanpa dependency yang dapat dihapus.');
             }
             foreach (['soal', 'jadwal'] as $table) {
                 if ($db->table($table)->where('bank_soal_id', $id)->countAllResults() > 0) {
