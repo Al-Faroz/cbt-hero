@@ -89,4 +89,6 @@
     document.addEventListener('cbt:bootstrap-ready', updatePosition);
     document.addEventListener('cbt:question-rendered', updatePosition);
     document.addEventListener('cbt:answer-saved', refreshPalette);
+
+    window.CbtExamNavigation = {refreshPalette, closePalette};
 })();
