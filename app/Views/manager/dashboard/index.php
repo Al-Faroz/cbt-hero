@@ -84,6 +84,7 @@ $scheduleStatusNames = [
                                     <strong><?= esc($schedule['nama_mapel'] ?: $schedule['nama_bank']) ?></strong>
                                     <span>
                                         <?= esc($schedule['kegiatan_nama']) ?> · Tingkat <?= esc((string) ($schedule['tingkat'] ?? '-')) ?>
+                                        · Urutan <?= (int) ($schedule['urutan_ujian'] ?? 1) ?>
                                         · <?= esc(date('d-m-Y H:i', strtotime((string) $schedule['mulai_at']))) ?>
                                     </span>
                                 </div>
