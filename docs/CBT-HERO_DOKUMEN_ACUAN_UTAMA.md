@@ -929,7 +929,7 @@ Tidak ada tombol untuk membuat Kegiatan BERJALAN sebagai syarat pelaksanaan. Pek
 
 Mendukung:
 
-- peserta baru sebelum Kegiatan berjalan;
+- peserta baru sebelum first START pada Kegiatan;
 - invalidasi selektif;
 - rebuild hanya target terdampak;
 - resumable/chunked processing.
@@ -1422,15 +1422,16 @@ Uraian.
 
 Saat peserta menekan Selesai:
 
-1. Konfirmasi #1;
-2. Konfirmasi #2;
-3. drain pending queue;
-4. tunggu ACK sesuai batas wajar;
-5. server FINALIZE;
-6. Attempt → FINISHED;
-7. clear cache exam yang sudah final jika aman.
+1. tampilkan satu modal konfirmasi final;
+2. modal menampilkan total soal, sudah dijawab, belum dijawab, dan ditandai/ragu-ragu;
+3. peserta memilih Kembali Mengerjakan atau Ya, Selesaikan Ujian;
+4. drain pending queue;
+5. tunggu ACK sesuai batas wajar;
+6. server FINALIZE;
+7. Attempt → FINISHED;
+8. clear cache exam yang sudah final jika aman.
 
-Saat timeout tidak ada dua konfirmasi; input langsung dikunci dan proses finalisasi berjalan sesuai kondisi jaringan.
+Saat timeout tidak ada modal konfirmasi; input langsung dikunci dan proses finalisasi berjalan sesuai kondisi jaringan.
 
 ---
 
