@@ -675,6 +675,11 @@ body.participant-exam-mode .participant-topbar-inner{
         padding:.2rem .32rem;
         font-size:.76rem;
     }
+    .exam-question-card .exam-match-select,
+    .exam-question-card .exam-text-answer input.form-control,
+    .exam-question-card .exam-text-answer textarea.form-control{
+        font-size:max(16px,calc(.9rem * var(--exam-font-scale)))!important;
+    }
     .exam-image-modal-content{
         min-height:78vh;
     }
