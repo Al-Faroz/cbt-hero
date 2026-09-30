@@ -190,6 +190,7 @@ class SusulanService
                 'psych_instrument_id' => null,
                 'parent_jadwal_id' => $mainId,
                 'jenis_jadwal' => 'SUSULAN',
+                'urutan_ujian' => max(1, (int) ($main['urutan_ujian'] ?? 1)),
                 'mulai_at' => $data['mulai_at'],
                 'batas_mulai_at' => $data['batas_mulai_at'],
                 'durasi_seconds' => $data['durasi_seconds'],
