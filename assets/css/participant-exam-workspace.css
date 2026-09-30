@@ -340,10 +340,18 @@ body.participant-exam-mode .participant-topbar-inner{
     margin:.75rem auto;
     border-radius:8px;
 }
+.exam-question-card .cbt-math-block,
+.exam-question-card .cbt-math-inline,
 .exam-question-card .katex-display{
     max-width:100%;
     overflow-x:auto;
     overflow-y:hidden;
+}
+.exam-question-card .cbt-math-inline{
+    display:inline-block;
+    vertical-align:middle;
+}
+.exam-question-card .katex-display{
     padding:.25rem 0;
 }
 .exam-question-card .cbt-drive-media{
