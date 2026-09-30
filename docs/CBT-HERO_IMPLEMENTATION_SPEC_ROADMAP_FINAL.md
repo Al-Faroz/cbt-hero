@@ -868,6 +868,7 @@ PreparedAssignmentMediaModel
 
 - `Mulai` = earliest allowed START;
 - `Batas Mulai` = latest new START;
+- `urutan_ujian` default 1; pada slot sama, urutan lebih besar menunggu seluruh ujian berurutan lebih kecil yang menjadi hak participant;
 - participant yang sudah START tetap dapat RESUME setelah Batas Mulai;
 - timer individual dimulai dari START aktual;
 - setelah first START, perubahan struktural dilarang; perubahan operasional yang diizinkan antara lain Extend Batas Mulai dan Tambah Waktu;
@@ -911,6 +912,8 @@ START → reject NOT_PREPARED
 
 - jadwal valid dan availability otomatis mengikuti waktu;
 - status Kegiatan tidak menjadi runtime gate;
+- structural lock berbasis first START/dependency nyata, bukan status Kegiatan;
+- urutan ujian participant-aware bekerja pada slot waktu sama;
 - status Preparation DRAFT/READY terlihat langsung pada daftar Jadwal;
 - BUKA/TAHAN hanya gate;
 - TAHAN tidak menghentikan participant yang sudah berada di workspace;
