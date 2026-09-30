@@ -45,6 +45,7 @@
                         <th>Kegiatan</th>
                         <th>Bank / Mapel</th>
                         <th>Mulai</th>
+                        <th>Urutan</th>
                         <th>Batas Mulai</th>
                         <th>Durasi</th>
                         <th>Soal Diambil</th>
@@ -100,16 +101,21 @@
                             <input class="form-control" id="jadwalBatasMulai" type="datetime-local" required>
                             <div class="form-text">Batas Mulai adalah batas START baru, bukan waktu peserta harus selesai.</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="cbt-form-label" for="jadwalUrutan">Urutan Ujian</label>
+                            <input class="form-control" id="jadwalUrutan" type="number" min="1" max="99" step="1" value="1" required>
+                            <div class="form-text">Default 1. Urutan lebih besar menunggu ujian urutan sebelumnya pada slot waktu yang sama selesai.</div>
+                        </div>
+                        <div class="col-md-3">
                             <label class="cbt-form-label" for="jadwalDurasi">Durasi (menit)</label>
                             <input class="form-control" id="jadwalDurasi" type="number" min="1" step="1" value="90" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="cbt-form-label" for="jadwalAccess">Akses</label>
                             <select class="form-select" id="jadwalAccess" required><option value="BUKA">Buka</option><option value="TAHAN">Tahan</option></select>
                             <div class="form-text">TAHAN menahan peserta masuk, tetapi tidak menghentikan timer peserta yang sudah berada di ujian.</div>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-3 d-flex align-items-end">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" id="jadwalShowScore">
                                 <label class="form-check-label" for="jadwalShowScore">Tampilkan nilai saat selesai</label>
