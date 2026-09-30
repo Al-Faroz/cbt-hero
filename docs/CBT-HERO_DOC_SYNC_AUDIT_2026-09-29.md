@@ -183,9 +183,12 @@ Audit kode 2026-09-30 menemukan dan memperbaiki beberapa gap penting:
 - debounce Isian/Uraian sebelumnya dapat dibatalkan saat peserta cepat pindah soal;
 - write jawaban cepat sekarang diserialisasi agar revision lokal tidak berlomba;
 - pending text di-flush sebelum navigasi, submit, page hide, dan timeout;
+- timestamp + elapsed time jawaban di-snapshot saat input terjadi, bukan baru saat
+  debounce di-flush;
 - flush dari input yang sudah terjadi sebelum timeout tetap dapat dipersist walau
   workspace sudah input-locked;
 - line break rich-content opsi/Matching dipertahankan;
+- label dropdown Matching menormalisasi entity dan marker media agar tidak memanjang;
 - long content dan tabel dicegah membuat halaman utama overflow;
 - cell tabel memakai direction auto;
 - audio/video Google Drive dipisahkan sizing-nya agar audio tetap compact dan video
