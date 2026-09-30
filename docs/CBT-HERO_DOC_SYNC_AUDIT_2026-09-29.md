@@ -191,6 +191,7 @@ Audit kode 2026-09-30 menemukan dan memperbaiki beberapa gap penting:
 - audio/video Google Drive dipisahkan sizing-nya agar audio tetap compact dan video
   responsif;
 - banner offline mobile tidak lagi menutup fixed navigation;
+- palette mobile ditutup sebelum modal submit untuk menghindari konflik z-index;
 - touch/input size Matching dan Isian/Uraian diperkuat.
 
 Acceptance khusus dibuat pada:
