@@ -149,19 +149,20 @@ Implementasi 2026-09-30:
 
 Status: **IMPLEMENTED, BELUM PASS**.
 
-## 2.3 Participant A-/A/A+ belum tersedia
+## 2.3 Participant A-/A/A+ — IMPLEMENTED
 
 Acuan Utama dan Roadmap UI Polish mensyaratkan kontrol ukuran teks.
-Workspace saat audit belum mempunyai kontrol tersebut.
+Implementasi 2026-09-30 menambahkan A−/A/A+ pada workspace dan menyimpan pilihan
+di localStorage.
 
-Status: **BELUM DIKERJAKAN**.
+Status: **IMPLEMENTED, BELUM PASS MOBILE/REGRESSION**.
 
-## 2.4 Image zoom/Panzoom belum tersedia
+## 2.4 Image zoom/Panzoom — IMPLEMENTED
 
-Acuan Exam Shell mensyaratkan image zoom. Workspace belum memuat Panzoom dan belum
-mempunyai interaksi zoom gambar.
+Acuan Exam Shell mensyaratkan image zoom. Implementasi 2026-09-30 memuat Panzoom
+lokal dan modal zoom gambar dengan +/−/reset serta pan/wheel.
 
-Status: **BELUM DIKERJAKAN**.
+Status: **IMPLEMENTED, BELUM PASS MOBILE/REGRESSION**.
 
 ## 2.5 Audit mobile seluruh tipe soal belum PASS
 
