@@ -19,6 +19,11 @@
         </div>
 
         <div class="exam-runtime-badges">
+            <div class="exam-text-controls" role="group" aria-label="Ukuran teks soal">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-exam-font="small" aria-label="Perkecil teks">A−</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm is-active" data-exam-font="normal" aria-label="Ukuran teks normal">A</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-exam-font="large" aria-label="Perbesar teks">A+</button>
+            </div>
             <span class="exam-sync-state" id="examSyncState">Memuat...</span>
             <span class="exam-timer" id="examTimer">--:--:--</span>
         </div>
@@ -86,6 +91,30 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="examImageModal" tabindex="-1" aria-labelledby="examImageModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content exam-image-modal-content">
+            <div class="modal-header py-2">
+                <h2 class="modal-title fs-6" id="examImageModalTitle">Perbesar Gambar</h2>
+                <div class="d-flex align-items-center gap-1 ms-auto me-2">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="examImageZoomOut" aria-label="Perkecil gambar"><i class="bi bi-dash-lg"></i></button>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="examImageZoomReset" aria-label="Kembalikan ukuran gambar">100%</button>
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="examImageZoomIn" aria-label="Perbesar gambar"><i class="bi bi-plus-lg"></i></button>
+                </div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body exam-image-stage" id="examImageStage">
+                <img id="examImageZoomTarget" alt="Gambar soal diperbesar">
+            </div>
+            <div class="modal-footer py-2">
+                <span class="small text-secondary me-auto">Geser gambar saat diperbesar. Gunakan tombol +/− atau roda mouse.</span>
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="examSubmitModal" tabindex="-1" aria-labelledby="examSubmitModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -120,7 +149,9 @@
 <?= $this->section('pageScripts') ?>
 <script src="<?= base_url('assets/vendor/dexie/dexie.min.js') ?>"></script>
 <script src="<?= base_url('assets/vendor/katex/katex.min.js') ?>"></script>
+<script src="<?= base_url('assets/vendor/panzoom/panzoom.min.js') ?>"></script>
 <script src="<?= base_url('assets/js/question-renderer.js') ?>"></script>
+<script src="<?= base_url('assets/js/exam-display.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-db.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-runtime-state.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-tab-lock.js') ?>"></script>
