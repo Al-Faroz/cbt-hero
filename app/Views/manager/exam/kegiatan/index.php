@@ -12,7 +12,7 @@
     <section class="manager-section-card">
         <div class="card-body">
             <div class="row g-2 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-6">
                     <label class="cbt-form-label" for="kegiatanSearch">Cari Nama / Tahun Pelajaran</label>
                     <input class="form-control" id="kegiatanSearch" autocomplete="off">
                 </div>
@@ -20,11 +20,7 @@
                     <label class="cbt-form-label" for="kegiatanJenisFilter">Jenis</label>
                     <select class="form-select" id="kegiatanJenisFilter"><option value="">Semua</option><option value="AKADEMIK">Akademik</option><option value="PSIKOLOGIS">Psikologis</option></select>
                 </div>
-                <div class="col-6 col-md-2">
-                    <label class="cbt-form-label" for="kegiatanStatusFilter">Status</label>
-                    <select class="form-select" id="kegiatanStatusFilter"><option value="">Semua</option><option value="DRAFT">Draft</option><option value="BERJALAN">Berjalan</option><option value="SELESAI">Selesai</option></select>
-                </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <label class="cbt-form-label" for="kegiatanPageSize">Per halaman</label>
                     <select class="form-select" id="kegiatanPageSize"><option>25</option><option>50</option><option>100</option></select>
                 </div>
@@ -34,7 +30,7 @@
         </div>
         <div class="table-responsive">
             <table class="table manager-table mb-0">
-                <thead><tr><th>Nama Kegiatan</th><th>Jenis</th><th>Tahun Pelajaran</th><th>Semester</th><th>Keterangan</th><th>Exam Browser</th><th>Status</th><th>Aksi</th></tr></thead>
+                <thead><tr><th>Nama Kegiatan</th><th>Jenis</th><th>Tahun Pelajaran</th><th>Semester</th><th>Keterangan</th><th>Exam Browser</th><th>Aksi</th></tr></thead>
                 <tbody id="kegiatanRows"></tbody>
             </table>
         </div>
@@ -61,7 +57,7 @@
                     <div class="col-md-6 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="kegiatanBrowser"><label class="form-check-label" for="kegiatanBrowser">Wajib Exam Browser</label></div></div>
                 </div>
                 <div class="mb-3"><label class="cbt-form-label" for="kegiatanKeterangan">Keterangan (opsional)</label><textarea class="form-control" id="kegiatanKeterangan" maxlength="500" rows="3"></textarea></div>
-                <p class="small text-secondary">Kegiatan baru berstatus DRAFT. Tahun Pelajaran dan Semester disalin dari Settings sebagai isian awal; Anda dapat menyesuaikannya sebelum menyimpan.</p>
+                <p class="small text-secondary">Kegiatan adalah wadah ujian. Pelaksanaan peserta dikendalikan otomatis oleh waktu Jadwal, Preparation, dan BUKA/TAHAN.</p>
                 <div class="d-flex justify-content-end gap-2"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button><button class="btn btn-cbt-primary" type="submit" id="kegiatanSubmit">Simpan</button></div>
                 <div class="cbt-inline-feedback mt-2" id="kegiatanFormFeedback" role="alert"></div>
             </form>
