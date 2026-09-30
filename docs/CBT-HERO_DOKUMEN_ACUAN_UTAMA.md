@@ -517,9 +517,9 @@ Dashboard. Kesiapan operasional ditampilkan dari Jadwal + Preparation.
 
 Susulan boleh dibuat berkali-kali sesuai kebutuhan Operator. Sistem **tidak memberikan artificial limit satu kali**.
 
-Susulan adalah **pengecualian operasional resmi** terhadap lock struktur Kegiatan. Jika Kegiatan sudah berstatus `SELESAI`, Operator tetap boleh membuat Susulan baru tanpa harus melakukan workflow “buka kembali Kegiatan”. Status Kegiatan tidak perlu diputar ulang ke BERJALAN hanya untuk menjalankan Susulan.
+Susulan adalah **pengecualian operasional resmi** terhadap lock struktur yang sudah terpakai. Operator tetap boleh membuat Susulan baru sesuai dependency dan target yang valid tanpa workflow mengubah status Kegiatan.
 
-Implementasi harus memungkinkan satu Jadwal utama mempunyai N Susulan dan monitoring tetap dapat menjalankan Jadwal Susulan tersebut meskipun Kegiatan induk sudah berstatus SELESAI.
+Implementasi harus memungkinkan satu Jadwal utama mempunyai N Susulan. Status Kegiatan tidak menjadi gate Susulan.
 
 ---
 
@@ -989,7 +989,7 @@ Peserta yang sudah mempunyai Attempt dapat tetap RESUME sesuai aturan waktu Atte
 - peserta yang sudah berada di dalam workspace tetap berjalan;
 - timer tidak pause karena TAHAN.
 
-## 18.3 Perubahan Jadwal saat BERJALAN
+## 18.3 Perubahan Jadwal setelah First START
 
 Perubahan struktural dilarang.
 
