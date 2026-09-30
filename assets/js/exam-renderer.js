@@ -133,14 +133,29 @@
 
     const plainText = value => String(value ?? '')
         .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/(?:\*{1,2})?(Audio|Video)\s*:(?:\*{1,2})?\s*https:\/\/(?:www\.)?drive\.google\.com\/[^\s<]+/gi, '$1')
         .replace(/\[\[media:[^\]]+\]\]/gi, 'Gambar')
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
         .replace(/\$\$?([^$]+)\$\$?/g, '$1')
         .replace(/&apos;|&#39;/gi, "'")
         .replace(/&quot;/gi, '"')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
         .replace(/&amp;/gi, '&')
         .replace(/&nbsp;/gi, ' ')
+        .replace(/&#(\d{1,7});/g, (_, code) => {
+            const point = Number(code);
+            return Number.isInteger(point) && point >= 0 && point <= 0x10FFFF
+                ? String.fromCodePoint(point)
+                : _;
+        })
+        .replace(/&#x([0-9a-f]{1,6});/gi, (_, code) => {
+            const point = Number.parseInt(code, 16);
+            return Number.isInteger(point) && point >= 0 && point <= 0x10FFFF
+                ? String.fromCodePoint(point)
+                : _;
+        })
         .replace(/\s+/g, ' ')
         .trim();
 
