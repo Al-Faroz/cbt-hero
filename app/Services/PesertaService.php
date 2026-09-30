@@ -193,11 +193,8 @@ class PesertaService
 
     private function locked(int $id): bool
     {
-        return Database::connect()->table('peserta_kegiatan AS pk')
-            ->join('kegiatan AS k', 'k.id = pk.kegiatan_id')
-            ->where('pk.peserta_id', $id)
-            ->where('k.status', 'BERJALAN')
-            ->countAllResults() > 0;
+        $db = Database::connect();
+        return (new ExecutionDependencyService())->participantHasActiveAttempt($db, $id);
     }
 
     private function audit(int $id, string $action, ?array $before, ?array $after, array $actor): void
