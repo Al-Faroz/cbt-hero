@@ -1618,6 +1618,7 @@ bank_soal_id OR psych_instrument_id
 mulai_at
 batas_mulai_at
 durasi_seconds
+urutan_ujian
 access_state
 tampilkan_nilai_saat_selesai
 type_selection (akademik: daftar question_type + selection_count per tipe)
