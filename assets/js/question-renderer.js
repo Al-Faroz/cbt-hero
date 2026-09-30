@@ -27,18 +27,18 @@
         const url = drivePreviewUrl(value);
         if (!url) { element.append(document.createTextNode(kind + ': ' + value)); return; }
         const wrapper = document.createElement('div');
-        wrapper.className = 'cbt-drive-media border rounded p-2 my-2';
+        wrapper.className = 'cbt-drive-media cbt-drive-media-' + kind.toLowerCase() + ' border rounded p-2 my-2';
         const label = document.createElement('div');
         label.className = 'small fw-semibold mb-2';
         label.textContent = kind === 'AUDIO' ? 'Audio Google Drive' : 'Video Google Drive';
         const frame = document.createElement('iframe');
         frame.src = url; frame.loading = 'lazy'; frame.referrerPolicy = 'no-referrer';
-        frame.allow = 'autoplay; encrypted-media'; frame.title = label.textContent;
+        frame.allow = 'autoplay; encrypted-media; fullscreen'; frame.allowFullscreen = true; frame.title = label.textContent;
         frame.style.width = '100%'; frame.style.border = '0'; frame.style.display = 'block';
         if (kind === 'AUDIO') {
             frame.style.height = '120px'; frame.style.maxWidth = '620px';
         } else {
-            frame.style.aspectRatio = '16 / 9'; frame.style.minHeight = '220px';
+            frame.style.aspectRatio = '16 / 9'; frame.style.minHeight = '0';
         }
         wrapper.append(label, frame); element.append(wrapper);
     };
@@ -55,8 +55,8 @@
                 if (!asset) element.append(document.createTextNode(match[0]));
                 else if (asset.kind === 'IMAGE') {
                     const image = document.createElement('img'); image.src = asset.url;
-                    image.alt = 'Gambar soal'; image.loading = 'eager'; image.style.maxWidth = '100%';
-                    image.className = 'd-block my-2'; element.append(image);
+                    image.alt = 'Gambar soal'; image.loading = 'eager'; image.decoding = 'async'; image.style.maxWidth = '100%';
+                    image.className = 'd-block my-2 cbt-rich-image'; element.append(image);
                 } else if (asset.kind === 'AUDIO') {
                     if (asset.provider === 'GDRIVE' || driveFileId(asset.url)) renderDrive(element, 'AUDIO', asset.url);
                     else {
@@ -147,6 +147,7 @@
                     pieces.forEach((piece, colIndex) => {
                         const tag = hasHeader && rowIndex === 0 ? 'th' : 'td';
                         const td = document.createElement(tag);
+                        td.dir = 'auto';
                         if (!hasHeader && colIndex === 0) td.classList.add('cbt-rich-table-label');
                         appendInline(td, piece, media);
                         tr.append(td);
