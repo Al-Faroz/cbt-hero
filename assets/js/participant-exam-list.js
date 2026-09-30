@@ -144,7 +144,8 @@
 
         meta.append(
             createMeta('Mulai', formatDate(item.mulai_at)),
-            createMeta('Durasi', formatDuration(item.durasi_seconds))
+            createMeta('Durasi', formatDuration(item.durasi_seconds)),
+            createMeta('Urutan', String(item.urutan_ujian || 1))
         );
 
         if (item.ruang) {
