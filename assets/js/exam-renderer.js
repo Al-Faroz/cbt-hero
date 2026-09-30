@@ -11,6 +11,7 @@
     let currentPayload = null;
     let currentItem = null;
     let textTimer = null;
+    let pendingTextSave = null;
 
     const rich = (value, className = '') =>
         window.CbtQuestionRenderer?.renderContent
@@ -27,14 +28,41 @@
         return false;
     };
 
+    const persistSnapshot = (snapshot, options = {}) =>
+        store()?.save(snapshot.itemId, snapshot.payload, snapshot.isFlagged, options);
+
+    const flushPending = async () => {
+        clearTimeout(textTimer);
+        textTimer = null;
+        const pending = pendingTextSave;
+        pendingTextSave = null;
+        if (!pending) return true;
+        await persistSnapshot(pending, {allowLocked: true});
+        return true;
+    };
+
     const scheduleSave = (payload, immediate = true) => {
         currentPayload = payload;
         clearTimeout(textTimer);
+        textTimer = null;
+        if (!currentItem) return;
+
+        const snapshot = {
+            itemId: Number(currentItem.item_id),
+            payload,
+            isFlagged: Boolean(flagged?.checked)
+        };
+
         if (immediate) {
-            store()?.save(currentItem.item_id, payload, flagged.checked);
+            pendingTextSave = null;
+            persistSnapshot(snapshot);
         } else {
+            pendingTextSave = snapshot;
             textTimer = setTimeout(() => {
-                store()?.save(currentItem.item_id, currentPayload, flagged.checked);
+                const pending = pendingTextSave;
+                pendingTextSave = null;
+                textTimer = null;
+                if (pending) persistSnapshot(pending);
             }, 400);
         }
     };
@@ -279,7 +307,7 @@
     const renderIndex = async index => {
         const items = runtime.bootstrap?.package?.items || [];
         if (!items.length || index < 0 || index >= items.length || !card) return;
-        clearTimeout(textTimer);
+        await flushPending();
         runtime.currentIndex = index;
         currentItem = items[index];
 
@@ -338,9 +366,16 @@
 
     flagged?.addEventListener('change', () => {
         if (!currentItem || currentItem.voided) return;
-        store()?.save(currentItem.item_id, currentPayload, flagged.checked);
+        scheduleSave(currentPayload, true);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') void flushPending();
+    });
+    window.addEventListener('pagehide', () => {
+        void flushPending();
     });
 
     document.addEventListener('cbt:bootstrap-ready', () => renderIndex(runtime.currentIndex || 0));
-    window.CbtExamRenderer = {renderIndex, isAnswered};
+    window.CbtExamRenderer = {renderIndex, isAnswered, flushPending};
 })();
