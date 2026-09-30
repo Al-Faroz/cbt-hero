@@ -57,7 +57,7 @@ rumus lebar, dan dua tabel referensi Menjodohkan.
 | PRM13 | Uji Audio Google Drive dan Video Google Drive. | Keduanya tampil inline. Audio tetap compact; video responsif 16:9 dan tidak memaksa tinggi berlebih di layar kecil. |
 | PRM14 | Ganti A− / A / A+, pindah soal, refresh workspace. | Ukuran teks berubah konsisten pada pertanyaan, opsi, matching, tabel, dan input yang relevan; pilihan tersimpan di localStorage. |
 | PRM15 | Putus jaringan saat workspace aktif. | Banner offline terlihat tetapi tidak menutup tombol **Sebelumnya/Berikutnya** pada mobile; navigasi soal tetap dapat digunakan dari cache. |
-| PRM16 | Buka **Daftar Soal** pada mobile dan pilih nomor lain. | Palette muncul sebagai bottom sheet, backdrop bekerja, nomor mudah disentuh, lalu palette menutup setelah pilihan. |
+| PRM16 | Buka **Daftar Soal** pada mobile, pilih nomor lain, lalu buka lagi dan tekan **Selesai Ujian**. | Palette muncul sebagai bottom sheet, backdrop bekerja, nomor mudah disentuh, palette menutup setelah pilihan, dan modal konfirmasi Selesai selalu tampil di atas tanpa tertutup bottom sheet. |
 | PRM17 | Uji soal dengan string panjang/tanpa spasi, Unicode, Arab, dan aksara Jawa. | Konten tidak memaksa halaman melebar; Unicode tidak rusak; arah teks tetap wajar. |
 | PRM18 | Audit bootstrap/network response seluruh enam tipe. | Tidak ada kunci jawaban, poin opsi PG Bertingkat, pasangan benar Menjodohkan, accepted answer Isian, atau rubrik Uraian yang bocor. |
 | PRM19 | Uji refresh/re-entry setelah jawaban sudah ACK server. | Jawaban pulih dari server/cache sesuai kontrak Attempt; renderer menampilkan state yang sama. |
@@ -78,6 +78,7 @@ Implementasi yang sudah masuk sebelum acceptance manual:
 - cell tabel memakai direction auto;
 - player Drive dibedakan audio/video; audio compact dan video responsif;
 - banner offline pada mobile dipindah di atas fixed navigation;
+- palette mobile ditutup sebelum modal submit agar tidak menutupi konfirmasi;
 - select Matching dan field Isian/Uraian mendapat ukuran input/touch yang lebih aman
   pada layar kecil.
 
