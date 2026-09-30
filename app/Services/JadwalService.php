@@ -48,7 +48,7 @@ class JadwalService
         $filtered = (int) $builder->countAllResults(false);
         $pages = max(1, (int) ceil($filtered / $perPage));
         $page = min($page, $pages);
-        $items = $builder->select('j.id, j.kegiatan_id, j.bank_soal_id, j.mulai_at, j.batas_mulai_at, '
+        $items = $builder->select('j.id, j.kegiatan_id, j.bank_soal_id, j.urutan_ujian, j.mulai_at, j.batas_mulai_at, '
                 . 'j.durasi_seconds, j.access_state, j.tampilkan_nilai_saat_selesai, j.first_attempt_started_at, '
                 . 'j.results_finalized_at, '
                 . '(SELECT COUNT(*) FROM attempt a WHERE a.jadwal_id = j.id AND a.status = \'ACTIVE\') AS active_attempt_count, '
@@ -63,7 +63,8 @@ class JadwalService
             $id = (int) $item['id'];
             $item['type_selection'] = $selectionMap[$id] ?? [];
             $item['window_state'] = $this->windowState((string) $item['mulai_at'], (string) $item['batas_mulai_at']);
-            $item['structural_editable'] = $item['kegiatan_status'] === 'DRAFT' && $item['first_attempt_started_at'] === null;
+            $item['structural_editable'] = $item['first_attempt_started_at'] === null
+                && $item['results_finalized_at'] === null;
             $item['access_editable'] = $item['results_finalized_at'] === null;
 
             $prep = $preparationService->status($id);
@@ -149,7 +150,8 @@ class JadwalService
         if ($item === null) return null;
         $item['type_selection'] = $this->selectionMap($db, [$id])[$id] ?? [];
         $item['window_state'] = $this->windowState((string) $item['mulai_at'], (string) $item['batas_mulai_at']);
-        $item['structural_editable'] = $item['kegiatan_status'] === 'DRAFT' && $item['first_attempt_started_at'] === null;
+        $item['structural_editable'] = $item['first_attempt_started_at'] === null
+            && $item['results_finalized_at'] === null;
         $item['access_editable'] = $item['results_finalized_at'] === null;
         return $item;
     }
@@ -166,6 +168,7 @@ class JadwalService
         $mulai = $this->dateTime($payload['mulai_at'] ?? null);
         $batas = $this->dateTime($payload['batas_mulai_at'] ?? null);
         $duration = $this->positive($payload['durasi_seconds'] ?? null, 0);
+        $order = $this->positive($payload['urutan_ujian'] ?? null, 1);
         $access = strtoupper(trim($this->scalar($payload['access_state'] ?? null)));
         $showScore = $this->boolean($payload['tampilkan_nilai_saat_selesai'] ?? null);
         $selection = $payload['type_selection'] ?? null;
@@ -178,6 +181,7 @@ class JadwalService
         if ($mulai !== null && $batas !== null && $this->timestamp($batas) <= $this->timestamp($mulai))
             $fields['batas_mulai_at'] = 'Batas Mulai harus setelah waktu Mulai.';
         if ($duration < 1) $fields['durasi_seconds'] = 'Durasi harus lebih dari 0.';
+        if ($order < 1 || $order > 99) $fields['urutan_ujian'] = 'Urutan Ujian harus antara 1 sampai 99.';
         if (!in_array($access, ['BUKA', 'TAHAN'], true)) $fields['access_state'] = 'Pilih BUKA atau TAHAN.';
         if ($showScore === null) $fields['tampilkan_nilai_saat_selesai'] = 'Pilihan tampilkan nilai tidak valid.';
         if (!is_array($selection)) $fields['type_selection'] = 'Jumlah soal yang diambil per tipe wajib diisi.';
@@ -190,21 +194,20 @@ class JadwalService
             if ($id !== null && ($old === null || $old['jenis_jadwal'] !== 'MAIN' || $old['parent_jadwal_id'] !== null)) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
             }
-            if ($old !== null) {
-                $oldActivity = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [(int) $old['kegiatan_id']])->getRowArray();
-                if ($oldActivity === null || $oldActivity['status'] !== 'DRAFT' || $old['first_attempt_started_at'] !== null) {
-                    $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Jadwal yang sudah berjalan tidak dapat diubah secara struktural.');
-                }
+            if ($old !== null
+                && ($old['first_attempt_started_at'] !== null || $old['results_finalized_at'] !== null)) {
+                $db->transRollback();
+                return $this->error(
+                    423,
+                    'DATA_LOCKED',
+                    'Struktur Jadwal terkunci karena ujian sudah pernah START atau hasil sudah difinalkan.'
+                );
             }
 
             $activity = $db->query('SELECT id, jenis, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
             if ($activity === null || $activity['jenis'] !== 'AKADEMIK') {
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Kegiatan Akademik tidak tersedia.', ['kegiatan_id' => 'Pilih Kegiatan Akademik.']);
             }
-            if ($activity['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Jadwal utama hanya dapat disusun saat Kegiatan masih DRAFT.');
-            }
-
             $bank = $db->query('SELECT id, kegiatan_id, status, fingerprint FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
             if ($bank === null || (int) $bank['kegiatan_id'] !== $kegiatanId || $bank['status'] !== 'READY') {
                 $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Pilih Bank Soal READY dari Kegiatan yang sama.', ['bank_soal_id' => 'Bank harus READY dan berasal dari Kegiatan yang dipilih.']);
@@ -225,6 +228,7 @@ class JadwalService
                 'psych_instrument_id' => null,
                 'parent_jadwal_id' => null,
                 'jenis_jadwal' => 'MAIN',
+                'urutan_ujian' => $order,
                 'mulai_at' => $mulai,
                 'batas_mulai_at' => $batas,
                 'durasi_seconds' => $duration,
@@ -293,9 +297,9 @@ class JadwalService
             if ($old === null || $old['jenis_jadwal'] !== 'MAIN' || $old['parent_jadwal_id'] !== null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
             }
-            $activity = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE', [(int) $old['kegiatan_id']])->getRowArray();
-            if ($activity === null || $activity['status'] !== 'DRAFT' || $old['first_attempt_started_at'] !== null) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Hanya Jadwal yang belum berjalan pada Kegiatan DRAFT yang dapat dihapus.');
+            if ($old['first_attempt_started_at'] !== null || $old['results_finalized_at'] !== null) {
+                $db->transRollback();
+                return $this->error(423, 'DATA_LOCKED', 'Jadwal yang sudah pernah START atau hasilnya sudah final tidak dapat dihapus.');
             }
             if ($db->table('jadwal')->where('parent_jadwal_id', $id)->countAllResults() > 0
                 || $db->table('prepared_assignment')->where('generated_for_jadwal_id', $id)->countAllResults() > 0
