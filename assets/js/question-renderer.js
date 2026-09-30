@@ -73,7 +73,7 @@
             } else if (match[2] || match[3]) {
                 const block = Boolean(match[2]), latex = match[2] || match[3];
                 const math = document.createElement(block ? 'div' : 'span');
-                math.className = block ? 'my-2 text-center' : '';
+                math.className = block ? 'cbt-math-block my-2 text-center' : 'cbt-math-inline';
                 if (window.katex) {
                     try {window.katex.render(latex, math, {throwOnError:true, trust:false, strict:'warn', displayMode:block});}
                     catch (_) {math.textContent = match[0];}
