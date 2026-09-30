@@ -40,9 +40,10 @@
         if (finalizing) return false;
         finalizing = true;
         if (button) button.disabled = true;
-        runtime.lockInputs(reason === 'TIMEOUT' ? 'Waktu habis · menyimpan' : 'Menyelesaikan ujian...');
 
         try {
+            await window.CbtExamRenderer?.flushPending?.();
+            runtime.lockInputs(reason === 'TIMEOUT' ? 'Waktu habis · menyimpan' : 'Menyelesaikan ujian...');
             const drained = await window.CbtExamSync?.drain(timeoutMode ? 15000 : 12000);
             if (!drained) {
                 if (timeoutMode) {
@@ -133,6 +134,7 @@
 
     button?.addEventListener('click', async () => {
         if (runtime.inputLocked) return;
+        await window.CbtExamRenderer?.flushPending?.();
         await submitSummary();
         submitModal?.show();
     });
