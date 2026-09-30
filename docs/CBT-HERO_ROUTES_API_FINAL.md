@@ -464,6 +464,7 @@ tipe AKADEMIK/PSIKOLOGIS
 mulai_at
 batas_mulai_at
 durasi_seconds
+urutan_ujian              // integer 1..99, default 1
 access_state
 ui_state
 attempt_id nullable
@@ -1626,10 +1627,20 @@ Jumlah yang dipilih setiap tipe harus positif dan tidak melebihi soal aktif
 tipe tersebut di Bank. Susulan memakai komposisi Jadwal utama. Bobot tipe
 tidak disalin ke Jadwal karena berasal dari Bank.
 
-Structural edit hanya selama lifecycle mengizinkan. Pada Phase 5A, MAIN akademik
-hanya dapat dibuat/diubah saat Kegiatan DRAFT; Bank wajib READY dan berasal dari
+Structural edit MAIN diizinkan selama Jadwal belum pernah START dan hasil belum
+difinalkan. Status Kegiatan tidak menjadi gate. Bank wajib READY dan berasal dari
 Kegiatan yang sama. Endpoint `/jadwal/options` menyediakan pilihan Kegiatan,
 Bank READY, dan ringkasan tipe/soal tersedia untuk form Manager.
+
+### Urutan Ujian
+
+Kelompok slot V1 adalah Kegiatan + Mulai + Batas Mulai yang sama.
+
+- `urutan_ujian = 1` tidak mempunyai predecessor;
+- jika seluruh Jadwal yang menjadi hak participant pada slot bernilai 1, participant bebas memilih;
+- `urutan_ujian > 1` hanya dapat START bila seluruh Jadwal MAIN dengan urutan lebih kecil yang menjadi hak participant sudah `FINISHED/SUPERSEDED`;
+- Jadwal yang bukan target participant tidak mengunci;
+- jika predecessor belum selesai, START ditolak `409 EXAM_ORDER_LOCKED`.
 
 ## 32.2 BUKA / TAHAN
 
