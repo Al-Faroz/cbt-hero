@@ -36,7 +36,11 @@
                 snapshot.itemId,
                 snapshot.payload,
                 snapshot.isFlagged,
-                {allowLocked: true}
+                {
+                    allowLocked: true,
+                    answeredAtClient: snapshot.answeredAtClient,
+                    clientElapsedMs: snapshot.clientElapsedMs
+                }
             ));
         writeChain = run;
         return run;
@@ -61,7 +65,9 @@
         const snapshot = {
             itemId: Number(currentItem.item_id),
             payload,
-            isFlagged: Boolean(flagged?.checked)
+            isFlagged: Boolean(flagged?.checked),
+            answeredAtClient: new Date(runtime.serverNowMs()).toISOString(),
+            clientElapsedMs: runtime.elapsedMs()
         };
 
         if (immediate) {
