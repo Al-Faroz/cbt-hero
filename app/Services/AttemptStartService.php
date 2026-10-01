@@ -78,6 +78,10 @@ class AttemptStartService
                 return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak tersedia.');
             }
 
+            if ($schedule['results_finalized_at'] !== null) {
+                $db->transRollback();
+                return $this->error(423, 'RESULT_ALREADY_FINAL', 'Hasil Jadwal sudah FINAL dan tidak menerima Attempt baru.');
+            }
             if ($schedule['access_state'] !== 'BUKA') {
                 $db->transRollback();
                 return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan.');
