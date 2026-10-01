@@ -7,7 +7,6 @@ use DateTimeZone;
 
 class ParticipantExamDiscoveryService
 {
-    private const ALLOWED_ACTIVITY_STATUS = ['DRAFT', 'BERJALAN', 'SELESAI'];
 
     private string $timezone;
 
