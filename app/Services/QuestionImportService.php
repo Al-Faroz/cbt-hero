@@ -201,11 +201,8 @@ class QuestionImportService
             if ($job['status'] !== 'VALIDATED' || (int) $job['invalid_items'] > 0 || (int) $job['valid_items'] < 1) {
                 $db->transRollback(); return $this->error(409, 'IMPORT_NOT_READY', 'Perbaiki atau keluarkan baris invalid, lalu validasi ulang.');
             }
-            $lookup = $db->table('bank_soal')->select('kegiatan_id')->where('id', $bankId)->get()->getRowArray();
-            if ($lookup === null) throw new RuntimeException('Bank hilang.');
-            $activity = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE', [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
-            if ($activity === null || $bank === null || $activity['status'] !== 'DRAFT' || $bank['status'] !== 'DRAFT')
+            if ($bank === null || $bank['status'] !== 'DRAFT')
                 throw new RuntimeException('Bank READY tidak dapat diubah melalui impor.');
             $rows = $db->table('import_staging_items')->where('import_job_id', $id)->where('validation_status', 'VALID')
                 ->orderBy('item_no')->get()->getResultArray();
