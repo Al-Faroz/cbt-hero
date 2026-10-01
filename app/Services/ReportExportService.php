@@ -50,29 +50,9 @@ class ReportExportService
 
     private function hasil(array $query): array
     {
-        $service = new HasilUjianService();
-        $items = [];
-        $page = 1;
-        $pages = 1;
-        do {
-            $pageQuery = $query;
-            $pageQuery['page'] = $page;
-            $pageQuery['per_page'] = 100;
-            $result = $service->index($pageQuery);
-            if (!($result['ok'] ?? false)) return $result;
-
-            $pages = (int) ($result['data']['pagination']['pages'] ?? 1);
-            if ($page === 1 && $pages > 500) {
-                return $this->error(
-                    422,
-                    'EXPORT_TOO_LARGE',
-                    'Dataset export terlalu besar. Persempit filter sebelum membuat file.'
-                );
-            }
-
-            $items = array_merge($items, $result['data']['items'] ?? []);
-            $page++;
-        } while ($page <= $pages);
+        $result = (new HasilUjianService())->exportRows($query);
+        if (!($result['ok'] ?? false)) return $result;
+        $items = $result['data']['items'] ?? [];
 
         $rows = [];
         foreach ($items as $item) {
