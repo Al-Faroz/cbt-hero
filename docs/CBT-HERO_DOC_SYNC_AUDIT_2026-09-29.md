@@ -229,7 +229,7 @@ Status: **DOC/API DRIFT**.
 
 ---
 
-# 3. Akademik yang belum selesai
+# 3. Phase 9 Akademik — implementasi selesai, acceptance deferred
 
 ## 3.1 Phase 9A — Hasil Ujian
 
@@ -237,47 +237,59 @@ Implementasi: **SUDAH ADA**.
 
 Acceptance: **DEFERRED**, belum PASS.
 
-## 3.2 Rekap Nilai
+## 3.2 Rekap Nilai — IMPLEMENTED
 
-Requirement:
-- matrix Peserta × Mapel;
-- official result only;
-- export.
+Implementasi 2026-10-01:
+- matrix Peserta × Mapel/Jadwal root;
+- sumber hanya `official_result_pointer`;
+- filter Kegiatan dan Rombel;
+- status hasil belum final tetap terlihat sebagai proses;
+- export Excel dan halaman cetak/PDF mengikuti filter aktif.
 
-Controller/Service/View belum ada.
+Status: **IMPLEMENTED / BELUM PASS REGRESSION**.
 
-Status: **BELUM DIKERJAKAN**.
+## 3.3 Analisis Soal — IMPLEMENTED
 
-## 3.3 Analisis Soal
+Implementasi 2026-10-01:
+- type-aware untuk seluruh 6 tipe soal Akademik;
+- aggregate dari `result_item_snapshot` yang ditunjuk official pointer;
+- metrik peserta, rata-rata, indeks skor, nilai penuh, skor nol, dan VOID;
+- detail item memakai Attempt resmi;
+- V1 dihitung live dari snapshot resmi sehingga tidak memerlukan cache aggregate/stale flag.
 
-Requirement:
-- type-aware;
-- aggregate;
-- stale/rebuild setelah scoring/live edit.
+Status: **IMPLEMENTED / BELUM PASS REGRESSION**.
 
-Controller/Service/View belum ada.
+## 3.4 Export Excel/PDF hasil — IMPLEMENTED
 
-Status: **BELUM DIKERJAKAN**.
+`ReportExportService` menyediakan export Hasil Ujian, Rekap Nilai, dan Analisis Soal:
+- XLSX native melalui ZipArchive/XML tanpa dependency tambahan;
+- PDF memakai halaman cetak dan Save as PDF browser seperti pola Cetak Bank;
+- export Hasil Ujian tidak terbatas pada satu halaman pagination UI.
 
-## 3.4 Export Excel/PDF hasil
+Status: **IMPLEMENTED / BELUM PASS REGRESSION**.
 
-Belum ada ReportExportService/flow final sesuai roadmap Phase 9.
+## 3.5 Public Live Scoring — IMPLEMENTED
 
-Status: **BELUM DIKERJAKAN**.
-
-## 3.5 Public Live Scoring
-
-Sidebar masih unavailable.
-
-Requirement tetap:
+Implementasi 2026-10-01:
 - satu Jadwal per display;
-- URL public random;
-- 5 kolom exact;
-- click score;
-- competition rank;
-- full scroll cycle baru refresh.
+- START/STOP Manager;
+- random public URL + regenerate invalidates URL lama;
+- tabel exact: No | No Peserta | Nama | Skor | Status;
+- click score hanya PG, PG Kompleks, PG Bertingkat, Menjodohkan;
+- unanswered = 0 sementara;
+- competition rank, score sama = rank sama, secondary order No Peserta;
+- public payload tidak membawa ID internal/jawaban/kunci;
+- snapshot menggunakan query agregat, bukan N+1 per peserta;
+- fetch berikutnya hanya setelah full scroll cycle selesai;
+- Hasil Psikologis tetap tidak masuk Live Scoring.
 
-Status: **BELUM DIKERJAKAN**.
+Compatibility SQL:
+`docs/CBT-HERO_PHASE_9_REPORT_LIVE_UPGRADE.sql`
+
+Acceptance:
+`docs/CBT-HERO_PHASE_9_REPORT_LIVE_ACCEPTANCE.md`
+
+Status: **IMPLEMENTED / BELUM PASS REGRESSION**.
 
 ## 3.6 Participant finish page
 
