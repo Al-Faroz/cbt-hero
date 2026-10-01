@@ -258,13 +258,31 @@ class QuestionLiveEditService
     {
         $type = (string) $data['question_type'];
         $shape = ['type' => $type];
+
         if (in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)) {
-            $shape['option_count'] = count($data['options'] ?? []);
+            $keys = array_map(
+                static fn(array $row): string => (string) ($row['option_key'] ?? ''),
+                $data['options'] ?? []
+            );
+            sort($keys, SORT_STRING);
+            $shape['option_keys'] = $keys;
         } elseif ($type === 'MATCHING') {
-            $shape['pair_count'] = count($data['pairs'] ?? []);
+            $left = array_map(
+                static fn(array $row): string => (string) ($row['left_key'] ?? ''),
+                $data['pairs'] ?? []
+            );
+            $right = array_map(
+                static fn(array $row): string => (string) ($row['right_key'] ?? ''),
+                $data['pairs'] ?? []
+            );
+            sort($left, SORT_STRING);
+            sort($right, SORT_STRING);
+            $shape['left_keys'] = $left;
+            $shape['right_keys'] = $right;
         } elseif ($type === 'ISIAN_SINGKAT') {
             $shape['short_answer_mode'] = (string) ($data['short_answer_mode'] ?? '');
         }
+
         return hash('sha256', json_encode($shape, JSON_UNESCAPED_SLASHES));
     }
 
@@ -272,29 +290,43 @@ class QuestionLiveEditService
     {
         $type = (string) $data['question_type'];
         $score = ['type' => $type, 'max_point' => (string) $data['max_point']];
+
         if (in_array($type, ['PG', 'PG_KOMPLEKS'], true)) {
-            $score['correct'] = array_map(
-                static fn(array $row): int => (int) ($row['is_correct'] ?? 0),
-                $data['options'] ?? []
-            );
+            $correct = [];
+            foreach ($data['options'] ?? [] as $row) {
+                $correct[(string) ($row['option_key'] ?? '')] = (int) ($row['is_correct'] ?? 0);
+            }
+            ksort($correct, SORT_STRING);
+            $score['correct'] = $correct;
         } elseif ($type === 'PG_BERTINGKAT') {
-            $score['points'] = array_map(
-                static fn(array $row): string => (string) ($row['point_value'] ?? '0'),
-                $data['options'] ?? []
-            );
+            $points = [];
+            foreach ($data['options'] ?? [] as $row) {
+                $points[(string) ($row['option_key'] ?? '')] = (string) ($row['point_value'] ?? '0');
+            }
+            ksort($points, SORT_STRING);
+            $score['points'] = $points;
         } elseif ($type === 'MATCHING') {
+            $mapping = [];
+            foreach ($data['pairs'] ?? [] as $row) {
+                $mapping[(string) ($row['left_key'] ?? '')] = (string) ($row['right_key'] ?? '');
+            }
+            ksort($mapping, SORT_STRING);
+            $score['mapping'] = $mapping;
             $score['scoring_mode'] = (string) ($data['scoring_mode'] ?? '');
         } elseif ($type === 'ISIAN_SINGKAT') {
             $score['mode'] = (string) ($data['short_answer_mode'] ?? '');
             $score['expected_numeric'] = (string) ($data['expected_numeric'] ?? '');
             $score['numeric_tolerance'] = (string) ($data['numeric_tolerance'] ?? '');
-            $score['accepted'] = array_map(
+            $accepted = array_map(
                 static fn(array $row): string => (string) ($row['normalized_value'] ?? $row['accepted_value'] ?? ''),
                 $data['accepted'] ?? []
             );
+            sort($accepted, SORT_STRING);
+            $score['accepted'] = $accepted;
         } elseif ($type === 'URAIAN') {
             $score['rubric'] = (string) ($data['rubric_html'] ?? '');
         }
+
         return hash('sha256', json_encode($score, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
