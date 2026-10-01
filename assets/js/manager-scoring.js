@@ -114,8 +114,7 @@
         const current = select.value;
         select.replaceChildren(new Option('Pilih Kegiatan', ''));
         for (const item of state.kegiatan) {
-            const suffix = item.status ? ' · ' + item.status : '';
-            select.add(new Option(item.nama + suffix, item.id));
+            select.add(new Option(item.nama, item.id));
         }
         if ([...select.options].some(option => option.value === current)) select.value = current;
     };
@@ -129,7 +128,8 @@
             const mapel = item.nama_mapel || item.nama_bank || 'Jadwal #' + item.id;
             const kind = item.jenis_jadwal === 'SUSULAN' ? ' · Susulan' : '';
             const date = item.mulai_at ? ' · ' + item.mulai_at : '';
-            select.add(new Option(mapel + kind + date, item.id));
+            const final = item.results_finalized_at ? ' · FINAL' : '';
+            select.add(new Option(mapel + kind + date + final, item.id));
         }
         if (state.selectedJadwal && [...select.options].some(option => Number(option.value) === state.selectedJadwal)) {
             select.value = String(state.selectedJadwal);
@@ -141,9 +141,11 @@
 
     const updateActions = () => {
         const ready = state.selectedJadwal > 0;
+        const schedule = state.jadwal.find(item => Number(item.id) === state.selectedJadwal);
+        const finalized = Boolean(schedule?.results_finalized_at);
         $('scoringReload').disabled = !ready;
-        $('scoringRescore').disabled = !ready;
-        $('scoringFinalize').disabled = !ready;
+        $('scoringRescore').disabled = !ready || finalized;
+        $('scoringFinalize').disabled = !ready || finalized;
     };
 
     const renderQuestions = () => {
@@ -322,6 +324,12 @@
             feedback('scoringFeedback', type === 'finalize'
                 ? 'Hasil Jadwal berhasil difinalkan.'
                 : 'Hitung ulang selesai untuk ' + Number(data.rescored_count || 0) + ' Attempt.');
+            if (type === 'finalize') {
+                const schedule = state.jadwal.find(item => Number(item.id) === state.selectedJadwal);
+                if (schedule) schedule.results_finalized_at = data.results_finalized_at || new Date().toISOString();
+                updateActions();
+                populateJadwal();
+            }
             if (state.selectedQuestion) await loadResponses(state.selectedQuestion.question_id);
             await loadQuestions();
         } catch (error) {
