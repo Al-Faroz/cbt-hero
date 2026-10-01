@@ -3,6 +3,8 @@
     const app=document.getElementById('liveScoringManager');
     if(!app)return;
     const csrf=()=>document.querySelector('meta[name="csrf-token"]')?.content||'';
+    const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+        .replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const els={
         jadwal:document.getElementById('liveJadwal'),start:document.getElementById('liveStart'),
         stop:document.getElementById('liveStop'),regenerate:document.getElementById('liveRegenerate'),
@@ -19,7 +21,7 @@
     async function options(){
         const rows=await request(app.dataset.optionsApi);
         els.jadwal.innerHTML='<option value="">Pilih Jadwal</option>'+(rows||[]).map(r=>
-            '<option value="'+String(r.id)+'">'+[(r.kegiatan_nama||'Kegiatan'),(r.nama_mapel||r.nama_bank||'Ujian'),r.jenis_jadwal,(r.mulai_at||'')].join(' — ')+'</option>'
+            '<option value="'+String(Number(r.id)||0)+'">'+esc([(r.kegiatan_nama||'Kegiatan'),(r.nama_mapel||r.nama_bank||'Ujian'),r.jenis_jadwal,(r.mulai_at||'')].join(' — '))+'</option>'
         ).join('');
     }
     function render(data){
