@@ -44,6 +44,7 @@ class AcademicScoringService
         $items = [];
         $totals = [];
         $pendingManual = false;
+        $pendingTypedManual = false;
 
         foreach ($rows as $row) {
             if ($row['scoring_revision_id'] === null) {
@@ -98,6 +99,9 @@ class AcademicScoringService
                         $state = $manual === null ? 'NEEDS_REVIEW' : 'MANUAL';
                         if ($manual === null) {
                             $pendingManual = true;
+                            if (in_array($type, self::TYPED_TYPES, true)) {
+                                $pendingTypedManual = true;
+                            }
                         }
                     } else {
                         $auto = $validated['auto_score'] === null ? null : (float) $validated['auto_score'];
@@ -105,6 +109,9 @@ class AcademicScoringService
                         $state = $manual !== null ? 'MANUAL' : (string) $validated['scoring_state'];
                         if ($state === 'PENDING_MANUAL') {
                             $pendingManual = true;
+                            if (in_array($type, self::TYPED_TYPES, true)) {
+                                $pendingTypedManual = true;
+                            }
                         }
                     }
                 }
@@ -194,9 +201,9 @@ class AcademicScoringService
         unset($item);
 
         $clickScore = $clickMax > 0 ? ($clickEarned / $clickMax) * 100.0 : null;
-        $typedScore = $typedMax > 0 && !$pendingManual ? ($typedEarned / $typedMax) * 100.0 : null;
+        $typedScore = $typedMax > 0 && !$pendingTypedManual ? ($typedEarned / $typedMax) * 100.0 : null;
         $finalScore = $pendingManual ? null : array_sum($typeContribution);
-        $typedState = $typedMax <= 0 ? 'NOT_APPLICABLE' : ($pendingManual ? 'IN_PROCESS' : 'COMPLETE');
+        $typedState = $typedMax <= 0 ? 'NOT_APPLICABLE' : ($pendingTypedManual ? 'IN_PROCESS' : 'COMPLETE');
 
         return [
             'scoring_status' => $pendingManual ? 'IN_PROCESS' : 'COMPLETE',
@@ -208,6 +215,7 @@ class AcademicScoringService
                 'type_contribution' => $typeContribution,
                 'normalized_type_weight' => $normalizedWeights,
                 'pending_manual' => $pendingManual,
+                'pending_typed_manual' => $pendingTypedManual,
                 'click_max_contribution' => $clickMax,
                 'typed_max_contribution' => $typedMax,
                 'typed_score_state' => $typedState,
