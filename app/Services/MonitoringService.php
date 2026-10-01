@@ -10,11 +10,13 @@ class MonitoringService
     {
         $db = Database::connect();
 
-        $kegiatan = $db->table('kegiatan')
-            ->select('id, nama, status, tahun_pelajaran, semester')
-            ->where('jenis', 'AKADEMIK')
-            ->whereIn('status', ['BERJALAN', 'SELESAI'])
-            ->orderBy('status', 'ASC')->orderBy('id', 'DESC')
+        $kegiatan = $db->table('kegiatan AS k')
+            ->distinct()
+            ->select('k.id, k.nama, k.status, k.tahun_pelajaran, k.semester')
+            ->join('jadwal AS j', 'j.kegiatan_id = k.id')
+            ->where('k.jenis', 'AKADEMIK')
+            ->where('j.psych_instrument_id', null)
+            ->orderBy('k.id', 'DESC')
             ->get()->getResultArray();
 
         $jadwal = $db->table('jadwal AS j')
@@ -24,7 +26,7 @@ class MonitoringService
             ->join('bank_soal AS b', 'b.id = j.bank_soal_id')
             ->join('mata_pelajaran AS m', 'm.id = b.mapel_id')
             ->where('k.jenis', 'AKADEMIK')
-            ->whereIn('k.status', ['BERJALAN', 'SELESAI'])
+            ->where('j.psych_instrument_id', null)
             ->orderBy('j.mulai_at', 'DESC')->orderBy('j.id', 'DESC')
             ->get()->getResultArray();
 
