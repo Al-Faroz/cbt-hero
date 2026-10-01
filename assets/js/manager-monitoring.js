@@ -119,7 +119,7 @@
         state.options = data;
         $('monitorKegiatan').replaceChildren(
             new Option('Pilih Kegiatan', ''),
-            ...data.kegiatan.map(item => new Option(item.nama + ' · ' + item.status, item.id))
+            ...data.kegiatan.map(item => new Option(item.nama, item.id))
         );
         $('monitorRuang').replaceChildren(
             new Option('Semua Ruang', ''),
