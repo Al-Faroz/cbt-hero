@@ -350,7 +350,7 @@ class LiveScoringService
             return $row;
         }
 
-        $db->table('live_scoring_config')->insert(['id' => 1, 'enabled' => 0]);
+        $db->query('INSERT IGNORE INTO live_scoring_config (id, enabled) VALUES (1, 0)');
         return $db->table('live_scoring_config')->where('id', 1)->get()->getRowArray() ?? [
             'id' => 1,
             'enabled' => 0,
