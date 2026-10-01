@@ -27,15 +27,16 @@ class AnalisisSoalService
                 's.id AS question_id, s.stable_key, '
                 . 'MAX(ris.question_type) AS question_type, '
                 . 'COUNT(DISTINCT orp.peserta_kegiatan_id) AS participant_count, '
-                . 'SUM(CASE WHEN ris.voided = 0 THEN 1 ELSE 0 END) AS scored_count, '
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') THEN 1 ELSE 0 END) AS scored_count, "
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') THEN 1 ELSE 0 END) AS pending_count, "
                 . 'SUM(CASE WHEN ris.voided = 1 THEN 1 ELSE 0 END) AS voided_count, '
-                . 'SUM(CASE WHEN ris.voided = 0 THEN ris.raw_score ELSE 0 END) AS raw_total, '
-                . 'SUM(CASE WHEN ris.voided = 0 THEN ris.max_point ELSE 0 END) AS max_total, '
-                . 'AVG(CASE WHEN ris.voided = 0 AND ris.max_point > 0 '
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') THEN ris.raw_score ELSE 0 END) AS raw_total, "
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') THEN ris.max_point ELSE 0 END) AS max_total, "
+                . "AVG(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') AND ris.max_point > 0 "
                 . 'THEN (ris.raw_score / ris.max_point) * 100 ELSE NULL END) AS average_percent, '
-                . 'SUM(CASE WHEN ris.voided = 0 AND ris.max_point > 0 '
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') AND ris.max_point > 0 "
                 . 'AND ris.raw_score >= ris.max_point THEN 1 ELSE 0 END) AS full_score_count, '
-                . 'SUM(CASE WHEN ris.voided = 0 AND COALESCE(ris.raw_score, 0) = 0 THEN 1 ELSE 0 END) AS zero_score_count',
+                . "SUM(CASE WHEN ris.voided = 0 AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ris.payload_json, '$.scoring_state')), '') NOT IN ('PENDING','PENDING_MANUAL','NEEDS_REVIEW') AND COALESCE(ris.raw_score, 0) = 0 THEN 1 ELSE 0 END) AS zero_score_count',
                 false
             )
             ->join('result_item_snapshot AS ris', 'ris.result_snapshot_id = orp.result_snapshot_id')
@@ -69,6 +70,7 @@ class AnalisisSoalService
             $item['revision_count'] = is_array($meta) ? (int) ($meta['revision_count'] ?? 0) : 0;
             $item['participant_count'] = (int) $item['participant_count'];
             $item['scored_count'] = $scored;
+            $item['pending_count'] = (int) ($item['pending_count'] ?? 0);
             $item['voided_count'] = (int) $item['voided_count'];
             $item['average_percent'] = $item['average_percent'] === null
                 ? null : round((float) $item['average_percent'], 2);
@@ -130,6 +132,10 @@ class AnalisisSoalService
             ->orderBy('a.rombel_snapshot', 'ASC')
             ->orderBy('a.nama_snapshot', 'ASC')
             ->get()->getResultArray();
+
+        if (!$rows) {
+            return $this->error(404, 'NOT_FOUND', 'Soal tidak ditemukan pada hasil resmi Jadwal ini.');
+        }
 
         $revisionIds = [];
         foreach ($rows as $row) {
