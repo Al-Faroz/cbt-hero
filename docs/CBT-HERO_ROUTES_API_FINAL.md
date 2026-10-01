@@ -51,7 +51,7 @@ MANAGER UI + MANAGER API
 
 PUBLIC DISPLAY
 /live/{publicToken}
-/api/public/live/{publicToken}/snapshot
+/api/live/{publicToken}
 ```
 
 ## 1.1 Participant Realm
@@ -976,15 +976,14 @@ GET  /manager/api/auth/session
 
 Manager session terpisah dari participant session namespace.
 
-## 18.3 Dashboard API
+## 18.3 Dashboard Data
 
-```text
-GET /manager/api/dashboard/summary
-GET /manager/api/dashboard/active-schedules
-GET /manager/api/dashboard/preflight-warnings
-```
+Dashboard Manager V1 dirender server-side pada `GET /manager/dashboard` dan membaca
+ringkasan Jadwal/Preparation melalui service internal. Implementasi V1 tidak mempunyai
+kontrak `/manager/api/dashboard/*`.
 
-Dashboard API non-kritis dan boleh diturunkan refresh-nya di bawah high load.
+Jika di masa depan dibutuhkan refresh parsial, endpoint API dashboard harus ditambahkan
+melalui revisi eksplisit kontrak.
 
 ---
 
@@ -2742,8 +2741,8 @@ $routes->group('manager', static function ($routes) {
     });
 });
 
-$routes->get('live/(:segment)', 'PublicLiveScoring::index/$1');
-$routes->get('api/public/live/(:segment)/snapshot', 'PublicLiveScoring::snapshot/$1');
+$routes->get('live/(:segment)', 'Live\\LiveScoringController::index/$1');
+$routes->get('api/live/(:segment)', 'Live\\LiveScoringController::snapshot/$1');
 ```
 
 Actual filter composition harus tetap memisahkan:
