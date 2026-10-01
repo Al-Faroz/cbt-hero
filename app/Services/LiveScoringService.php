@@ -53,22 +53,33 @@ class LiveScoringService
             return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
         }
 
-        $config = $this->config($db);
-        $token = trim((string) ($config['public_token'] ?? ''));
-        if ($token === '') {
-            $token = $this->token();
-        }
-
-        $now = date('Y-m-d H:i:s');
         $actorId = (int) ($actor['user_id'] ?? 0);
-        $db->table('live_scoring_config')->where('id', 1)->update([
-            'enabled' => 1,
-            'jadwal_id' => $jadwalId,
-            'public_token' => $token,
-            'started_at' => $now,
-            'stopped_at' => null,
-            'updated_by' => $actorId > 0 ? $actorId : null,
-        ]);
+        $db->transBegin();
+        try {
+            $config = $this->configForUpdate($db);
+            $token = trim((string) ($config['public_token'] ?? ''));
+            if ($token === '') {
+                $token = $this->token();
+            }
+
+            $now = date('Y-m-d H:i:s');
+            $db->table('live_scoring_config')->where('id', 1)->update([
+                'enabled' => 1,
+                'jadwal_id' => $jadwalId,
+                'public_token' => $token,
+                'started_at' => $now,
+                'stopped_at' => null,
+                'updated_by' => $actorId > 0 ? $actorId : null,
+            ]);
+
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit START Live Scoring gagal.');
+            }
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'START Live Scoring gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Live Scoring belum dapat diaktifkan.');
+        }
 
         (new AuditService())->log(
             'MANAGER',
@@ -90,15 +101,26 @@ class LiveScoringService
     public function stop(array $actor): array
     {
         $db = Database::connect();
-        $config = $this->config($db);
         $actorId = (int) ($actor['user_id'] ?? 0);
-        $jadwalId = $config['jadwal_id'] === null ? null : (int) $config['jadwal_id'];
+        $db->transBegin();
+        try {
+            $config = $this->configForUpdate($db);
+            $jadwalId = $config['jadwal_id'] === null ? null : (int) $config['jadwal_id'];
 
-        $db->table('live_scoring_config')->where('id', 1)->update([
-            'enabled' => 0,
-            'stopped_at' => date('Y-m-d H:i:s'),
-            'updated_by' => $actorId > 0 ? $actorId : null,
-        ]);
+            $db->table('live_scoring_config')->where('id', 1)->update([
+                'enabled' => 0,
+                'stopped_at' => date('Y-m-d H:i:s'),
+                'updated_by' => $actorId > 0 ? $actorId : null,
+            ]);
+
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit STOP Live Scoring gagal.');
+            }
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'STOP Live Scoring gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Live Scoring belum dapat dihentikan.');
+        }
 
         (new AuditService())->log(
             'MANAGER',
@@ -120,14 +142,24 @@ class LiveScoringService
     public function regenerate(array $actor): array
     {
         $db = Database::connect();
-        $config = $this->config($db);
         $actorId = (int) ($actor['user_id'] ?? 0);
+        $db->transBegin();
+        try {
+            $config = $this->configForUpdate($db);
+            $db->table('live_scoring_config')->where('id', 1)->update([
+                'public_token' => $this->token(),
+                'public_token_version' => ((int) ($config['public_token_version'] ?? 1)) + 1,
+                'updated_by' => $actorId > 0 ? $actorId : null,
+            ]);
 
-        $db->table('live_scoring_config')->where('id', 1)->update([
-            'public_token' => $this->token(),
-            'public_token_version' => ((int) ($config['public_token_version'] ?? 1)) + 1,
-            'updated_by' => $actorId > 0 ? $actorId : null,
-        ]);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit regenerate URL Live Scoring gagal.');
+            }
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Regenerate URL Live Scoring gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'URL publik belum dapat diganti.');
+        }
 
         (new AuditService())->log(
             'MANAGER',
@@ -295,6 +327,21 @@ class LiveScoringService
             'stopped_at' => $config['stopped_at'] ?? null,
             'schedule' => $schedule,
         ];
+    }
+
+    private function configForUpdate($db): array
+    {
+        $db->query('INSERT IGNORE INTO live_scoring_config (id, enabled) VALUES (1, 0)');
+        return $db->query('SELECT * FROM live_scoring_config WHERE id = 1 FOR UPDATE')
+            ->getRowArray() ?? [
+                'id' => 1,
+                'enabled' => 0,
+                'jadwal_id' => null,
+                'public_token' => null,
+                'public_token_version' => 1,
+                'started_at' => null,
+                'stopped_at' => null,
+            ];
     }
 
     private function config($db): array
