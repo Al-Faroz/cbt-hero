@@ -25,7 +25,8 @@ class ManualOverrideService
         try {
             $row = $db->query(
                 'SELECT ar.*, a.jadwal_id, a.root_jadwal_id, a.peserta_kegiatan_id, a.prepared_assignment_id, '
-                . 'a.status AS attempt_status, j.results_finalized_at, sr.max_point '
+                . 'a.status AS attempt_status, j.results_finalized_at, s.status AS question_status, '
+                . 'sr.max_point, sr.change_kind '
                 . 'FROM attempt_response ar '
                 . 'JOIN attempt a ON a.id = ar.attempt_id '
                 . 'JOIN jadwal j ON j.id = a.jadwal_id '
@@ -47,6 +48,11 @@ class ManualOverrideService
             if ((string) $row['attempt_status'] !== 'FINISHED') {
                 $db->transRollback();
                 return $this->error(409, 'STATE_CONFLICT', 'Nilai manual hanya dapat diberikan pada Attempt yang sudah selesai.');
+            }
+            if ((string) ($row['question_status'] ?? '') === 'VOID'
+                || (string) ($row['change_kind'] ?? '') === 'VOID') {
+                $db->transRollback();
+                return $this->error(423, 'QUESTION_VOID', 'Soal VOID dikeluarkan dari scoring dan tidak dapat diberi nilai manual.');
             }
 
             $max = max(0.0, (float) $row['max_point']);
