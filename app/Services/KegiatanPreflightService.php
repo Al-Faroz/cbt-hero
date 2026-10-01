@@ -30,7 +30,7 @@ class KegiatanPreflightService
     public function inspect(int $kegiatanId): ?array
     {
         $db = Database::connect();
-        $kegiatan = $kegiatanId > 0 ? $db->table('kegiatan')->select('id, nama, tahun_pelajaran, semester, status')
+        $kegiatan = $kegiatanId > 0 ? $db->table('kegiatan')->select('id, nama, tahun_pelajaran, semester')
             ->where('id', $kegiatanId)->get()->getRowArray() : null;
         if ($kegiatan === null) return null;
 
