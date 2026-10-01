@@ -21,6 +21,8 @@
         pageInfo: document.getElementById('hasilPageInfo'),
         prev: document.getElementById('hasilPrev'),
         next: document.getElementById('hasilNext'),
+        excel: document.getElementById('hasilExcel'),
+        pdf: document.getElementById('hasilPdf'),
         detailTitle: document.getElementById('hasilDetailTitle'),
         detailBody: document.getElementById('hasilDetailBody'),
     };
@@ -43,8 +45,8 @@
     async function getJson(url) {
         const response = await fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.success === false) {
-            throw new Error(payload.message || 'Data belum dapat dimuat.');
+        if (!response.ok || payload.ok === false) {
+            throw new Error(payload.error?.message || payload.message || 'Data belum dapat dimuat.');
         }
         return payload.data ?? payload;
     }
@@ -82,6 +84,13 @@
         if (els.rombel.value) p.set('rombel', els.rombel.value);
         if (els.final.value !== '') p.set('final', els.final.value);
         if (els.search.value.trim()) p.set('q', els.search.value.trim());
+        return p;
+    }
+
+    function exportParams() {
+        const p = params();
+        p.delete('page');
+        p.delete('per_page');
         return p;
     }
 
@@ -184,6 +193,12 @@
     els.rows.addEventListener('click', e => {
         const button = e.target.closest('[data-result-detail]');
         if (button) showDetail(button.dataset.resultDetail);
+    });
+    els.excel?.addEventListener('click', () => {
+        window.location.assign(app.dataset.exportXlsx + '?' + exportParams().toString());
+    });
+    els.pdf?.addEventListener('click', () => {
+        window.open(app.dataset.exportPdf + '?' + exportParams().toString(), '_blank', 'noopener');
     });
 
     (async () => {
