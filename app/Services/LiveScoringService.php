@@ -219,8 +219,6 @@ class LiveScoringService
             return [];
         }
 
-        $attemptIds = array_map(static fn(array $row): int => (int) $row['id'], $attempts);
-
         $aggregates = $db->table('attempt AS a')
             ->select(
                 'a.id AS attempt_id, sr.question_type, '
@@ -249,7 +247,8 @@ class LiveScoringService
                 'left',
                 false
             )
-            ->whereIn('a.id', $attemptIds)
+            ->where('a.jadwal_id', $jadwalId)
+            ->whereIn('a.status', ['ACTIVE', 'FINISHED'])
             ->whereIn('sr.question_type', self::CLICK_TYPES)
             ->groupBy('a.id, sr.question_type')
             ->get()->getResultArray();
