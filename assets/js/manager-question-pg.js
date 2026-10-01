@@ -77,7 +77,7 @@
         try {
             const data = await api(base + '?' + new URLSearchParams({page: state.page, per_page: $('questionPageSize').value}));
             if (seq !== state.seq) return;
-            state.editable = data.bank.status === 'DRAFT' && data.bank.kegiatan_status === 'DRAFT';
+            state.editable = data.bank.status === 'DRAFT';
             state.configured = Boolean(data.pg_configured);
             state.optionCount = Number(data.pg_option_count) || 4;
             $('questionOptionInfo').textContent = 'Opsi (' + state.optionCount + ' sesuai Komposisi Bank)';
