@@ -109,7 +109,7 @@ class KegiatanService
             }
             if ($old !== null && (new ExecutionDependencyService())->activityStructureLocked($db, (int) $old['id'])) {
                 $db->transRollback();
-                return $this->error(423, 'DATA_LOCKED', 'Kegiatan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
+                return $this->error(423, 'DATA_LOCKED', 'Kegiatan terkunci karena sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             if ($old !== null && $old['jenis'] !== $jenis
                 && $db->table('bank_soal')->where('kegiatan_id', $id)->countAllResults() > 0) {
