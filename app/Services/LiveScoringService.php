@@ -194,8 +194,8 @@ class LiveScoringService
             ->select(
                 'a.id AS attempt_id, sr.question_type, '
                 . 'MAX(COALESCE(btc.weight_percent, 0)) AS type_weight, '
-                . 'SUM(CASE WHEN s.status = "VOID" OR sr.change_kind = "VOID" THEN 0 ELSE sr.max_point END) AS max_points, '
-                . 'SUM(CASE WHEN s.status = "VOID" OR sr.change_kind = "VOID" THEN 0 ELSE COALESCE(ar.effective_score, 0) END) AS raw_points',
+                . "SUM(CASE WHEN s.status = 'VOID' OR sr.change_kind = 'VOID' THEN 0 ELSE sr.max_point END) AS max_points, "
+                . "SUM(CASE WHEN s.status = 'VOID' OR sr.change_kind = 'VOID' THEN 0 ELSE COALESCE(ar.effective_score, 0) END) AS raw_points",
                 false
             )
             ->join('prepared_assignment_item AS pai', 'pai.prepared_assignment_id = a.prepared_assignment_id')
