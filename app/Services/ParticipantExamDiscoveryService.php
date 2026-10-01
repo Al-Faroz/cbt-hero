@@ -80,6 +80,7 @@ class ParticipantExamDiscoveryService
                 'j.batas_mulai_at',
                 'j.durasi_seconds',
                 'j.access_state',
+                'j.results_finalized_at',
                 'k.nama AS nama_kegiatan',
                 'k.jenis AS jenis_kegiatan',
                 'k.status AS kegiatan_status',
@@ -449,7 +450,11 @@ class ParticipantExamDiscoveryService
             $start = $this->timestamp((string) $row['mulai_at']);
             $latestStart = $this->timestamp((string) $row['batas_mulai_at']);
 
-            if ($now < $start) {
+            if ($row['results_finalized_at'] !== null) {
+                $uiState = 'DITUTUP';
+                $availability = 'RESULT_FINAL';
+                $reason = 'Hasil Jadwal telah difinalkan; ujian tidak dapat dimulai.';
+            } elseif ($now < $start) {
                 $availability = 'TOO_EARLY';
                 $reason = 'Ujian belum dibuka.';
             } elseif ($now > $latestStart) {
