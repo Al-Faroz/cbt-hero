@@ -40,7 +40,7 @@ class RuangAssignmentService
             $kegiatan = $db->query('SELECT id, status FROM kegiatan WHERE id = ? FOR UPDATE', [$kegiatanId])->getRowArray();
             if ($kegiatan === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.'); }
             if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Penempatan Ruang terkunci karena pelaksanaan ujian sudah pernah dimulai.');
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Penempatan Ruang terkunci karena Kegiatan sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             if ($roomId !== null) {
                 $room = $db->query('SELECT id, status FROM ruang WHERE id = ? FOR UPDATE', [$roomId])->getRowArray();
