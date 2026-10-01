@@ -61,8 +61,14 @@ class HasilUjianService
             ->getRowArray();
 
         if ($header === null) {
-            return $this->error(404, 'NOT_FOUND', 'Hasil resmi tidak ditemukan.');
+            return $this->error(404, 'NOT_FOUND', 'Hasil aktif tidak ditemukan.');
         }
+
+        $header['result_snapshot_id'] = (int) $header['result_snapshot_id'];
+        $header['attempt_id'] = (int) $header['attempt_id'];
+        $header['root_jadwal_id'] = (int) $header['root_jadwal_id'];
+        $header['jadwal_id'] = (int) $header['jadwal_id'];
+        $header['is_final'] = (bool) $header['is_final'];
 
         $items = $db->table('result_item_snapshot AS ris')
             ->select('ris.id, ris.prepared_assignment_item_id, ris.question_type, ris.raw_score, ris.max_point, '
