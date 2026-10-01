@@ -31,6 +31,8 @@ Database baseline terbaru sudah memiliki `live_scoring_config`. Untuk database l
 | P9R04 | Hasil masih belum final/scoring proses. | Nilai final kosong/— dan UI dapat menandai proses; tidak mengarang nilai. |
 | P9R05 | Klik Excel. | XLSX mengikuti Kegiatan/Rombel aktif dan memakai angka nilai numerik. |
 | P9R06 | Klik PDF. | Halaman cetak mengikuti filter aktif dan dapat disimpan sebagai PDF dari browser. |
+| P9R07 | Kegiatan mempunyai dua root Jadwal untuk Mata Pelajaran bernama sama. | Kolom Rekap dibedakan dengan suffix ID Jadwal pada UI/export sehingga tidak ambigu. |
+| P9R08 | Hasil aktif masih BELUM FINAL. | Cell nilai akhir tetap kosong/PROSES dan tidak ikut rata-rata maupun export angka FINAL. |
 
 ## Analisis Soal
 
@@ -41,6 +43,8 @@ Database baseline terbaru sudah memiliki `live_scoring_config`. Untuk database l
 | P9A03 | Buka Detail satu item. | Detail memakai response dari Attempt yang ditunjuk official pointer, bukan Attempt superseded. |
 | P9A04 | Ada item VOID. | VOID tidak menambah denominator analisis aktif. |
 | P9A05 | Export Excel/PDF. | Data export konsisten dengan filter Jadwal + tipe soal. |
+| P9A06 | Uraian belum dinilai / response NEEDS_REVIEW masih ada pada hasil aktif. | Item tersebut masuk hitungan Belum Dinilai tetapi tidak dianggap skor 0 dan tidak masuk denominator rata-rata/indeks/full-score/zero-score. |
+| P9A07 | Buka detail question_id yang tidak terdapat pada hasil aktif Jadwal. | API menolak NOT_FOUND, bukan mengembalikan detail kosong. |
 
 Catatan: agregat dihitung langsung dari snapshot resmi sehingga V1 tidak membutuhkan tabel cache agregat/stale flag. Setelah rescore/live edit menghasilkan official snapshot baru, pembacaan berikutnya otomatis memakai pointer terbaru.
 
@@ -49,7 +53,8 @@ Catatan: agregat dihitung langsung dari snapshot resmi sehingga V1 tidak membutu
 | ID | Langkah | Hasil yang diharapkan |
 |---|---|---|
 | P9E01 | Atur filter pada Hasil Ujian lalu export Excel. | Export mengikuti filter, bukan hanya halaman pagination yang sedang terlihat. |
-| P9E02 | Export PDF. | Halaman cetak berisi dataset hasil resmi sesuai filter. |
+| P9E02 | Export PDF. | Halaman cetak berisi dataset hasil aktif sesuai filter dan dikirim dengan Cache-Control no-store/private. |
+| P9E03 | Dataset Hasil melebihi safety limit export. | Export ditolak dengan EXPORT_TOO_LARGE; tidak membuat file yang terpotong diam-diam. |
 
 ## Manager Live Scoring
 
