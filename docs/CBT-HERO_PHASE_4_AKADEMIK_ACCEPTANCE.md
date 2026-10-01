@@ -1,10 +1,10 @@
 # Phase 4 — Bank Soal Akademik: uji terpadu
 
-Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatus DRAFT**, Mapel aktif, dan akun Manager dengan izin `master.exam.manage`. Semua kasus berikut menggunakan halaman yang sudah tersedia; tidak perlu menunggu lifecycle Jadwal/Attempt.
+Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK**, Mapel aktif, dan akun Manager dengan izin `master.exam.manage`. Status administratif Kegiatan bukan gate editor Bank. Semua kasus berikut menggunakan halaman yang sudah tersedia; tidak perlu menunggu lifecycle Jadwal/Attempt.
 
 ## Persiapan
 
-1. Buka **Master Ujian → Bank Soal**, buat Bank untuk Kegiatan DRAFT.
+1. Buka **Master Ujian → Bank Soal**, buat Bank DRAFT pada Kegiatan Akademik.
 2. Buka **Komposisi**. Aktifkan keenam tipe bila hendak menguji semuanya. Isi `question_count = 1` masing-masing, `option_count = 4` untuk PG/PG Kompleks/PG Bertingkat dan Menjodohkan (pada Menjodohkan berarti 4 pasangan), lalu isi bobot yang berjumlah tepat 100%, misalnya `20, 20, 15, 15, 15, 15`. Pada database lama, jalankan `CBT-HERO_BANK_COMPOSITION_UPGRADE.sql`; bila upgrade lama sudah pernah dijalankan sebelum revisi Matching, jalankan juga `CBT-HERO_MATCHING_OPTION_COUNT_UPGRADE.sql`.
 3. Untuk Menjodohkan pilih mode **Per pasangan**. Simpan. Bank tetap DRAFT sampai semua syarat READY terpenuhi.
 
@@ -25,7 +25,7 @@ Jalankan setelah menarik perubahan Phase 4. Gunakan Kegiatan **AKADEMIK berstatu
 | A13 | Commit staging yang seluruh baris aktifnya valid; buka ulang riwayat job yang sama. | Soal masuk Bank sekali saja dan job berstatus COMMITTED; panggilan commit ulang tidak menggandakan soal. |
 | A14 | Dalam template Word, sisipkan gambar JPG/PNG/WebP ke sel pertanyaan lalu unggah. | Gambar menjadi referensi media pada staging dan terlihat saat pratinjau; ikut soal setelah commit. |
 | A15 | Dengan jumlah soal belum cukup atau bobot belum 100%, klik **Validasi / Status** di daftar Bank. | READY ditolak dengan rincian ketersediaan per tipe. |
-| A16 | Setelah jumlah soal aktif tiap tipe **tepat sama** dengan `question_count`, jumlah pilihan/pasangan setiap soal sesuai `option_count`, dan bobot 100%, klik **Validasi / READY** lalu jadikan READY. | Modal menampilkan ringkasan per tipe dan hasil validasi. Bank menjadi READY dan editor/komposisi terkunci. **Cetak PDF**, **Detail READY**, dan **Kembali ke DRAFT** tetap tersedia. Bila belum dipakai Jadwal dan Kegiatan masih DRAFT, Kembali ke DRAFT membuka editor/import lagi. |
+| A16 | Setelah jumlah soal aktif tiap tipe **tepat sama** dengan `question_count`, jumlah pilihan/pasangan setiap soal sesuai `option_count`, dan bobot 100%, klik **Validasi / READY** lalu jadikan READY. | Modal menampilkan ringkasan per tipe dan hasil validasi. Bank menjadi READY dan editor/komposisi terkunci. **Cetak PDF**, **Detail READY**, dan **Kembali ke DRAFT** tetap tersedia. Bila belum dipakai Jadwal/dependency pelaksanaan, Kembali ke DRAFT membuka editor/import lagi tanpa bergantung pada status administratif Kegiatan. |
 | A17 | Klik **Cetak PDF** saat DRAFT maupun READY. Lihat semua soal, centang/lepaskan **Sertakan kunci dan rubrik**, lalu gunakan dialog **Cetak / Simpan PDF**. | Tampilan cetak sesuai pratinjau; kunci/rubrik hanya muncul bila dipilih; angka poin ditampilkan ringkas tanpa nol desimal semu (contoh `4`, bukan `4.000`). |
 | A18 | Dengan Bank READY, coba POST/PUT/DELETE soal melalui API Manager. | Server menolak perubahan dengan status terkunci, bukan sekadar menyembunyikan tombol. |
 | A19 | Akses API peserta yang sudah ada (`/api/ujian` dan konfirmasi ujian). | Tidak ada kunci jawaban, rubrik, atau daftar jawaban diterima pada respons peserta. |
