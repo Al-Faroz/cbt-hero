@@ -67,21 +67,46 @@ class HasilUjianService
         $items = $db->table('result_item_snapshot AS ris')
             ->select('ris.id, ris.prepared_assignment_item_id, ris.question_type, ris.raw_score, ris.max_point, '
                 . 'ris.type_weight_percent, ris.weighted_score, ris.voided, ris.payload_json, '
-                . 'pai.sequence_no, s.stable_key, sr.question_html')
+                . 'pai.sequence_no, pai.soal_revision_id AS baseline_revision_id, s.stable_key')
             ->join('prepared_assignment_item AS pai', 'pai.id = ris.prepared_assignment_item_id')
             ->join('soal AS s', 's.id = pai.soal_id', 'left')
-            ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id', 'left')
             ->where('ris.result_snapshot_id', $snapshotId)
             ->orderBy('pai.sequence_no', 'ASC')
             ->get()
             ->getResultArray();
 
+        $revisionIds = [];
+        foreach ($items as $item) {
+            $payload = $item['payload_json']
+                ? (json_decode((string) $item['payload_json'], true) ?: [])
+                : [];
+            $revisionId = (int) ($payload['scoring_revision_id'] ?? 0);
+            if ($revisionId < 1) {
+                $revisionId = (int) ($item['baseline_revision_id'] ?? 0);
+            }
+            if ($revisionId > 0) {
+                $revisionIds[$revisionId] = true;
+            }
+        }
+
+        $revisions = $this->revisionsById($db, array_keys($revisionIds));
         foreach ($items as &$item) {
             $item['voided'] = (bool) $item['voided'];
             $item['payload'] = $item['payload_json']
                 ? (json_decode((string) $item['payload_json'], true) ?: null)
                 : null;
-            unset($item['payload_json']);
+            $revisionId = (int) (is_array($item['payload'])
+                ? ($item['payload']['scoring_revision_id'] ?? 0)
+                : 0);
+            if ($revisionId < 1) {
+                $revisionId = (int) ($item['baseline_revision_id'] ?? 0);
+            }
+            $revision = $revisionId > 0 ? ($revisions[$revisionId] ?? null) : null;
+            $item['scoring_revision_id'] = $revisionId > 0 ? $revisionId : null;
+            $item['question_html'] = is_array($revision)
+                ? (string) ($revision['question_html'] ?? '')
+                : '';
+            unset($item['payload_json'], $item['baseline_revision_id']);
         }
         unset($item);
 
@@ -185,6 +210,28 @@ class HasilUjianService
                 ->orLike('a.rombel_snapshot', $q)
                 ->groupEnd();
         }
+    }
+
+    private function revisionsById($db, array $revisionIds): array
+    {
+        $revisionIds = array_values(array_unique(array_filter(
+            array_map('intval', $revisionIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if (!$revisionIds) {
+            return [];
+        }
+
+        $rows = $db->table('soal_revision')
+            ->select('id, question_html')
+            ->whereIn('id', $revisionIds)
+            ->get()->getResultArray();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[(int) $row['id']] = $row;
+        }
+        return $result;
     }
 
     private function error(int $status, string $code, string $message): array
