@@ -24,7 +24,7 @@ class RekapNilaiService
 
         $rombel = trim(is_scalar($query['rombel'] ?? null) ? (string) $query['rombel'] : '');
         $columnsBuilder = $db->table('official_result_pointer AS orp')
-            ->select('orp.root_jadwal_id, m.id AS mapel_id, m.kode_mapel, m.nama_mapel, '
+            ->select('orp.root_jadwal_id, m.id AS mapel_id, m.kode_mapel, m.nama_mapel, m.urutan AS mapel_urutan, '
                 . 'b.nama_bank, rootj.mulai_at')
             ->join('jadwal AS rootj', 'rootj.id = orp.root_jadwal_id')
             ->join('bank_soal AS b', 'b.id = rootj.bank_soal_id')
@@ -33,7 +33,7 @@ class RekapNilaiService
             ->where('rootj.kegiatan_id', $kegiatanId)
             ->where('rootj.psych_instrument_id', null)
             ->where('rs.result_type', 'ACADEMIC')
-            ->groupBy('orp.root_jadwal_id, m.id, m.kode_mapel, m.nama_mapel, b.nama_bank, rootj.mulai_at')
+            ->groupBy('orp.root_jadwal_id, m.id, m.kode_mapel, m.nama_mapel, m.urutan, b.nama_bank, rootj.mulai_at')
             ->orderBy('m.urutan', 'ASC')
             ->orderBy('m.nama_mapel', 'ASC')
             ->orderBy('rootj.mulai_at', 'ASC');
