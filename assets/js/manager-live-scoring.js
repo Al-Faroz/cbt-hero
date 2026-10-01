@@ -48,5 +48,13 @@
     els.regenerate.addEventListener('click',()=>{if(window.confirm('Ganti URL publik? URL lama langsung tidak berlaku.'))mutate('regenerate');});
     els.open.addEventListener('click',()=>{if(els.url.value)window.open(els.url.value,'_blank','noopener');});
     els.copy.addEventListener('click',async()=>{if(!els.url.value)return;try{await navigator.clipboard.writeText(els.url.value);els.feedback.textContent='URL disalin.';}catch(_){els.url.select();document.execCommand('copy');els.feedback.textContent='URL disalin.';}});
-    Promise.all([options(),state()]).catch(error=>{els.feedback.textContent=error.message;els.feedback.className='cbt-inline-feedback mt-3 text-danger';});
+    (async()=> {
+        try {
+            await options();
+            await state();
+        } catch (error) {
+            els.feedback.textContent=error.message;
+            els.feedback.className='cbt-inline-feedback mt-3 text-danger';
+        }
+    })();
 })();
