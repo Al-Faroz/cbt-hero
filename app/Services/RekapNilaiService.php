@@ -82,13 +82,16 @@ class RekapNilaiService
             }
 
             $rootId = (int) $record['root_jadwal_id'];
+            $isFinal = (bool) $record['is_final'];
             $rows[$participantKey]['scores'][(string) $rootId] = [
                 'result_snapshot_id' => (int) $record['result_snapshot_id'],
-                'final_score' => $record['final_score'] === null ? null : (float) $record['final_score'],
+                'final_score' => $isFinal && $record['final_score'] !== null
+                    ? (float) $record['final_score']
+                    : null,
                 'click_score' => $record['click_score'] === null ? null : (float) $record['click_score'],
                 'typed_score' => $record['typed_score'] === null ? null : (float) $record['typed_score'],
                 'scoring_status' => (string) $record['scoring_status'],
-                'is_final' => (bool) $record['is_final'],
+                'is_final' => $isFinal,
             ];
             $rows[$participantKey]['result_count']++;
             if ((bool) $record['is_final']) {
