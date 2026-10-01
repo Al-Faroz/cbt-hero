@@ -26,10 +26,9 @@ class BankReadinessService
         try {
             $lookup = $db->table('bank_soal')->select('kegiatan_id')->where('id', $bankId)->get()->getRowArray();
             if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $activity = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE', [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT * FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
-            if ($bank === null || $activity === null || $activity['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Kegiatan sudah terkunci.');
+            if ($bank === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
             }
             if ((int) $bank['version_no'] !== $expected) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Versi Bank berubah. Muat ulang.');
