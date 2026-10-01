@@ -4,7 +4,7 @@
     if (!app) return;
     const $ = (id) => document.getElementById(id);
     const base = app.dataset.api;
-    const state = {draft: false, rooms: [], members: {page: 1, pages: 1, seq: 0, ids: new Set()},
+    const state = {editable: false, rooms: [], members: {page: 1, pages: 1, seq: 0, ids: new Set()},
         candidates: {page: 1, pages: 1, seq: 0, ids: new Set()}};
     let memberDebounce, candidateDebounce;
     const feedback = (id, message, error = false) => {
@@ -42,7 +42,7 @@
         all.indeterminate = boxes.some((node) => node.checked) && !boxes.every((node) => node.checked);
         const count = state.members.ids.size;
         $('pesertaUjianBulkRemove').textContent = 'Hapus Terpilih (' + count + ')';
-        $('pesertaUjianBulkRemove').disabled = !state.draft || count === 0;
+        $('pesertaUjianBulkRemove').disabled = !state.editable || count === 0;
     };
     const sourceLabel = (item) => {
         const source = item.assignment_source;
@@ -113,7 +113,7 @@
     };
     const roomCell = (item) => {
         const td = document.createElement('td');
-        if (!state.draft) {
+        if (!state.editable) {
             td.textContent = item.ruang_id ? (item.ruang_kode + ' · ' + item.ruang_nama) : '-';
             return td;
         }
@@ -152,15 +152,15 @@
         try {
             const data = await api(base + '?' + params);
             if (seq !== s.seq) return;
-            state.draft = data.kegiatan.status === 'DRAFT';
+            state.editable = data.kegiatan.structural_editable === true;
             $('pesertaUjianContext').textContent = data.kegiatan.nama + ' · ' + data.kegiatan.jenis +
                 ' · ' + data.kegiatan.tahun_pelajaran + ' / ' + data.kegiatan.semester +
-                ' · ' + data.kegiatan.status;
-            $('pesertaUjianAssignCard').hidden = !state.draft;
-            $('pesertaUjianRuangCard').hidden = !state.draft;
-            $('pesertaUjianNomorCard').hidden = !state.draft;
-            $('pesertaUjianBulkRemove').hidden = !state.draft;
-            $('pesertaUjianMemberSelectAll').hidden = !state.draft;
+                (state.editable ? ' · Struktur dapat diubah' : ' · Struktur terkunci');
+            $('pesertaUjianAssignCard').hidden = !state.editable;
+            $('pesertaUjianRuangCard').hidden = !state.editable;
+            $('pesertaUjianNomorCard').hidden = !state.editable;
+            $('pesertaUjianBulkRemove').hidden = !state.editable;
+            $('pesertaUjianMemberSelectAll').hidden = !state.editable;
             s.ids.clear(); $('pesertaUjianMemberSelectAll').checked = false;
             $('pesertaUjianMemberSelectAll').indeterminate = false;
             renderSummary(data);
@@ -173,7 +173,7 @@
                 const row = document.createElement('tr');
                 row.dataset.id = item.id;
                 const select = document.createElement('td');
-                if (state.draft) {
+                if (state.editable) {
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox'; checkbox.className = 'form-check-input';
                     checkbox.setAttribute('aria-label', 'Pilih ' + item.nama_snapshot);
@@ -189,7 +189,7 @@
                     cell(sourceLabel(item)),
                     cell(item.nomor_peserta), roomCell(item));
                 const actions = document.createElement('td');
-                if (state.draft) {
+                if (state.editable) {
                     const remove = document.createElement('button');
                     remove.type = 'button'; remove.className = 'btn btn-outline-danger btn-sm';
                     remove.textContent = 'Hapus';
