@@ -43,11 +43,11 @@
             <table class="table manager-table align-middle mb-0">
                 <thead>
                 <tr>
-                    <th>Kode Soal</th><th>Tipe</th><th>Peserta</th><th>Rata-rata</th>
+                    <th>Kode Soal</th><th>Tipe</th><th>Peserta</th><th>Belum Dinilai</th><th>Rata-rata</th>
                     <th>Indeks Skor</th><th>Nilai Penuh</th><th>Skor Nol</th><th>Void</th><th>Aksi</th>
                 </tr>
                 </thead>
-                <tbody id="analysisRows"><tr><td colspan="9" class="text-center text-secondary py-4">Pilih Jadwal untuk menampilkan analisis.</td></tr></tbody>
+                <tbody id="analysisRows"><tr><td colspan="10" class="text-center text-secondary py-4">Pilih Jadwal untuk menampilkan analisis.</td></tr></tbody>
             </table>
         </div>
     </section>
