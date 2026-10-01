@@ -4,7 +4,7 @@
     <div>
         <div class="manager-page-kicker">Hasil & Laporan</div>
         <h1 class="manager-page-title">Hasil Ujian</h1>
-        <p class="manager-page-description">Menampilkan hasil akademik resmi. Hasil yang sudah digantikan oleh Attempt susulan tidak ditampilkan sebagai hasil resmi.</p>
+        <p class="manager-page-description">Menampilkan hasil akademik yang saat ini dipilih sebagai hasil aktif. Status FINAL/BELUM FINAL ditampilkan terpisah; Attempt lama yang sudah digantikan Susulan tetap hanya menjadi histori.</p>
     </div>
 </section>
 
