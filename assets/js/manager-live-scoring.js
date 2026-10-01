@@ -5,6 +5,7 @@
     const csrf=()=>document.querySelector('meta[name="csrf-token"]')?.content||'';
     const esc=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
         .replaceAll('"','&quot;').replaceAll("'",'&#039;');
+    let busy=false;
     const els={
         jadwal:document.getElementById('liveJadwal'),start:document.getElementById('liveStart'),
         stop:document.getElementById('liveStop'),regenerate:document.getElementById('liveRegenerate'),
@@ -30,20 +31,33 @@
         els.badge.textContent=enabled?'ON':'OFF';
         els.badge.className='badge '+(enabled?'text-bg-success':'text-bg-secondary');
         els.url.value=data.public_url||'';
-        els.open.disabled=!data.public_url;
-        els.copy.disabled=!data.public_url;
-        els.stop.disabled=!enabled;
+        els.open.disabled=busy||!data.public_url;
+        els.copy.disabled=busy||!data.public_url;
+        els.stop.disabled=busy||!enabled;
+        els.start.disabled=busy;
+        els.regenerate.disabled=busy;
+        els.jadwal.disabled=busy;
         if(data.jadwal_id)els.jadwal.value=String(data.jadwal_id);
     }
     async function state(){render(await request(app.dataset.api));}
     async function mutate(action,body=null){
+        if(busy)return;
+        busy=true;
         els.feedback.textContent='';
+        els.start.disabled=true;els.stop.disabled=true;els.regenerate.disabled=true;
+        els.copy.disabled=true;els.open.disabled=true;els.jadwal.disabled=true;
         try{
             const data=await request(app.dataset.api+'/'+action,{method:'POST',body:body===null?'{}':JSON.stringify(body)});
             render(data);
             els.feedback.textContent=action==='start'?'Live Scoring aktif.':action==='stop'?'Live Scoring dihentikan.':'URL publik berhasil diganti.';
             els.feedback.className='cbt-inline-feedback mt-3 text-success';
-        }catch(error){els.feedback.textContent=error.message;els.feedback.className='cbt-inline-feedback mt-3 text-danger';}
+        }catch(error){
+            els.feedback.textContent=error.message;
+            els.feedback.className='cbt-inline-feedback mt-3 text-danger';
+        }finally{
+            busy=false;
+            try{render(await request(app.dataset.api));}catch(_){}
+        }
     }
     els.start.addEventListener('click',()=>{if(!els.jadwal.value){els.feedback.textContent='Pilih Jadwal terlebih dahulu.';return;} mutate('start',{jadwal_id:Number(els.jadwal.value)});});
     els.stop.addEventListener('click',()=>mutate('stop'));
