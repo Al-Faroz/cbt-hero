@@ -10,7 +10,9 @@
 
 <div id="hasilUjianApp"
      data-api="<?= esc(base_url('manager/api/results'), 'attr') ?>"
-     data-options-api="<?= esc(base_url('manager/api/results/options'), 'attr') ?>">
+     data-options-api="<?= esc(base_url('manager/api/results/options'), 'attr') ?>"
+     data-export-xlsx="<?= esc(base_url('manager/hasil/export/hasil/xlsx'), 'attr') ?>"
+     data-export-pdf="<?= esc(base_url('manager/hasil/export/hasil/pdf'), 'attr') ?>">
 
     <section class="manager-section-card mb-3">
         <div class="card-body">
@@ -51,6 +53,8 @@
                         <i class="bi bi-funnel me-1"></i>Terapkan
                     </button>
                     <button class="btn btn-outline-secondary" id="hasilReset" type="button">Reset</button>
+                    <button class="btn btn-outline-success" id="hasilExcel" type="button"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</button>
+                    <button class="btn btn-outline-secondary" id="hasilPdf" type="button"><i class="bi bi-printer me-1"></i>PDF</button>
                     <span class="small text-secondary ms-lg-auto align-self-center" id="hasilSummary">0 hasil</span>
                 </div>
             </div>
