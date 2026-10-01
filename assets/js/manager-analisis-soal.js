@@ -13,6 +13,11 @@
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('analysisDetailModal'));
     const esc = value => String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;')
         .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+    const plain = value => {
+        const node = document.createElement('div');
+        node.innerHTML = String(value || '');
+        return (node.textContent || '').replace(/\s+/g, ' ').trim();
+    };
     const fmt = value => value === null || value === '' || value === undefined ? '—'
         : Number(value).toLocaleString('id-ID',{maximumFractionDigits:2});
     const pct = value => value === null || value === '' || value === undefined ? '—' : fmt(value) + '%';
@@ -69,7 +74,7 @@
             const data=await getJson(app.dataset.api+'/'+encodeURIComponent(id)+'?jadwal_id='+encodeURIComponent(els.jadwal.value));
             const q=data.question||{}, rows=data.responses||[];
             els.detailTitle.textContent=(q.stable_key||'Soal')+' · '+(q.question_type||'');
-            els.detailBody.innerHTML='<div class="border rounded-3 p-3 mb-3 text-break">'+esc(q.question_html||'')+'</div>'
+            els.detailBody.innerHTML='<div class="border rounded-3 p-3 mb-3 text-break">'+esc(plain(q.question_html||''))+'</div>'
                 +'<div class="table-responsive"><table class="table manager-table align-middle mb-0">'
                 +'<thead><tr><th>No Peserta</th><th>Nama</th><th>Rombel</th><th>Dijawab</th><th>Skor</th><th>Maks.</th><th>Status</th></tr></thead><tbody>'
                 +(rows.length?rows.map(r=>{
