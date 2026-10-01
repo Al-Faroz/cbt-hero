@@ -112,7 +112,6 @@ class ParticipantExamDiscoveryService
             )
             ->where('pk.peserta_id', $participantId)
             ->where('pk.status', 'ACTIVE')
-            ->whereIn('k.status', self::ALLOWED_ACTIVITY_STATUS)
             ->orderBy('j.mulai_at', 'ASC')
             ->get()
             ->getResultArray();
