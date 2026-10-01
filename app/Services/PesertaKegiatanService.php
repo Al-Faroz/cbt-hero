@@ -16,6 +16,8 @@ class PesertaKegiatanService
         $perPage = $this->perPage($query['per_page'] ?? null);
         $q = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
         $db = Database::connect();
+        $kegiatan['structural_editable'] = ! (new ExecutionDependencyService())
+            ->activityStructureLocked($db, $kegiatanId);
         $total = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)->countAllResults();
         $unassigned = (int) $db->table('peserta_kegiatan')->where('kegiatan_id', $kegiatanId)
             ->where('ruang_id IS NULL', null, false)->countAllResults();
