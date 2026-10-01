@@ -98,7 +98,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div>
-                    <div class="manager-page-kicker mb-1">Detail Hasil Resmi</div>
+                    <div class="manager-page-kicker mb-1">Detail Hasil Aktif</div>
                     <h2 class="modal-title fs-5" id="hasilDetailTitle">Hasil Peserta</h2>
                 </div>
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
