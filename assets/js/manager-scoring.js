@@ -225,8 +225,9 @@
             button.type = 'button';
             button.className = 'btn btn-outline-primary btn-sm';
             button.dataset.responseId = String(item.response_id);
-            button.textContent = item.manual_score === null ? 'Beri Nilai' : 'Koreksi';
-            button.disabled = String(item.attempt_status) !== 'FINISHED' || Boolean(item.results_finalized_at);
+            const voided = String(item.change_kind) === 'VOID' || String(item.question_status) === 'VOID';
+            button.textContent = voided ? 'VOID' : (item.manual_score === null ? 'Beri Nilai' : 'Koreksi');
+            button.disabled = voided || String(item.attempt_status) !== 'FINISHED' || Boolean(item.results_finalized_at);
             button.dataset.maxPoint = String(item.max_point ?? '');
             button.dataset.currentScore = String(item.manual_score ?? item.effective_score ?? '');
             button.dataset.participant = item.nama_snapshot || item.nomor_peserta_snapshot || '';
