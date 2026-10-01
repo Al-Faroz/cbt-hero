@@ -3020,6 +3020,8 @@ Tidak boleh ada perubahan diam-diam pada requirement hanya karena implementasi t
 | 2026-09-29 | 1.15 | Format/UI Manager | Notasi angka Indonesia dan compact Manager UI menjadi standar; header Manager inline compact pada desktop | Menyamakan output/input numerik dan memaksimalkan viewport tabel | UI standard/Manager JS/CSS |
 | 2026-09-30 | 1.16 | Dependency Lock | Lock Kegiatan/Peserta/Ruang/Nomor/Jadwal dipindah dari status Kegiatan ke dependency pelaksanaan nyata | Kegiatan bukan sakelar runtime dan status administratif tidak boleh memblokir workflow | ExecutionDependencyService + services terkait |
 | 2026-09-30 | 1.17 | Urutan Ujian | Jadwal MAIN mendapat urutan_ujian default 1; START urutan lebih besar menunggu ujian urutan lebih kecil yang menjadi hak peserta pada slot sama | Mendukung beberapa ujian pada slot waktu sama tanpa memaksa urutan jika seluruhnya bernilai 1 | Schema/Jadwal/Participant/Attempt/UI |
+| 2026-09-30 | 1.18 | Participant Renderer + Mobile | Debounce Isian/Uraian diamankan dengan flush + input-time authority metadata; rich-content overflow, formula, Matching, media Drive, offline banner, palette/modal, touch target, dan mobile renderer diperkuat | Menutup risiko kehilangan jawaban cepat dan overflow sebelum regression device | Participant renderer/answer store/CSS/acceptance |
+| 2026-10-01 | 1.19 | Phase 9 Akademik | Hasil Ujian dilengkapi export; Rekap Nilai official-only, Analisis Soal item-aware, XLSX + print/PDF, Manager/Public Live Scoring, random URL, competition rank, dan full-scroll snapshot cycle diimplementasikan | Menyelesaikan seluruh scope Akademik sebelum regression terpadu | Report services/controllers/views/routes/export/live scoring/docs |
 
 ---
 
