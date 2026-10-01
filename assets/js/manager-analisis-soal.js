@@ -72,9 +72,13 @@
             els.detailBody.innerHTML='<div class="border rounded-3 p-3 mb-3 text-break">'+esc(q.question_html||'')+'</div>'
                 +'<div class="table-responsive"><table class="table manager-table align-middle mb-0">'
                 +'<thead><tr><th>No Peserta</th><th>Nama</th><th>Rombel</th><th>Dijawab</th><th>Skor</th><th>Maks.</th><th>Status</th></tr></thead><tbody>'
-                +(rows.length?rows.map(r=>'<tr><td>'+esc(r.nomor_peserta_snapshot||'—')+'</td><td>'+esc(r.nama_snapshot)+'</td>'
-                    +'<td>'+esc(r.rombel_snapshot)+'</td><td>'+(r.answered?'Ya':'Tidak')+'</td><td>'+fmt(r.raw_score)+'</td>'
-                    +'<td>'+fmt(r.max_point)+'</td><td>'+(r.voided?'VOID':esc(r.scoring_state||'—'))+'</td></tr>').join('')
+                +(rows.length?rows.map(r=>{
+                    const pending=['PENDING','PENDING_MANUAL','NEEDS_REVIEW'].includes(String(r.scoring_state||''));
+                    const status=r.voided?'VOID':(pending?'BELUM DINILAI':esc(r.scoring_state||'—'));
+                    return '<tr><td>'+esc(r.nomor_peserta_snapshot||'—')+'</td><td>'+esc(r.nama_snapshot)+'</td>'
+                        +'<td>'+esc(r.rombel_snapshot)+'</td><td>'+(r.answered?'Ya':'Tidak')+'</td><td>'+(pending?'—':fmt(r.raw_score))+'</td>'
+                        +'<td>'+fmt(r.max_point)+'</td><td>'+status+'</td></tr>';
+                }).join('')
                     :'<tr><td colspan="7" class="text-center text-secondary py-4">Tidak ada response resmi.</td></tr>')
                 +'</tbody></table></div>';
         }catch(error){els.detailBody.innerHTML='<div class="alert alert-danger mb-0">'+esc(error.message)+'</div>';}
