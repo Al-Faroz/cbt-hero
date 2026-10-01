@@ -204,28 +204,27 @@ Acceptance khusus dibuat pada:
 
 Status: **IMPLEMENTED / BELUM PASS DEVICE REGRESSION**.
 
-## 2.6 Exam Browser proof konkret
+## 2.6 Exam Browser proof konkret — DEFERRED PHASE 2
 
-Gate `exam_browser_required` sudah dirancang pada Attempt Engine, tetapi integrasi
-proof dengan aplikasi Exam Browser nyata masih tercatat sebagai pekerjaan yang harus
-dikunci.
+Acuan Utama menetapkan Phase 1 memakai browser biasa dengan **Exam Browser = OFF**.
+Android Exam Browser dan proof client konkret adalah scope **Phase 2 Exam Browser**,
+bukan blocker penyelesaian Akademik Phase 1.
 
-Status: **BELUM FINAL**.
+Gate `exam_browser_required` pada Attempt Engine tetap disiapkan untuk integrasi
+Phase 2, tetapi tidak diaktifkan sebagai requirement runtime saat ini.
 
-## 2.7 Dashboard API pada ROUTES_API tidak sesuai implementasi
+Status: **SENGAJA DITUNDA KE PHASE 2 EXAM BROWSER**.
 
-Dokumen Routes masih menyebut kontrak seperti:
-- `GET /manager/api/dashboard/summary`
-- `GET /manager/api/dashboard/active-schedules`
-- `GET /manager/api/dashboard/preflight-warnings`
+## 2.7 Dashboard API drift — RESOLVED
 
-Dashboard implementasi saat ini server-rendered dan endpoint tersebut belum tersedia.
+Dashboard implementasi V1 tetap server-rendered. Kontrak endpoint
+`/manager/api/dashboard/*` yang tidak digunakan sudah dihapus dari
+`CBT-HERO_ROUTES_API_FINAL.md`.
 
-Keputusan perlu dibuat:
-- endpoint memang diperlukan → implementasikan; atau
-- tidak diperlukan → hapus dari kontrak Routes.
+Jika kelak diperlukan refresh parsial, endpoint baru harus masuk sebagai revisi
+kontrak eksplisit.
 
-Status: **DOC/API DRIFT**.
+Status: **RESOLVED 2026-10-01**.
 
 ---
 
