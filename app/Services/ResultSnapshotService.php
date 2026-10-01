@@ -6,6 +6,14 @@ class ResultSnapshotService
 {
     public function create($db, array $attempt, array $snapshot, bool $final = false, ?string $finalizedAt = null): int
     {
+        if ($final && (
+            (string) ($snapshot['scoring_status'] ?? '') !== 'COMPLETE'
+            || !array_key_exists('final_score', $snapshot)
+            || $snapshot['final_score'] === null
+        )) {
+            throw new \RuntimeException('Snapshot FINAL hanya dapat dibuat dari scoring COMPLETE.');
+        }
+
         $attemptId = (int) $attempt['id'];
         $versionRow = $db->table('result_snapshot')
             ->selectMax('snapshot_version', 'max_version')
