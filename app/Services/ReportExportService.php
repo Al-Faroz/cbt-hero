@@ -139,6 +139,7 @@ class ReportExportService
             (string) ($context['nama'] ?? '')
             . ' · ' . (string) ($context['tahun_pelajaran'] ?? '')
             . ' ' . (string) ($context['semester'] ?? '')
+            . ' · hanya nilai FINAL; hasil BELUM FINAL dikosongkan'
         );
 
         return ['ok' => true, 'status' => 200, 'data' => [
@@ -175,6 +176,7 @@ class ReportExportService
         $subtitle = trim(
             (string) ($context['kegiatan_nama'] ?? '')
             . ' · ' . (string) ($context['nama_mapel'] ?? '')
+            . ' · item belum dinilai tidak masuk denominator'
         );
 
         return ['ok' => true, 'status' => 200, 'data' => [
