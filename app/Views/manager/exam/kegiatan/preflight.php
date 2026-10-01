@@ -4,7 +4,7 @@
     <div>
         <div class="manager-page-kicker">Master Ujian / Kegiatan</div>
         <h1 class="manager-page-title">Kesiapan Kegiatan</h1>
-        <p class="manager-page-description"><?= esc($kegiatan['nama']) ?> · <?= esc($kegiatan['tahun_pelajaran']) ?> <?= esc($kegiatan['semester']) ?> · <?= esc($kegiatan['status']) ?></p>
+        <p class="manager-page-description"><?= esc($kegiatan['nama']) ?> · <?= esc($kegiatan['tahun_pelajaran']) ?> <?= esc($kegiatan['semester']) ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-primary" href="<?= base_url('manager/master-ujian/kegiatan/' . $kegiatan['id'] . '/peserta') ?>">Kelola Peserta</a>
@@ -25,7 +25,7 @@
         </div>
         <?php if ($findings > $affected): ?><p class="small text-secondary mt-2 mb-0">Satu peserta bisa memiliki beberapa temuan, misalnya belum punya nomor peserta dan ruang.</p><?php endif ?>
         <?php if ($total === 0): ?><p class="mt-3 mb-0">Tambahkan anggota melalui halaman Peserta Ujian.</p><?php endif ?>
-        <p class="small text-secondary mb-0 mt-3">Pemeriksaan ini mencakup data peserta, nomor, ruang, credential cetak, dan identitas kartu. Kesiapan Bank Soal dan Jadwal baru dapat diperiksa setelah modul tersebut tersedia. Status Kegiatan tidak diubah oleh halaman ini.</p>
+        <p class="small text-secondary mb-0 mt-3">Pemeriksaan ini mencakup data peserta, nomor, ruang, credential cetak, dan identitas kartu. Kesiapan operasional ujian dilihat dari Jadwal dan Preparation; status administratif Kegiatan bukan gate pelaksanaan.</p>
     </div>
 </section>
 <?php foreach ($issues as $issue): ?>
