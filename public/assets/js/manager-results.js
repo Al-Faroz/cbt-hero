@@ -160,12 +160,18 @@
                 + '</div>'
                 + '<div class="table-responsive"><table class="table manager-table align-middle mb-0">'
                 + '<thead><tr><th>No</th><th>Tipe</th><th>Skor</th><th>Maks.</th><th>Bobot</th><th>Kontribusi</th><th>Status</th></tr></thead>'
-                + '<tbody>' + (items.length ? items.map(i =>
-                    '<tr><td>' + esc(i.sequence_no) + '</td><td>' + esc(i.question_type || '—') + '</td>'
-                    + '<td>' + fmt(i.raw_score) + '</td><td>' + fmt(i.max_point) + '</td>'
-                    + '<td>' + fmt(i.type_weight_percent) + '%</td><td>' + fmt(i.weighted_score) + '</td>'
-                    + '<td>' + (i.voided ? '<span class="badge text-bg-secondary">VOID</span>' : 'Aktif') + '</td></tr>'
-                ).join('') : '<tr><td colspan="7" class="text-center text-secondary py-4">Tidak ada item hasil.</td></tr>') + '</tbody>'
+                + '<tbody>' + (items.length ? items.map(i => {
+                    const pending = ['PENDING', 'PENDING_MANUAL', 'NEEDS_REVIEW'].includes(String(i.scoring_state || ''));
+                    const status = i.voided
+                        ? '<span class="badge text-bg-secondary">VOID</span>'
+                        : pending
+                            ? '<span class="badge text-bg-warning">BELUM DINILAI</span>'
+                            : esc(i.scoring_state || 'Terskor');
+                    return '<tr><td>' + esc(i.sequence_no) + '</td><td>' + esc(i.question_type || '—') + '</td>'
+                        + '<td>' + (pending ? '—' : fmt(i.raw_score)) + '</td><td>' + fmt(i.max_point) + '</td>'
+                        + '<td>' + fmt(i.type_weight_percent) + '%</td><td>' + (pending ? '—' : fmt(i.weighted_score)) + '</td>'
+                        + '<td>' + status + '</td></tr>';
+                }).join('') : '<tr><td colspan="7" class="text-center text-secondary py-4">Tidak ada item hasil.</td></tr>') + '</tbody>'
                 + '</table></div>';
         } catch (err) {
             els.detailBody.innerHTML = '<div class="alert alert-danger mb-0">' + esc(err.message) + '</div>';
