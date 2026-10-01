@@ -520,7 +520,7 @@
             if(seq!==state.seq)return;
 
             state.bank=data.bank;
-            state.editable=data.bank.status==='DRAFT'&&data.bank.kegiatan_status==='DRAFT';
+            state.editable=data.bank.status==='DRAFT';
             state.page=Number(data.pagination.page||1);
             state.pages=Number(data.pagination.pages||1);
             state.total=Number(data.pagination.total||0);
