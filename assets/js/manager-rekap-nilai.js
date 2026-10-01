@@ -55,8 +55,17 @@
             const context = data.context || {};
             els.title.textContent = [context.nama, context.tahun_pelajaran, context.semester].filter(Boolean).join(' · ');
             els.summary.textContent = (data.summary?.participant_count || 0) + ' peserta · ' + (data.summary?.subject_count || 0) + ' mata pelajaran';
+            const labelCounts = {};
+            for (const column of columns) {
+                const label = column.nama_mapel || column.nama_bank || 'Mapel';
+                labelCounts[label] = (labelCounts[label] || 0) + 1;
+            }
+            const columnLabel = column => {
+                const label = column.nama_mapel || column.nama_bank || 'Mapel';
+                return labelCounts[label] > 1 ? label + ' #' + column.root_jadwal_id : label;
+            };
             els.head.innerHTML = '<tr><th>No Peserta</th><th>Nama</th><th>Rombel</th>'
-                + columns.map(c => '<th>'+esc(c.nama_mapel || c.nama_bank || 'Mapel')+'</th>').join('')
+                + columns.map(column => '<th>'+esc(columnLabel(column))+'</th>').join('')
                 + '<th>Rata-rata</th></tr>';
             if (!rows.length) {
                 els.rows.innerHTML = '<tr><td colspan="'+(columns.length+4)+'" class="text-center text-secondary py-4">Belum ada hasil resmi.</td></tr>';
