@@ -11,6 +11,9 @@ use CodeIgniter\Router\RouteCollection;
 */
 $routes->get('/', 'Participant\\ParticipantAuthController::index');
 
+$routes->get('live/(:segment)', 'Live\\LiveScoringController::index/$1');
+$routes->get('api/live/(:segment)', 'Live\\LiveScoringController::snapshot/$1');
+
 $routes->group(
     '',
     ['filter' => 'participant-auth'],
@@ -177,6 +180,8 @@ $routes->group(
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('pelaksanaan/monitoring', 'Manager\\Execution\\MonitoringController::index',
             ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('pelaksanaan/live-scoring', 'Manager\\Execution\\LiveScoringController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('pelaksanaan/penilaian', 'Manager\\Scoring\\ScoringController::index',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('pelaksanaan/koreksi', 'Manager\\Scoring\\CorrectionController::index',
@@ -184,6 +189,14 @@ $routes->group(
         $routes->get('pelaksanaan/finalisasi-hasil', 'Manager\\Scoring\\FinalizationController::index',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('hasil/ujian', 'Manager\\Report\\HasilUjianController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('hasil/rekap', 'Manager\\Report\\RekapNilaiController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('hasil/analisis', 'Manager\\Report\\AnalisisSoalController::index',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('hasil/export/(:segment)/xlsx', 'Manager\\Report\\ReportExportController::xlsx/$1',
+            ['filter' => 'manager-role:master.exam.manage']);
+        $routes->get('hasil/export/(:segment)/pdf', 'Manager\\Report\\ReportExportController::pdf/$1',
             ['filter' => 'manager-role:master.exam.manage']);
         $routes->get('master-ujian/bank-soal/(:num)/soal/(:num)/live-edit', 'Manager\\Scoring\\LiveEditController::question/$1/$2',
             ['filter' => 'manager-role:master.exam.manage']);
@@ -329,6 +342,11 @@ $routes->group(
         $routes->get('results/options', 'Api\\Manager\\Report\\HasilUjianController::options', $examFilter);
         $routes->get('results', 'Api\\Manager\\Report\\HasilUjianController::index', $examFilter);
         $routes->get('results/(:num)', 'Api\\Manager\\Report\\HasilUjianController::show/$1', $examFilter);
+        $routes->get('reports/rekap/options', 'Api\\Manager\\Report\\RekapNilaiController::options', $examFilter);
+        $routes->get('reports/rekap', 'Api\\Manager\\Report\\RekapNilaiController::index', $examFilter);
+        $routes->get('reports/analysis/options', 'Api\\Manager\\Report\\AnalisisSoalController::options', $examFilter);
+        $routes->get('reports/analysis', 'Api\\Manager\\Report\\AnalisisSoalController::index', $examFilter);
+        $routes->get('reports/analysis/(:num)', 'Api\\Manager\\Report\\AnalisisSoalController::show/$1', $examFilter);
 
         $jadwal = 'Api\\Manager\\Schedule\\JadwalController::';
         $routes->get('jadwal', $jadwal . 'index', $examFilter);
@@ -361,6 +379,13 @@ $routes->group(
         $routes->post('token/rotate', $token . 'rotate', $examFilter);
         $routes->post('token/generate', $token . 'generate', $examFilter);
         $routes->patch('token/auto-rotate', $token . 'autoRotate', $examFilter);
+
+        $liveScoring = 'Api\\Manager\\Execution\\LiveScoringController::';
+        $routes->get('live-scoring', $liveScoring . 'state', $examFilter);
+        $routes->get('live-scoring/options', $liveScoring . 'options', $examFilter);
+        $routes->post('live-scoring/start', $liveScoring . 'start', $examFilter);
+        $routes->post('live-scoring/stop', $liveScoring . 'stop', $examFilter);
+        $routes->post('live-scoring/regenerate', $liveScoring . 'regenerate', $examFilter);
 
         $monitoring = 'Api\\Manager\\Execution\\MonitoringController::';
         $routes->get('monitoring/options', $monitoring . 'options', $examFilter);
