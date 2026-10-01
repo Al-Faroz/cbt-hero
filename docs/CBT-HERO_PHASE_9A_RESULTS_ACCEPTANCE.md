@@ -43,6 +43,9 @@ GET /manager/api/results/{resultSnapshotId}
 | R10 | Snapshot ID yang bukan official pointer. | API detail menolak dengan NOT_FOUND. |
 | R11 | Dataset > 25 hasil. | Pagination berjalan dan tidak memuat seluruh dataset sekaligus. |
 | R12 | Mobile 360x800. | Tabel tetap usable melalui horizontal table scroll, bukan page overflow. |
+| R13 | Buka Detail hasil BELUM FINAL. | Status modal tetap BELUM FINAL; nilai string `0` dari DB tidak boleh terbaca truthy sebagai FINAL. |
+| R14 | Detail snapshot mempunyai item Uraian `PENDING_MANUAL`/item `NEEDS_REVIEW`. | Skor sementara 0 tidak ditampilkan sebagai nilai nol; UI menampilkan `—` dan status BELUM DINILAI. |
+| R15 | Export Hasil saat dataset aktif berubah selama proses. | Export mengambil dataset melalui satu query terurut, bukan menggabungkan pagination bertahap. |
 
 ## Status
 
