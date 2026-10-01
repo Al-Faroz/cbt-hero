@@ -39,6 +39,9 @@ runtime gate START/RESUME dan tidak boleh menjadi pengganti dependency lock.
 
 Static audit 2026-10-01 menghapus sisa gate lama pada:
 
+- `ExecutionDependencyService` diperkuat agar Preparation juga menjadi dependency lock
+  struktur Kegiatan/keanggotaan/Ruang/Nomor, sementara edit Jadwal pra-START tetap
+  boleh dan menghasilkan assignment STALE/rebuild;
 - `RuangService`;
 - `ParticipantCredentialService`;
 - `BankTypeConfigService`;
@@ -125,7 +128,8 @@ Acceptance Phase 8 S19 tetap menjadi kontrak authoritative.
   bukan otomatis ke revisi soal saat ini atau baseline Preparation;
 - filter Kegiatan/Jadwal/Mapel/Rombel hanya berasal dari official-result Akademik
   yang benar-benar tersedia;
-- status FINAL/BELUM FINAL tetap eksplisit.
+- status FINAL/BELUM FINAL tetap eksplisit;
+- Paksa Selesai tidak dapat membuat hasil FINAL secara implisit.
 
 ### Rekap Nilai
 
@@ -173,6 +177,10 @@ Skor hanya kelompok klik:
 - Menjodohkan.
 
 Fetch snapshot berikutnya dilakukan setelah full scroll cycle.
+
+HTML public dan snapshot API sama-sama menggunakan `no-store/no-cache`; HTML juga
+mengirim `Referrer-Policy: no-referrer` agar bearer-like public token tidak bocor
+melalui referrer/cache setelah STOP atau regenerate URL.
 
 ## 7. Participant finish page
 
