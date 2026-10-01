@@ -31,14 +31,7 @@ class HasilUjianService
             ->get()
             ->getResultArray();
 
-        foreach ($rows as &$row) {
-            $row['result_snapshot_id'] = (int) $row['result_snapshot_id'];
-            $row['attempt_id'] = (int) $row['attempt_id'];
-            $row['root_jadwal_id'] = (int) $row['root_jadwal_id'];
-            $row['jadwal_id'] = (int) $row['jadwal_id'];
-            $row['is_final'] = (bool) $row['is_final'];
-        }
-        unset($row);
+        $rows = $this->normalizeRows($rows);
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'items' => $rows,
@@ -48,6 +41,36 @@ class HasilUjianService
                 'total' => $total,
                 'pages' => max(1, (int) ceil($total / $perPage)),
             ],
+        ]];
+    }
+
+    public function exportRows(array $query, int $limit = 50000): array
+    {
+        $db = Database::connect();
+        $limit = max(1, min(50000, $limit));
+
+        $builder = $this->baseBuilder($db);
+        $this->applyFilters($builder, $query);
+
+        $rows = $builder
+            ->orderBy('k.nama', 'ASC')
+            ->orderBy('m.nama_mapel', 'ASC')
+            ->orderBy('a.rombel_snapshot', 'ASC')
+            ->orderBy('a.nama_snapshot', 'ASC')
+            ->limit($limit + 1)
+            ->get()
+            ->getResultArray();
+
+        if (count($rows) > $limit) {
+            return $this->error(
+                422,
+                'EXPORT_TOO_LARGE',
+                'Dataset export terlalu besar. Persempit filter sebelum membuat file.'
+            );
+        }
+
+        return ['ok' => true, 'status' => 200, 'data' => [
+            'items' => $this->normalizeRows($rows),
         ]];
     }
 
@@ -233,6 +256,19 @@ class HasilUjianService
                 ->orLike('a.rombel_snapshot', $q)
                 ->groupEnd();
         }
+    }
+
+    private function normalizeRows(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $row['result_snapshot_id'] = (int) $row['result_snapshot_id'];
+            $row['attempt_id'] = (int) $row['attempt_id'];
+            $row['root_jadwal_id'] = (int) $row['root_jadwal_id'];
+            $row['jadwal_id'] = (int) $row['jadwal_id'];
+            $row['is_final'] = (bool) $row['is_final'];
+        }
+        unset($row);
+        return $rows;
     }
 
     private function revisionsById($db, array $revisionIds): array
