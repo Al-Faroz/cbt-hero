@@ -8,6 +8,8 @@ $snapshotJson = json_encode($snapshotUrl ?? '', JSON_HEX_TAG | JSON_HEX_APOS | J
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow,noarchive">
 <title>Live Scoring | CBT-HERO</title>
 <style>
 :root{color-scheme:dark}
