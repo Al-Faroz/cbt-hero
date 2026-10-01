@@ -22,16 +22,52 @@ class ScoringQueryService
         $items = [];
         if ($snapshot !== null) {
             $items = $db->table('result_item_snapshot AS ris')
-                ->select('ris.*, pai.sequence_no, pai.soal_id, s.stable_key, sr.question_html, '
-                    . 'ar.id AS response_id, ar.answer_payload, ar.auto_score, ar.manual_score, ar.effective_score, ar.scoring_state')
+                ->select('ris.*, pai.sequence_no, pai.soal_id, pai.soal_revision_id AS baseline_revision_id, '
+                    . 's.stable_key, ar.id AS response_id, ar.answer_payload, ar.auto_score, '
+                    . 'ar.manual_score, ar.effective_score, ar.scoring_state')
                 ->join('prepared_assignment_item AS pai', 'pai.id = ris.prepared_assignment_item_id')
                 ->join('soal AS s', 's.id = pai.soal_id', 'left')
-                ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id', 'left')
                 ->join('attempt_response AS ar',
                     'ar.attempt_id = ' . $attemptId . ' AND ar.prepared_assignment_item_id = pai.id',
                     'left', false)
                 ->where('ris.result_snapshot_id', (int) $snapshot['id'])
                 ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
+
+            $revisionIds = [];
+            foreach ($items as $item) {
+                $payload = json_decode((string) ($item['payload_json'] ?? ''), true);
+                $revisionId = is_array($payload) ? (int) ($payload['scoring_revision_id'] ?? 0) : 0;
+                if ($revisionId < 1) {
+                    $revisionId = (int) ($item['baseline_revision_id'] ?? 0);
+                }
+                if ($revisionId > 0) {
+                    $revisionIds[$revisionId] = true;
+                }
+            }
+
+            $revisions = [];
+            if ($revisionIds) {
+                foreach ($db->table('soal_revision')
+                    ->select('id, question_html, rubric_html')
+                    ->whereIn('id', array_keys($revisionIds))
+                    ->get()->getResultArray() as $revision) {
+                    $revisions[(int) $revision['id']] = $revision;
+                }
+            }
+
+            foreach ($items as &$item) {
+                $payload = json_decode((string) ($item['payload_json'] ?? ''), true);
+                $revisionId = is_array($payload) ? (int) ($payload['scoring_revision_id'] ?? 0) : 0;
+                if ($revisionId < 1) {
+                    $revisionId = (int) ($item['baseline_revision_id'] ?? 0);
+                }
+                $revision = $revisionId > 0 ? ($revisions[$revisionId] ?? null) : null;
+                $item['scoring_revision_id'] = $revisionId > 0 ? $revisionId : null;
+                $item['question_html'] = is_array($revision) ? (string) ($revision['question_html'] ?? '') : '';
+                $item['rubric_html'] = is_array($revision) ? (string) ($revision['rubric_html'] ?? '') : '';
+                unset($item['baseline_revision_id']);
+            }
+            unset($item);
         }
 
         return ['ok' => true, 'status' => 200, 'data' => [
