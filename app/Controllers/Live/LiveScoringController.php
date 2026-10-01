@@ -21,7 +21,9 @@ class LiveScoringController extends BaseController
         $this->response
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->setHeader('Pragma', 'no-cache')
-            ->setHeader('Referrer-Policy', 'no-referrer');
+            ->setHeader('Referrer-Policy', 'no-referrer')
+            ->setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+            ->setHeader('X-Content-Type-Options', 'nosniff');
 
         return view('public/live_scoring', [
             'token' => $token,
@@ -35,7 +37,10 @@ class LiveScoringController extends BaseController
         $result = (new LiveScoringService())->publicState($token);
         $this->response
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->setHeader('Pragma', 'no-cache');
+            ->setHeader('Pragma', 'no-cache')
+            ->setHeader('Referrer-Policy', 'no-referrer')
+            ->setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+            ->setHeader('X-Content-Type-Options', 'nosniff');
 
         return ($result['ok'] ?? false)
             ? $this->apiSuccess($result['data'], $result['status'])
