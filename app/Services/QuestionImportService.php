@@ -25,10 +25,9 @@ class QuestionImportService
     public function upload(int $bankId, ?UploadedFile $file, array $actor): array
     {
         $db = Database::connect();
-        $bank = $db->table('bank_soal AS b')->select('b.id, b.status, k.status AS kegiatan_status')
-            ->join('kegiatan AS k', 'k.id = b.kegiatan_id')->where('b.id', $bankId)->get()->getRowArray();
+        $bank = $db->table('bank_soal')->select('id, status')->where('id', $bankId)->get()->getRowArray();
         if ($bank === null) return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
-        if ($bank['status'] !== 'DRAFT' || $bank['kegiatan_status'] !== 'DRAFT') return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan terkunci.');
+        if ($bank['status'] !== 'DRAFT') return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui impor.');
         $name = $file?->getClientName() ?? '';
         $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         if ($file === null || !$file->isValid() || !in_array($extension, ['xlsx', 'docx'], true)
@@ -102,10 +101,9 @@ class QuestionImportService
             if (!in_array($job['status'], ['PARSED', 'VALIDATED'], true)) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Job tidak dapat divalidasi.');
             }
-            $bank = $db->table('bank_soal AS b')->select('b.status, k.status AS kegiatan_status')
-                ->join('kegiatan AS k', 'k.id = b.kegiatan_id')->where('b.id', $bankId)->get()->getRowArray();
-            if ($bank === null || $bank['status'] !== 'DRAFT' || $bank['kegiatan_status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan terkunci.');
+            $bank = $db->table('bank_soal')->select('status')->where('id', $bankId)->get()->getRowArray();
+            if ($bank === null || $bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui impor.');
             }
             $configRows = $db->table('bank_type_config')->select('question_type, scoring_mode, option_count')->where('bank_soal_id', $bankId)
                 ->get()->getResultArray();
@@ -164,10 +162,9 @@ class QuestionImportService
             if (!in_array($job['status'], ['PARSED', 'VALIDATED'], true)) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Job sudah dikunci.');
             }
-            $bank = $db->table('bank_soal AS b')->select('b.status, k.status AS kegiatan_status')
-                ->join('kegiatan AS k', 'k.id = b.kegiatan_id')->where('b.id', $bankId)->get()->getRowArray();
-            if ($bank === null || $bank['status'] !== 'DRAFT' || $bank['kegiatan_status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank/Kegiatan terkunci.');
+            $bank = $db->table('bank_soal')->select('status')->where('id', $bankId)->get()->getRowArray();
+            if ($bank === null || $bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui impor.');
             }
             $row = $db->table('import_staging_items')->where('import_job_id', $id)->where('id', $itemId)->get()->getRowArray();
             if ($row === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Baris tidak ditemukan.'); }
@@ -209,7 +206,7 @@ class QuestionImportService
             $activity = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE', [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
             if ($activity === null || $bank === null || $activity['status'] !== 'DRAFT' || $bank['status'] !== 'DRAFT')
-                throw new RuntimeException('Bank/Kegiatan terkunci.');
+                throw new RuntimeException('Bank READY tidak dapat diubah melalui impor.');
             $rows = $db->table('import_staging_items')->where('import_job_id', $id)->where('validation_status', 'VALID')
                 ->orderBy('item_no')->get()->getResultArray();
             if (count($rows) !== (int) $job['valid_items']) throw new RuntimeException('Jumlah staging berubah.');
