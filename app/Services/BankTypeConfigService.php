@@ -29,7 +29,7 @@ class BankTypeConfigService
             ->where('bank_soal_id', $bankId)->get()->getResultArray();
         return ['ok' => true, 'status' => 200, 'data' => [
             'bank' => $bank, 'items' => $items, 'types' => self::TYPES,
-            'editable' => $bank['status'] === 'DRAFT' && $bank['kegiatan_status'] === 'DRAFT',
+            'editable' => $bank['status'] === 'DRAFT',
         ]];
     }
 
@@ -95,15 +95,13 @@ class BankTypeConfigService
         try {
             $lookup = $bankId > 0 ? $db->table('bank_soal')->select('kegiatan_id')->where('id', $bankId)->get()->getRowArray() : null;
             if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
-                [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT id, status, version_no, kegiatan_id FROM bank_soal WHERE id = ? FOR UPDATE',
                 [$bankId])->getRowArray();
-            if ($bank === null || $kegiatan === null || (int) $bank['kegiatan_id'] !== (int) $lookup['kegiatan_id']) {
+            if ($bank === null || (int) $bank['kegiatan_id'] !== (int) $lookup['kegiatan_id']) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Bank berubah. Muat ulang halaman.');
             }
-            if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
+            if ($bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat mengubah Komposisi.');
             }
             if ((int) $bank['version_no'] !== $version) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Konfigurasi telah berubah. Muat ulang sebelum menyimpan.');
