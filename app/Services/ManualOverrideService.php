@@ -10,10 +10,18 @@ class ManualOverrideService
 {
     public function apply(int $responseId, mixed $scoreValue, mixed $reasonValue, array $actor): array
     {
-        if (!is_scalar($scoreValue) || !is_numeric((string) $scoreValue)) {
+        if (!is_scalar($scoreValue)) {
             return $this->error(422, 'VALIDATION_FAILED', 'Nilai manual harus berupa angka.');
         }
-        $score = (float) $scoreValue;
+        $scoreText = trim((string) $scoreValue);
+        if (str_contains($scoreText, ',') && str_contains($scoreText, '.')) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Gunakan satu separator desimal: koma atau titik.');
+        }
+        $scoreText = str_replace(',', '.', $scoreText);
+        if (!is_numeric($scoreText)) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Nilai manual harus berupa angka.');
+        }
+        $score = (float) $scoreText;
         $reason = trim(is_scalar($reasonValue) ? (string) $reasonValue : '');
         if ($reason === '' || mb_strlen($reason) > 500) {
             return $this->error(422, 'VALIDATION_FAILED', 'Alasan koreksi wajib diisi, maksimal 500 karakter.');
