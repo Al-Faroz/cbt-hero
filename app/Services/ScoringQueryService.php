@@ -127,7 +127,7 @@ class ScoringQueryService
             ->select('ar.id AS response_id, ar.answer_payload, ar.auto_score, ar.manual_score, ar.effective_score, '
                 . 'ar.scoring_state, ar.updated_at, a.id AS attempt_id, a.jadwal_id, a.status AS attempt_status, '
                 . 'a.nomor_peserta_snapshot, a.nama_snapshot, a.rombel_snapshot, j.results_finalized_at, '
-                . 'sr.question_type, sr.max_point, sr.rubric_html')
+                . 's.status AS question_status, sr.question_type, sr.max_point, sr.rubric_html, sr.change_kind')
             ->join('attempt AS a', 'a.id = ar.attempt_id')
             ->join('jadwal AS j', 'j.id = a.jadwal_id')
             ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
