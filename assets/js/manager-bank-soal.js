@@ -78,19 +78,17 @@
             action.hidden = true; action.disabled = false; action.className = 'btn btn-cbt-primary';
             state.statusTransition = null;
             let note = 'Cetak PDF tetap dapat digunakan saat Bank berstatus READY.';
-            if (item.kegiatan_status !== 'DRAFT') {
-                note = 'Kegiatan sudah terkunci. Status Bank tidak dapat diubah, tetapi Cetak PDF tetap tersedia.';
-            } else if (intent === 'READY') {
+            if (intent === 'READY') {
                 action.hidden = false; action.textContent = 'Jadikan READY'; action.disabled = !check.pass;
                 state.statusTransition = check.pass ? {id: Number(item.id), target: 'READY', version: Number(check.bank.version_no)} : null;
                 note = check.pass
-                    ? 'Menjadikan READY akan mengunci perubahan Bank. Selama Kegiatan masih DRAFT dan Bank belum dipakai Jadwal, status dapat dikembalikan ke DRAFT.'
+                    ? 'Menjadikan READY akan mengunci perubahan Bank. Selama Bank belum dipakai Jadwal, status dapat dikembalikan ke DRAFT.'
                     : 'Tombol READY aktif setelah seluruh validasi lulus.';
             } else if (intent === 'DRAFT') {
                 action.hidden = false; action.textContent = 'Kembali ke DRAFT & Buka Edit';
                 action.className = 'btn btn-warning';
                 state.statusTransition = {id: Number(item.id), target: 'DRAFT', version: Number(check.bank.version_no)};
-                note = 'Kembali ke DRAFT membuka kembali Komposisi/editor/import. Server tetap menolak bila Bank sudah dipakai Jadwal atau Kegiatan tidak lagi DRAFT.';
+                note = 'Kembali ke DRAFT membuka kembali Komposisi/editor/import. Server tetap menolak bila Bank sudah dipakai Jadwal.';
             }
             $('bankStatusNote').textContent = note;
             statusModal.show(); feedback('bankFeedback', '');
@@ -102,7 +100,7 @@
         const filter = $('bankKegiatanFilter');
         const current = filter.value || new URLSearchParams(location.search).get('kegiatan_id') || '';
         selectOptions(filter, state.kegiatan.map((item) => ({id: item.id, label: item.nama + ' · ' + item.tahun_pelajaran})), 'Semua Kegiatan', current);
-        selectOptions($('bankKegiatan'), state.kegiatan.filter((item) => item.status === 'DRAFT')
+        selectOptions($('bankKegiatan'), state.kegiatan
             .map((item) => ({id: item.id, label: item.nama + ' · ' + item.tahun_pelajaran})), 'Pilih Kegiatan');
         selectOptions($('bankMapel'), state.mapel.filter((item) => item.status === 'ACTIVE')
             .map((item) => ({id: item.id, label: item.nama_mapel})), 'Pilih Mata Pelajaran');
@@ -120,7 +118,7 @@
                 const row = document.createElement('tr');
                 row.append(td(item.nama_bank), td(item.kegiatan_nama), td(item.mapel_nama), td(item.tingkat), td(item.status));
                 const actions = document.createElement('td'); actions.className = 'text-nowrap';
-                const editable = item.status === 'DRAFT' && item.kegiatan_status === 'DRAFT';
+                const editable = item.status === 'DRAFT';
                 if (editable) {
                     const composition = document.createElement('a');
                     composition.href = app.dataset.uiBase + '/' + item.id + '/komposisi';
@@ -147,10 +145,10 @@
                 preflight.className = 'btn btn-outline-info btn-sm me-1';
                 preflight.textContent = item.status === 'READY' ? 'Detail READY' : 'Validasi / READY';
                 preflight.addEventListener('click', () => openStatus(item,
-                    item.status === 'DRAFT' && item.kegiatan_status === 'DRAFT' ? 'READY' : 'INFO'));
+                    item.status === 'DRAFT' ? 'READY' : 'INFO'));
                 actions.append(preflight);
 
-                if (item.status === 'READY' && item.kegiatan_status === 'DRAFT') {
+                if (item.status === 'READY') {
                     const reopen = document.createElement('button'); reopen.type = 'button';
                     reopen.className = 'btn btn-outline-warning btn-sm me-1'; reopen.textContent = 'Kembali ke DRAFT';
                     reopen.addEventListener('click', () => openStatus(item, 'DRAFT'));
@@ -188,9 +186,6 @@
                         catch (error) {remove.disabled = false; feedback('bankFeedback', error.message, true);}
                     });
                     actions.append(edit, remove);
-                } else if (item.kegiatan_status !== 'DRAFT') {
-                    const locked = document.createElement('span'); locked.className = 'badge text-bg-secondary align-middle';
-                    locked.textContent = 'Kegiatan terkunci'; actions.append(locked);
                 }
                 row.append(actions); tbody.append(row);
             }
