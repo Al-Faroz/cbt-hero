@@ -105,6 +105,10 @@ Jalur yang menghasilkan snapshot provisional:
 Hanya command **Finalisasi Hasil** melalui `ResultFinalizationService` yang membuat
 snapshot final dan mengisi `jadwal.results_finalized_at/by`.
 
+Setelah `results_finalized_at` terisi, Jadwal juga menolak START baru. Discovery
+participant menampilkan Jadwal tersebut sebagai **Ditutup** bila peserta belum
+mempunyai Attempt.
+
 Static audit menemukan bug lama pada `forceFinishLocked()`: scoring COMPLETE sempat
 langsung menghasilkan `is_final=1`. Implementasi telah direfactor agar
 Submit/Timeout/Paksa Selesai menggunakan `ResultSnapshotService` yang sama dan
