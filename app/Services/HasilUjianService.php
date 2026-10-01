@@ -103,6 +103,9 @@ class HasilUjianService
             }
             $revision = $revisionId > 0 ? ($revisions[$revisionId] ?? null) : null;
             $item['scoring_revision_id'] = $revisionId > 0 ? $revisionId : null;
+            $item['scoring_state'] = is_array($item['payload'])
+                ? (string) ($item['payload']['scoring_state'] ?? '')
+                : '';
             $item['question_html'] = is_array($revision)
                 ? (string) ($revision['question_html'] ?? '')
                 : '';
