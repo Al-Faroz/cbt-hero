@@ -912,7 +912,7 @@ Invalid/off token → 404/disabled page tanpa data.
 ## 17.2 Snapshot
 
 ```text
-GET /api/public/live/{publicToken}/snapshot
+GET /api/live/{publicToken}
 ```
 
 No session. GET only.
@@ -920,11 +920,11 @@ No session. GET only.
 Mengembalikan tepat kebutuhan display:
 
 ```text
-snapshot_id/generated_at
+generated_at
 Jadwal display info
 rows:
-  rank
-  nomor_peserta
+  no (competition rank)
+  no_peserta
   nama
   skor
   status MENGERJAKAN/SELESAI
@@ -2079,7 +2079,7 @@ Command idempotent.
 
 ```text
 GET /manager/api/live-scoring
-PUT /manager/api/live-scoring
+GET /manager/api/live-scoring/options
 ```
 
 Config minimum:
@@ -2101,17 +2101,15 @@ POST /manager/api/live-scoring/stop
 ## 40.3 Public URL
 
 ```text
-POST /manager/api/live-scoring/regenerate-url
-GET  /manager/api/live-scoring/public-url
+POST /manager/api/live-scoring/regenerate
 ```
 
 Regenerate membuat token random baru dan token lama tidak valid.
 
-## 40.4 Preview Snapshot
+## 40.4 Snapshot Public
 
-```text
-GET /manager/api/live-scoring/preview
-```
+Snapshot public dibaca melalui `GET /api/live/{publicToken}`. Tidak ada endpoint
+preview terpisah agar kontrak display tetap tunggal.
 
 Menggunakan formula kelompok Pilihan Ganda/Klik:
 
@@ -2237,8 +2235,8 @@ q
 ## 43.2 Export Hasil
 
 ```text
-GET /manager/hasil/ujian/export.xlsx
-GET /manager/hasil/ujian/export.pdf
+GET /manager/hasil/export/hasil/xlsx
+GET /manager/hasil/export/hasil/pdf
 ```
 
 Export mengikuti filter yang dikirim secara eksplisit/query aman.
@@ -2248,9 +2246,10 @@ Export mengikuti filter yang dikirim secara eksplisit/query aman.
 # 44. REKAP NILAI API
 
 ```text
-GET /manager/api/rekap-nilai
-GET /manager/hasil/rekap/export.xlsx
-GET /manager/hasil/rekap/export.pdf
+GET /manager/api/reports/rekap/options
+GET /manager/api/reports/rekap
+GET /manager/hasil/export/rekap/xlsx
+GET /manager/hasil/export/rekap/pdf
 ```
 
 Rekap memakai hasil **official** dari `official_result_pointer`, bukan semua Attempt historis.
@@ -2260,14 +2259,16 @@ Rekap memakai hasil **official** dari `official_result_pointer`, bukan semua Att
 # 45. ANALISIS SOAL API
 
 ```text
-GET /manager/api/analisis-soal
-GET /manager/api/analisis-soal/{questionId}
-POST /manager/api/analisis-soal/rebuild
-GET /manager/hasil/analisis/export.xlsx
-GET /manager/hasil/analisis/export.pdf
+GET /manager/api/reports/analysis/options
+GET /manager/api/reports/analysis
+GET /manager/api/reports/analysis/{questionId}
+GET /manager/hasil/export/analisis/xlsx
+GET /manager/hasil/export/analisis/pdf
 ```
 
-Aggregate analisis boleh cached/stale dan direbuild. Tidak boleh menghambat Attempt Engine.
+V1 menghitung agregat langsung dari official result snapshot sehingga tidak mempunyai cache
+aggregate yang bisa stale. Setelah pointer official berubah, pembacaan berikutnya otomatis
+mengikuti snapshot terbaru dan tidak menghambat Attempt Engine.
 
 ---
 
