@@ -4,6 +4,9 @@ namespace App\Services;
 
 class AcademicAnswerService
 {
+    private array $optionCache = [];
+    private array $matchingCache = [];
+    private array $shortAnswerCache = [];
     public function validate($db, array $item, mixed $payload): array
     {
         $type = (string) $item['question_type'];
@@ -31,9 +34,8 @@ class AcademicAnswerService
         if ($selected === null || $selected === '') return ['ok' => true, 'payload' => ['selected' => null], 'auto_score' => 0.0, 'scoring_state' => 'AUTO'];
         if (!is_string($selected) || mb_strlen($selected) > 64) return $this->error('Pilihan jawaban tidak valid.');
 
-        $option = $db->table('soal_opsi')->select('option_key, is_correct, point_value')
-            ->where('soal_revision_id', (int) $item['soal_revision_id'])
-            ->where('option_key', $selected)->get()->getRowArray();
+        $options = $this->options($db, (int) $item['soal_revision_id']);
+        $option = $options[$selected] ?? null;
         if ($option === null) return $this->error('Pilihan jawaban tidak tersedia.');
 
         $score = $tiered
@@ -53,9 +55,8 @@ class AcademicAnswerService
         ), static fn(string $v): bool => $v !== '')));
         if (count($selected) > 20) return $this->error('Pilihan terlalu banyak.');
 
-        $options = $db->table('soal_opsi')->select('option_key, is_correct')
-            ->where('soal_revision_id', (int) $item['soal_revision_id'])->get()->getResultArray();
-        $known = array_column($options, null, 'option_key');
+        $known = $this->options($db, (int) $item['soal_revision_id']);
+        $options = array_values($known);
         foreach ($selected as $key) if (!isset($known[$key])) return $this->error('Pilihan jawaban tidak tersedia.');
 
         $correct = array_values(array_map(
@@ -86,8 +87,7 @@ class AcademicAnswerService
         if (array_diff(array_keys($payload), ['pairs']) !== [] || !is_array($payload['pairs'] ?? null))
             return $this->error('Format jawaban Menjodohkan tidak valid.');
 
-        $pairs = $db->table('soal_matching_pair')->select('left_key, right_key')
-            ->where('soal_revision_id', (int) $item['soal_revision_id'])->get()->getResultArray();
+        $pairs = $this->matchingPairs($db, (int) $item['soal_revision_id']);
         $correct = []; $rightKeys = [];
         foreach ($pairs as $row) {
             $correct[(string) $row['left_key']] = (string) $row['right_key'];
@@ -134,8 +134,7 @@ class AcademicAnswerService
             }
         } else {
             $normalized = $this->normalizeText($value);
-            $rows = $db->table('soal_short_answer_text')->select('normalized_value, accepted_value')
-                ->where('soal_revision_id', (int) $item['soal_revision_id'])->get()->getResultArray();
+            $rows = $this->shortAnswers($db, (int) $item['soal_revision_id']);
             foreach ($rows as $row) {
                 $candidate = trim((string) ($row['normalized_value'] ?: $row['accepted_value']));
                 if ($normalized === $this->normalizeText($candidate)) { $correct = true; break; }
@@ -152,6 +151,40 @@ class AcademicAnswerService
         $text = $payload['text'] ?? '';
         if (!is_string($text) || mb_strlen($text) > 30000) return $this->error('Jawaban Uraian terlalu panjang.');
         return ['ok' => true, 'payload' => ['text' => $text], 'auto_score' => null, 'scoring_state' => 'PENDING_MANUAL'];
+    }
+
+    private function options($db, int $revisionId): array
+    {
+        if (!array_key_exists($revisionId, $this->optionCache)) {
+            $rows = $db->table('soal_opsi')
+                ->select('option_key, is_correct, point_value')
+                ->where('soal_revision_id', $revisionId)
+                ->get()->getResultArray();
+            $this->optionCache[$revisionId] = array_column($rows, null, 'option_key');
+        }
+        return $this->optionCache[$revisionId];
+    }
+
+    private function matchingPairs($db, int $revisionId): array
+    {
+        if (!array_key_exists($revisionId, $this->matchingCache)) {
+            $this->matchingCache[$revisionId] = $db->table('soal_matching_pair')
+                ->select('left_key, right_key')
+                ->where('soal_revision_id', $revisionId)
+                ->get()->getResultArray();
+        }
+        return $this->matchingCache[$revisionId];
+    }
+
+    private function shortAnswers($db, int $revisionId): array
+    {
+        if (!array_key_exists($revisionId, $this->shortAnswerCache)) {
+            $this->shortAnswerCache[$revisionId] = $db->table('soal_short_answer_text')
+                ->select('normalized_value, accepted_value')
+                ->where('soal_revision_id', $revisionId)
+                ->get()->getResultArray();
+        }
+        return $this->shortAnswerCache[$revisionId];
     }
 
     private function normalizeText(string $value): string
