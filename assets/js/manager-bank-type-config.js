@@ -100,7 +100,7 @@
             body.append(row); sync();
         }
         $('typeSave').disabled = !editable;
-        if (!editable) feedback('Bank atau Kegiatan tidak DRAFT; komposisi terkunci.', true);
+        if (!editable) feedback('Bank READY; komposisi terkunci.', true);
         else feedback('');
     };
     $('typeForm').addEventListener('submit', async (event) => {
