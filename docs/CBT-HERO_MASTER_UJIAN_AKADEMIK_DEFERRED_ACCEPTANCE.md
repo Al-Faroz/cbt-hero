@@ -19,6 +19,9 @@ Status yang ditunda mulai keputusan ini:
 - Phase 6 — Attempt Engine + IndexedDB + Sync + Timer (implementasi selesai; acceptance tetap DEFERRED);
 - Phase 7 — Pelaksanaan + Token + Monitoring + Kontrol (implementasi selesai; acceptance tetap DEFERRED);
 - Phase 8 — Scoring Akademik + Live Edit + Finalisasi (implementasi selesai; acceptance tetap DEFERRED);
+- Participant Renderer + Mobile — PRM01–PRM20 (implementasi/hardening selesai; acceptance device tetap DEFERRED);
+- Phase 9A — Hasil Ujian (implementasi selesai; acceptance tetap DEFERRED);
+- Phase 9B–9E — Rekap Nilai + Analisis Soal + Export + Public Live Scoring (implementasi selesai; acceptance tetap DEFERRED);
 - subphase Master Ujian Akademis berikutnya yang selesai sebelum checkpoint tersebut.
 
 Dokumen acceptance masing-masing tetap menjadi sumber langkah pengujian. Kata
