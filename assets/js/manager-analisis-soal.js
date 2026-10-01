@@ -15,6 +15,7 @@
         .replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const fmt = value => value === null || value === '' || value === undefined ? '—'
         : Number(value).toLocaleString('id-ID',{maximumFractionDigits:2});
+    const pct = value => value === null || value === '' || value === undefined ? '—' : fmt(value) + '%';
     const params = () => {
         const p=new URLSearchParams();
         if(els.jadwal.value)p.set('jadwal_id',els.jadwal.value);
@@ -41,7 +42,7 @@
             els.feedback.className='cbt-inline-feedback mt-2 text-warning'; return;
         }
         els.feedback.textContent='';
-        els.rows.innerHTML='<tr><td colspan="9" class="text-center text-secondary py-4">Menghitung analisis...</td></tr>';
+        els.rows.innerHTML='<tr><td colspan="10" class="text-center text-secondary py-4">Menghitung analisis...</td></tr>';
         try{
             const data=await getJson(app.dataset.api+'?'+params());
             const context=data.context||{}, items=data.items||[];
@@ -49,15 +50,16 @@
             els.summary.textContent=(data.summary?.question_count||0)+' soal · '+(data.summary?.participant_count||0)+' peserta';
             els.rows.innerHTML=items.length?items.map(item=>'<tr>'
                 +'<td>'+esc(item.stable_key||('#'+item.question_id))+'</td><td>'+esc(item.question_type)+'</td>'
-                +'<td class="text-end">'+esc(item.participant_count)+'</td><td class="text-end">'+fmt(item.average_percent)+'%</td>'
-                +'<td class="text-end">'+fmt(item.difficulty_index)+'%</td><td class="text-end">'+fmt(item.full_score_rate)+'%</td>'
-                +'<td class="text-end">'+fmt(item.zero_score_rate)+'%</td><td class="text-end">'+esc(item.voided_count)+'</td>'
+                +'<td class="text-end">'+esc(item.participant_count)+'</td><td class="text-end">'+esc(item.pending_count||0)+'</td>'
+                +'<td class="text-end">'+pct(item.average_percent)+'</td>'
+                +'<td class="text-end">'+pct(item.difficulty_index)+'</td><td class="text-end">'+pct(item.full_score_rate)+'</td>'
+                +'<td class="text-end">'+pct(item.zero_score_rate)+'</td><td class="text-end">'+esc(item.voided_count)+'</td>'
                 +'<td><button class="btn btn-outline-primary btn-sm" data-analysis-detail="'+esc(item.question_id)+'">Detail</button></td></tr>').join('')
-                :'<tr><td colspan="9" class="text-center text-secondary py-4">Belum ada item hasil resmi.</td></tr>';
+                :'<tr><td colspan="10" class="text-center text-secondary py-4">Belum ada item hasil resmi.</td></tr>';
             els.excel.disabled=false; els.pdf.disabled=false;
         }catch(error){
             els.feedback.textContent=error.message; els.feedback.className='cbt-inline-feedback mt-2 text-danger';
-            els.rows.innerHTML='<tr><td colspan="9" class="text-center text-danger py-4">Analisis belum dapat dimuat.</td></tr>';
+            els.rows.innerHTML='<tr><td colspan="10" class="text-center text-danger py-4">Analisis belum dapat dimuat.</td></tr>';
         }
     }
     async function detail(id){
