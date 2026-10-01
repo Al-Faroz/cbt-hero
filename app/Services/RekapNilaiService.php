@@ -142,6 +142,8 @@ class RekapNilaiService
             'rombel' => $db->table('official_result_pointer AS orp')
                 ->select('a.rombel_snapshot AS nama')
                 ->join('attempt AS a', 'a.id = orp.attempt_id')
+                ->join('result_snapshot AS rs', 'rs.id = orp.result_snapshot_id')
+                ->where('rs.result_type', 'ACADEMIC')
                 ->groupBy('a.rombel_snapshot')
                 ->orderBy('a.rombel_snapshot', 'ASC')
                 ->get()->getResultArray(),
