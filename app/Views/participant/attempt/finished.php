@@ -34,7 +34,10 @@
 
             <div class="participant-result-card">
                 <span>NILAI ISIAN &amp; URAIAN</span>
-                <?php if (($typedScoreState ?? 'IN_PROCESS') === 'COMPLETE' && $snapshot['typed_score'] !== null): ?>
+                <?php if (($typedScoreState ?? 'IN_PROCESS') === 'NOT_APPLICABLE'): ?>
+                    <strong>—</strong>
+                    <small>Tidak ada soal Isian Singkat atau Uraian pada ujian ini.</small>
+                <?php elseif (($typedScoreState ?? 'IN_PROCESS') === 'COMPLETE' && $snapshot['typed_score'] !== null): ?>
                     <strong><?= esc(number_format((float) $snapshot['typed_score'], 2, ',', '.')) ?></strong>
                     <small>Penilaian bagian ketik sudah selesai.</small>
                 <?php else: ?>
