@@ -295,8 +295,7 @@ class ParticipantCredentialService
     private function isExamLocked(int $id): bool
     {
         $db = Database::connect();
-        if ($db->table('peserta_kegiatan AS pk')->join('kegiatan AS k', 'k.id = pk.kegiatan_id')
-            ->where('pk.peserta_id', $id)->where('k.status', 'BERJALAN')->countAllResults() > 0) {
+        if ((new ExecutionDependencyService())->participantHasActiveAttempt($db, $id)) {
             return true;
         }
         return $db->table('attempt_active_lock AS l')
