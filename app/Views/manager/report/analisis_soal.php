@@ -4,7 +4,7 @@
     <div>
         <div class="manager-page-kicker">Hasil & Laporan</div>
         <h1 class="manager-page-title">Analisis Soal</h1>
-        <p class="manager-page-description">Analisis item dari hasil resmi. Nilai agregat dihitung langsung dari snapshot resmi agar tidak memakai Attempt historis yang sudah digantikan.</p>
+        <p class="manager-page-description">Analisis item dari hasil aktif yang ditunjuk sistem. Item yang belum selesai dinilai tidak dianggap skor nol, dan Attempt historis yang sudah digantikan tidak ikut agregat.</p>
     </div>
 </section>
 
