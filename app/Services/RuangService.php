@@ -53,7 +53,7 @@ class RuangService
             $old = $id === null ? null : $db->query('SELECT * FROM ruang WHERE id = ? FOR UPDATE', [$id])->getRowArray();
             if ($id !== null && $old === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Ruang tidak ditemukan.'); }
             if ($old !== null && $this->usedByLockedKegiatan($db, $id)) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Ruang dipakai Kegiatan yang pelaksanaannya sudah pernah dimulai.');
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Ruang dipakai Kegiatan yang sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             $duplicate = $db->table('ruang')->select('id')->where('kode', $kode)->get()->getRowArray();
             if ($duplicate !== null && (int) $duplicate['id'] !== $id) {
@@ -83,7 +83,7 @@ class RuangService
             $old = $db->query('SELECT * FROM ruang WHERE id = ? FOR UPDATE', [$id])->getRowArray();
             if ($old === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Ruang tidak ditemukan.'); }
             if ($old['status'] !== $status) {
-                if ($this->usedByLockedKegiatan($db, $id)) { $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Ruang dipakai Kegiatan yang pelaksanaannya sudah pernah dimulai.'); }
+                if ($this->usedByLockedKegiatan($db, $id)) { $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Ruang dipakai Kegiatan yang sudah mempunyai Preparation, Attempt, atau hasil final.'); }
                 if ($status === 'INACTIVE' && $db->table('peserta_kegiatan')->where('ruang_id', $id)->countAllResults() > 0) {
                     $db->transRollback(); return $this->error(409, 'DEPENDENCY_EXISTS', 'Lepaskan penempatan anggota sebelum menonaktifkan Ruang.');
                 }
