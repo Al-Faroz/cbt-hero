@@ -165,7 +165,6 @@ class LiveScoringService
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'schedule' => [
-                'jadwal_id' => (int) $schedule['id'],
                 'kegiatan' => (string) $schedule['kegiatan_nama'],
                 'ujian' => (string) ($schedule['nama_mapel'] ?: $schedule['nama_bank']),
                 'jenis_jadwal' => (string) $schedule['jenis_jadwal'],
