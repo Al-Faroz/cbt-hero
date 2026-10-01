@@ -91,7 +91,7 @@ class ReportExportService
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'title' => 'Hasil Ujian',
-            'subtitle' => 'Hasil akademik resmi',
+            'subtitle' => 'Hasil akademik aktif — status FINAL/BELUM FINAL ditampilkan per baris',
             'slug' => 'hasil_ujian_' . date('Ymd_His'),
             'headers' => ['No Peserta', 'Nama', 'Rombel', 'Mata Pelajaran', 'Nilai Klik', 'Nilai Ketik', 'Nilai Akhir', 'Status Scoring', 'Status Hasil'],
             'rows' => $rows,
