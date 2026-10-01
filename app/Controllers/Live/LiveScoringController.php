@@ -18,6 +18,11 @@ class LiveScoringController extends BaseController
             throw PageNotFoundException::forPageNotFound('Live Scoring tidak tersedia.');
         }
 
+        $this->response
+            ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->setHeader('Pragma', 'no-cache')
+            ->setHeader('Referrer-Policy', 'no-referrer');
+
         return view('public/live_scoring', [
             'token' => $token,
             'initial' => $result['data'],
