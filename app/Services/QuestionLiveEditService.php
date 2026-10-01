@@ -199,6 +199,8 @@ class QuestionLiveEditService
             $serverRevisions = $this->touchActiveAttempts($db, $questionId);
             if ($kind === 'STRUCTURAL' && $policy === 'REANSWER') {
                 $this->resetActiveAnswers($db, $questionId, $actor, $serverRevisions);
+            } elseif (in_array($kind, ['KEY_WEIGHT', 'STRUCTURAL'], true)) {
+                $this->recomputeActiveResponses($db, $questionId, $revisionId, $data, $config);
             }
 
             (new BankReadinessService())->validateLiveEdit($db, $bankId);
@@ -477,6 +479,67 @@ class QuestionLiveEditService
                     'prefetch_order' => ((int) ($max['max_order'] ?? 0)) + 1,
                 ]);
             }
+        }
+    }
+
+    private function recomputeActiveResponses(
+        $db,
+        int $questionId,
+        int $revisionId,
+        array $data,
+        array $config
+    ): void {
+        $responses = $db->table('attempt_response AS ar')
+            ->select('ar.id, ar.answer_payload, ar.manual_score')
+            ->join('attempt AS a', 'a.id = ar.attempt_id')
+            ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
+            ->where('pai.soal_id', $questionId)
+            ->where('a.status', 'ACTIVE')
+            ->get()->getResultArray();
+
+        if (!$responses) {
+            return;
+        }
+
+        $item = [
+            'soal_revision_id' => $revisionId,
+            'question_type' => (string) $data['question_type'],
+            'max_point' => (float) $data['max_point'],
+            'scoring_mode' => $config['scoring_mode'] ?? ($data['scoring_mode'] ?? null),
+            'short_answer_mode' => $data['short_answer_mode'] ?? null,
+            'expected_numeric' => $data['expected_numeric'] ?? null,
+            'numeric_tolerance' => $data['numeric_tolerance'] ?? null,
+        ];
+
+        $answerService = new AcademicAnswerService();
+
+        foreach ($responses as $response) {
+            $payload = null;
+            if ($response['answer_payload'] !== null && (string) $response['answer_payload'] !== '') {
+                $decoded = json_decode((string) $response['answer_payload'], true);
+                $payload = is_array($decoded) ? $decoded : null;
+            }
+
+            $validated = $answerService->validate($db, $item, $payload);
+            $manual = $response['manual_score'] === null ? null : (float) $response['manual_score'];
+
+            if (!($validated['ok'] ?? false)) {
+                $auto = null;
+                $effective = $manual ?? 0.0;
+                $state = $manual === null ? 'NEEDS_REVIEW' : 'MANUAL';
+            } else {
+                $auto = $validated['auto_score'] === null ? null : (float) $validated['auto_score'];
+                $effective = $manual !== null ? $manual : (float) ($auto ?? 0.0);
+                $state = $manual !== null ? 'MANUAL' : (string) $validated['scoring_state'];
+            }
+
+            $effective = max(0.0, min((float) $data['max_point'], $effective));
+
+            $db->table('attempt_response')->where('id', (int) $response['id'])->update([
+                'auto_score' => $auto,
+                'effective_score' => $effective,
+                'scoring_state' => $state,
+            ]);
         }
     }
 
