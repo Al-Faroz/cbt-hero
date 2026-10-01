@@ -97,7 +97,7 @@ class PesertaService
             return $this->error(404, 'NOT_FOUND', 'Peserta tidak ditemukan.');
         }
         if ($old !== null && $this->locked($id)) {
-            return $this->error(423, 'DATA_LOCKED', 'Data Peserta terkunci oleh Kegiatan berjalan.');
+            return $this->error(423, 'DATA_LOCKED', 'Data Peserta terkunci karena Peserta sedang memiliki Attempt aktif.');
         }
         $nisn = trim($this->scalar($payload['nisn'] ?? $old['nisn'] ?? null));
         $nama = trim($this->scalar($payload['nama'] ?? $old['nama'] ?? null));
@@ -169,7 +169,7 @@ class PesertaService
             return $this->error(404, 'NOT_FOUND', 'Peserta tidak ditemukan.');
         }
         if ($this->locked($id)) {
-            return $this->error(423, 'DATA_LOCKED', 'Data Peserta terkunci oleh Kegiatan berjalan.');
+            return $this->error(423, 'DATA_LOCKED', 'Data Peserta terkunci karena Peserta sedang memiliki Attempt aktif.');
         }
         $status = strtoupper(trim($this->scalar($payload['status'] ?? null)));
         if (! in_array($status, ['ACTIVE', 'INACTIVE'], true)) {
