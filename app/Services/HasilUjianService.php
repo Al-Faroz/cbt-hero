@@ -127,29 +127,43 @@ class HasilUjianService
         $db = Database::connect();
 
         return ['ok' => true, 'status' => 200, 'data' => [
-            'kegiatan' => $db->table('kegiatan')
-                ->select('id, nama, tahun_pelajaran, semester')
-                ->orderBy('created_at', 'DESC')
+            'kegiatan' => $db->table('official_result_pointer AS orp')
+                ->distinct()
+                ->select('k.id, k.nama, k.tahun_pelajaran, k.semester')
+                ->join('result_snapshot AS rs', 'rs.id = orp.result_snapshot_id')
+                ->join('jadwal AS rootj', 'rootj.id = orp.root_jadwal_id')
+                ->join('kegiatan AS k', 'k.id = rootj.kegiatan_id')
+                ->where('rs.result_type', 'ACADEMIC')
+                ->orderBy('k.id', 'DESC')
                 ->get()->getResultArray(),
-            'jadwal' => $db->table('jadwal AS j')
-                ->select('j.id, j.kegiatan_id, j.jenis_jadwal, j.mulai_at, j.results_finalized_at, '
+            'jadwal' => $db->table('official_result_pointer AS orp')
+                ->distinct()
+                ->select('rootj.id, rootj.kegiatan_id, rootj.jenis_jadwal, rootj.mulai_at, rootj.results_finalized_at, '
                     . 'b.nama_bank, m.nama_mapel')
-                ->join('bank_soal AS b', 'b.id = j.bank_soal_id', 'left')
+                ->join('result_snapshot AS rs', 'rs.id = orp.result_snapshot_id')
+                ->join('jadwal AS rootj', 'rootj.id = orp.root_jadwal_id')
+                ->join('bank_soal AS b', 'b.id = rootj.bank_soal_id', 'left')
                 ->join('mata_pelajaran AS m', 'm.id = b.mapel_id', 'left')
-                ->where('j.parent_jadwal_id', null)
-                ->where('j.psych_instrument_id', null)
-                ->orderBy('j.mulai_at', 'DESC')
+                ->where('rs.result_type', 'ACADEMIC')
+                ->orderBy('rootj.mulai_at', 'DESC')
                 ->get()->getResultArray(),
-            'mapel' => $db->table('mata_pelajaran')
-                ->select('id, kode_mapel, nama_mapel')
-                ->where('status', 'ACTIVE')
-                ->orderBy('urutan', 'ASC')
-                ->orderBy('nama_mapel', 'ASC')
+            'mapel' => $db->table('official_result_pointer AS orp')
+                ->distinct()
+                ->select('m.id, m.kode_mapel, m.nama_mapel, m.urutan')
+                ->join('result_snapshot AS rs', 'rs.id = orp.result_snapshot_id')
+                ->join('jadwal AS rootj', 'rootj.id = orp.root_jadwal_id')
+                ->join('bank_soal AS b', 'b.id = rootj.bank_soal_id')
+                ->join('mata_pelajaran AS m', 'm.id = b.mapel_id')
+                ->where('rs.result_type', 'ACADEMIC')
+                ->orderBy('m.urutan', 'ASC')
+                ->orderBy('m.nama_mapel', 'ASC')
                 ->get()->getResultArray(),
             'rombel' => $db->table('official_result_pointer AS orp')
+                ->distinct()
                 ->select('a.rombel_snapshot AS nama')
+                ->join('result_snapshot AS rs', 'rs.id = orp.result_snapshot_id')
                 ->join('attempt AS a', 'a.id = orp.attempt_id')
-                ->groupBy('a.rombel_snapshot')
+                ->where('rs.result_type', 'ACADEMIC')
                 ->orderBy('a.rombel_snapshot', 'ASC')
                 ->get()->getResultArray(),
         ]];
