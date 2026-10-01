@@ -82,7 +82,12 @@ Kolom harus tepat:
 | P9L11 | Dataset lebih tinggi daripada viewport. | Snapshot tidak diganti selama scroll; data discroll sampai baris terakhir baru fetch berikutnya. |
 | P9L12 | Dataset muat satu layar. | Sistem menunggu satu siklus wajar sebelum fetch baru; tidak polling agresif. |
 | P9L13 | Audit payload public. | Tidak ada peserta_id, attempt_id, jawaban, kunci, rombel, atau data internal lain; hanya konteks display dan lima field tabel. |
-| P9L14 | ±2.000 peserta. | Satu snapshot menggunakan query agregat, bukan query per peserta/N+1. |
+| P9L14 | ±2.000 peserta. | Satu snapshot menggunakan query agregat, bukan query per peserta/N+1; query tidak membangun `IN (...)` ribuan Attempt ID. |
+| P9L15 | Saat peserta ACTIVE, Operator melakukan Live Edit KEY_WEIGHT/STRUCTURAL+PRESERVE pada soal Klik. | Respons aktif direcompute saat Live Edit sehingga snapshot publik berikutnya memakai skor baru tanpa menunggu mutation jawaban peserta. |
+| P9L16 | Dua aksi Manager START/STOP/Ganti URL dikirim hampir bersamaan. | Mutation diserialisasi dengan lock config; token/version/state tidak saling menimpa. |
+| P9L17 | Audit response public HTML/API. | Cache disabled, referrer disabled, noindex/noarchive, dan MIME sniffing disabled; bearer-like token tidak ditampilkan sebagai data tabel. |
+| P9L18 | Dua peserta mempunyai skor dan No Peserta identik/kosong. | Ranking tetap competition rank dan urutan render deterministik dengan fallback internal yang tidak diekspos ke public payload. |
+| P9L19 | Klik START/STOP/Ganti URL berulang cepat pada Manager UI. | UI menahan mutation kedua sampai state authoritative selesai dimuat ulang. |
 
 ## Gate
 
