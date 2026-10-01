@@ -218,7 +218,7 @@
             </div>
             <div class="modal-body">
                 <p class="mb-2" id="questionDeleteMessage"></p>
-                <div class="alert alert-warning mb-0">Penghapusan bersifat permanen dan menghapus seluruh revisi soal. Aksi hanya tersedia saat Bank dan Kegiatan masih DRAFT serta Bank belum dipakai Jadwal.</div>
+                <div class="alert alert-warning mb-0">Penghapusan bersifat permanen dan menghapus seluruh revisi soal. Aksi hanya tersedia saat Bank masih DRAFT dan belum dipakai Jadwal.</div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Batal</button>
