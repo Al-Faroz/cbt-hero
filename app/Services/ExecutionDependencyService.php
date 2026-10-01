@@ -12,7 +12,17 @@ class ExecutionDependencyService
 
         if ($db->table('jadwal')
             ->where('kegiatan_id', $kegiatanId)
-            ->where('first_attempt_started_at IS NOT NULL', null, false)
+            ->groupStart()
+                ->where('first_attempt_started_at IS NOT NULL', null, false)
+                ->orWhere('results_finalized_at IS NOT NULL', null, false)
+            ->groupEnd()
+            ->countAllResults() > 0) {
+            return true;
+        }
+
+        if ($db->table('prepared_assignment AS pa')
+            ->join('jadwal AS j', 'j.id = pa.generated_for_jadwal_id')
+            ->where('j.kegiatan_id', $kegiatanId)
             ->countAllResults() > 0) {
             return true;
         }
