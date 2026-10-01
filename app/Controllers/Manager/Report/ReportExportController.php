@@ -33,9 +33,13 @@ class ReportExportController extends BaseController
                 ->setBody((string) ($result['message'] ?? 'Laporan tidak tersedia.'));
         }
 
-        return view('manager/report/print', [
-            'report' => $result['data'],
-            'pageTitle' => $result['data']['title'] ?? 'Laporan',
-        ]);
+        return $this->response
+            ->setHeader('Cache-Control', 'no-store, private')
+            ->setHeader('Pragma', 'no-cache')
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setBody(view('manager/report/print', [
+                'report' => $result['data'],
+                'pageTitle' => $result['data']['title'] ?? 'Laporan',
+            ]));
     }
 }
