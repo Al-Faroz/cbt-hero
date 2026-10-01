@@ -275,6 +275,7 @@ class LiveScoringService
             $score = $weight > 0 ? round(($earned / $weight) * 100.0, 2) : 0.0;
 
             $rows[] = [
+                '_sort_id' => $id,
                 'no_peserta' => (string) ($attempt['nomor_peserta_snapshot'] ?? ''),
                 'nama' => (string) $attempt['nama_snapshot'],
                 'skor' => $score,
@@ -285,7 +286,9 @@ class LiveScoringService
         usort($rows, static function (array $a, array $b): int {
             $score = ((float) $b['skor']) <=> ((float) $a['skor']);
             if ($score !== 0) return $score;
-            return strnatcasecmp((string) $a['no_peserta'], (string) $b['no_peserta']);
+            $participantNo = strnatcasecmp((string) $a['no_peserta'], (string) $b['no_peserta']);
+            if ($participantNo !== 0) return $participantNo;
+            return ((int) $a['_sort_id']) <=> ((int) $b['_sort_id']);
         });
 
         $rank = 0;
