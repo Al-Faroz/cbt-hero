@@ -87,6 +87,13 @@ Mutation rescore dan finalisasi wajib memakai `Idempotency-Key`.
 | S37 | Live Edit setelah Attempt FINISHED tetapi sebelum FINAL. | Attempt FINISHED tidak dibuka kembali; hasil berubah hanya melalui rescore/snapshot baru. |
 | S38 | Buka halaman Penilaian Akademik. | Operator dapat memilih Jadwal, melihat soal/respons, memberi nilai manual, rescore, dan finalisasi melalui UI Manager. |
 | S39 | Buka Daftar Soal pada Bank READY. | Aksi Live Edit tersedia; editor meminta jenis perubahan, catatan, policy struktural, dan menyediakan VOID. |
+| S40 | STRUCTURAL + PRESERVE mengubah option/pair key yang membuat jawaban aktif tidak kompatibel. | Ditolak `REANSWER_REQUIRED`; Operator wajib memakai REANSWER. |
+| S41 | CONTENT mencoba mengubah option key atau mapping benar Menjodohkan. | Ditolak `CHANGE_KIND_MISMATCH`; perubahan tersebut bukan content-only. |
+| S42 | Coba beri manual score pada soal VOID. | Ditolak `QUESTION_VOID`; UI juga menonaktifkan tombol koreksi. |
+| S43 | Respons objektif masuk NEEDS_REVIEW sementara Isian/Uraian sudah complete. | Scoring global tetap IN_PROCESS, tetapi typed_score tetap tersedia/COMPLETE; pending objektif tidak membuat kelompok ketik palsu DALAM PROSES. |
+| S44 | Finalisasi Jadwal lalu peserta tanpa Attempt mencoba START selama window masih terbuka. | START ditolak `RESULT_ALREADY_FINAL`; Daftar Ujian menampilkan Jadwal sebagai Ditutup. |
+| S45 | Buat snapshot FINAL melalui service dengan scoring belum COMPLETE/final_score NULL. | Ditolak oleh invariant `ResultSnapshotService`. |
+| S46 | Input nilai manual desimal `2,5`. | Diterima dan disimpan canonical sebagai nilai numerik yang sama dengan `2.5`. |
 
 ## Status
 
