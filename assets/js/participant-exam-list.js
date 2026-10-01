@@ -62,6 +62,12 @@
                     className: 'is-finished'
                 };
 
+            case 'DITUTUP':
+                return {
+                    label: 'Ditutup',
+                    className: 'is-finished'
+                };
+
             default:
                 return {
                     label: item.availability === 'START_WINDOW_CLOSED'
@@ -188,7 +194,9 @@
                 'btn btn-outline-secondary flex-grow-1',
                 item.ui_state === 'SELESAI'
                     ? 'Ujian Selesai'
-                    : 'Belum Dapat Dibuka'
+                    : item.ui_state === 'DITUTUP'
+                        ? 'Ujian Ditutup'
+                        : 'Belum Dapat Dibuka'
             );
 
             button.type = 'button';
