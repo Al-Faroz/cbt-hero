@@ -184,6 +184,16 @@ class QuestionLiveEditService
             }
             (new QuestionMediaService())->attach($db, $revisionId, $revisionPayload, $actor);
 
+            if ($kind === 'STRUCTURAL' && $policy === 'PRESERVE' && $activeCount > 0
+                && !$this->activeAnswersCompatible($db, $questionId, $revisionId, $data)) {
+                $db->transRollback();
+                return $this->error(
+                    422,
+                    'REANSWER_REQUIRED',
+                    'Sebagian jawaban aktif tidak kompatibel dengan struktur baru. Gunakan kebijakan REANSWER.'
+                );
+            }
+
             $db->table('soal')->where('id', $questionId)->update(['current_revision_no' => $next]);
             $this->refreshAssignments($db, $questionId, $revisionId, $data, $kind);
             $serverRevisions = $this->touchActiveAttempts($db, $questionId);
@@ -346,6 +356,54 @@ class QuestionLiveEditService
             }
         }
         return null;
+    }
+
+    private function activeAnswersCompatible(
+        $db,
+        int $questionId,
+        int $revisionId,
+        array $data
+    ): bool {
+        $responses = $db->table('attempt_response AS ar')
+            ->select('ar.answer_payload')
+            ->join('attempt AS a', 'a.id = ar.attempt_id')
+            ->join('prepared_assignment_item AS pai', 'pai.id = ar.prepared_assignment_item_id')
+            ->where('pai.soal_id', $questionId)
+            ->where('a.status', 'ACTIVE')
+            ->get()->getResultArray();
+
+        if (!$responses) {
+            return true;
+        }
+
+        $item = [
+            'soal_revision_id' => $revisionId,
+            'question_type' => (string) $data['question_type'],
+            'max_point' => (float) $data['max_point'],
+            'scoring_mode' => $data['scoring_mode'] ?? null,
+            'short_answer_mode' => $data['short_answer_mode'] ?? null,
+            'expected_numeric' => $data['expected_numeric'] ?? null,
+            'numeric_tolerance' => $data['numeric_tolerance'] ?? null,
+        ];
+        $answerService = new AcademicAnswerService();
+
+        foreach ($responses as $response) {
+            $payload = null;
+            if ($response['answer_payload'] !== null && (string) $response['answer_payload'] !== '') {
+                $decoded = json_decode((string) $response['answer_payload'], true);
+                if (!is_array($decoded)) {
+                    return false;
+                }
+                $payload = $decoded;
+            }
+
+            $validated = $answerService->validate($db, $item, $payload);
+            if (!($validated['ok'] ?? false)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function refreshAssignments($db, int $questionId, int $revisionId, array $data, string $kind): void
