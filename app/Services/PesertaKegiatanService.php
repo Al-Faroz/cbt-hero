@@ -115,7 +115,7 @@ class PesertaKegiatanService
             }
             if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
                 $db->transRollback();
-                return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian pada Kegiatan ini sudah pernah dimulai.');
+                return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena Kegiatan sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             $builder = $db->table('peserta AS p')->join('rombel AS r', 'r.id = p.rombel_id')
                 ->select('p.id, p.nisn, p.nama, p.jenis_kelamin, r.display_name')
@@ -181,7 +181,7 @@ class PesertaKegiatanService
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
             if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena Kegiatan sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             $row = $db->query('SELECT id FROM peserta_kegiatan WHERE id = ? AND kegiatan_id = ? FOR UPDATE',
                 [$membershipId, $kegiatanId])->getRowArray();
@@ -228,7 +228,7 @@ class PesertaKegiatanService
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Kegiatan tidak ditemukan.');
             }
             if ((new ExecutionDependencyService())->activityStructureLocked($db, $kegiatanId)) {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena pelaksanaan ujian sudah pernah dimulai.');
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Keanggotaan terkunci karena Kegiatan sudah mempunyai Preparation, Attempt, atau hasil final.');
             }
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $rows = $db->query('SELECT id FROM peserta_kegiatan WHERE kegiatan_id = ? AND id IN (' . $placeholders . ') ORDER BY id FOR UPDATE',
