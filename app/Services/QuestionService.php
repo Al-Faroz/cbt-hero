@@ -138,14 +138,12 @@ class QuestionService
         try {
             $lookup = $this->bank($bankId);
             if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
-                [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT id, status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
-            if ($bank === null || $kegiatan === null) {
+            if ($bank === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
             }
-            if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
+            if ($bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui editor biasa.');
             }
             $config = $db->table('bank_type_config')->select('option_count')->where('bank_soal_id', $bankId)
                 ->where('question_type', 'PG')->get()->getRowArray();
@@ -207,14 +205,12 @@ class QuestionService
         try {
             $lookup = $this->bank($bankId);
             if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
-                [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
-            if ($bank === null || $kegiatan === null) {
+            if ($bank === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
             }
-            if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
+            if ($bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui editor biasa.');
             }
             $question = $db->query('SELECT s.id, sr.question_type, sr.metadata_json FROM soal s '
                 . 'JOIN soal_revision sr ON sr.soal_id = s.id AND sr.revision_no = s.current_revision_no '
@@ -253,14 +249,12 @@ class QuestionService
         try {
             $lookup = $this->bank($bankId);
             if ($lookup === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.'); }
-            $kegiatan = $db->query('SELECT status FROM kegiatan WHERE id = ? FOR UPDATE',
-                [$lookup['kegiatan_id']])->getRowArray();
             $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
-            if ($bank === null || $kegiatan === null) {
+            if ($bank === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Bank tidak ditemukan.');
             }
-            if ($bank['status'] !== 'DRAFT' || $kegiatan['status'] !== 'DRAFT') {
-                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank atau Kegiatan sudah terkunci.');
+            if ($bank['status'] !== 'DRAFT') {
+                $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui editor biasa.');
             }
             if ($db->table('jadwal')->where('bank_soal_id', $bankId)->countAllResults() > 0) {
                 $db->transRollback(); return $this->error(409, 'DEPENDENCY_EXISTS', 'Bank telah dipakai Jadwal.');
