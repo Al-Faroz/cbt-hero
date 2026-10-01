@@ -4,7 +4,7 @@
     <div>
         <div class="manager-page-kicker">Hasil & Laporan</div>
         <h1 class="manager-page-title">Rekap Nilai</h1>
-        <p class="manager-page-description">Matrix nilai resmi peserta per mata pelajaran. Attempt lama yang sudah digantikan tidak ikut rekap.</p>
+        <p class="manager-page-description">Matrix nilai FINAL peserta per mata pelajaran dari hasil aktif. Hasil BELUM FINAL ditandai PROSES dan tidak masuk rata-rata; Attempt lama yang sudah digantikan tidak ikut rekap.</p>
     </div>
 </section>
 
