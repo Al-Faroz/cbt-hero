@@ -286,9 +286,11 @@ class ReportExportService
 
     private function numberCell(string $ref, int|float $value, int $style): string
     {
-        return '<c r="' . $ref . '" s="' . $style . '"><v>'
-            . rtrim(rtrim(number_format((float) $value, 6, '.', ''), '0'), '.')
-            . '</v></c>';
+        $formatted = rtrim(rtrim(number_format((float) $value, 6, '.', ''), '0'), '.');
+        if ($formatted === '' || $formatted === '-0') {
+            $formatted = '0';
+        }
+        return '<c r="' . $ref . '" s="' . $style . '"><v>' . $formatted . '</v></c>';
     }
 
     private function columnName(int $index): string
