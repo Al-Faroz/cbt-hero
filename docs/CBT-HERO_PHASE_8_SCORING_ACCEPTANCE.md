@@ -94,6 +94,7 @@ Mutation rescore dan finalisasi wajib memakai `Idempotency-Key`.
 | S44 | Finalisasi Jadwal lalu peserta tanpa Attempt mencoba START selama window masih terbuka. | START ditolak `RESULT_ALREADY_FINAL`; Daftar Ujian menampilkan Jadwal sebagai Ditutup. |
 | S45 | Buat snapshot FINAL melalui service dengan scoring belum COMPLETE/final_score NULL. | Ditolak oleh invariant `ResultSnapshotService`. |
 | S46 | Input nilai manual desimal `2,5`. | Diterima dan disimpan canonical sebagai nilai numerik yang sama dengan `2.5`. |
+| S47 | Live Edit KEY_WEIGHT atau STRUCTURAL+PRESERVE saat Attempt ACTIVE sudah mempunyai jawaban. | `auto_score/effective_score/scoring_state` respons aktif direcompute terhadap revisi baru tanpa menunggu peserta mengubah jawaban lagi. FINISHED tetap berubah melalui Rescore. |
 
 ## Status
 
