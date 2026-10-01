@@ -302,7 +302,7 @@
         const finalize = type === 'finalize';
         $('scoringOperationTitle').textContent = finalize ? 'Finalisasi Hasil' : 'Hitung Ulang Nilai';
         $('scoringOperationMessage').textContent = finalize
-            ? 'Finalisasi akan membuat snapshot hasil FINAL dan mengunci koreksi normal pada Jadwal ini. Pastikan seluruh penilaian manual sudah selesai.'
+            ? 'Finalisasi akan membuat snapshot hasil FINAL, mengunci koreksi normal, dan menutup START baru pada Jadwal ini. Pastikan seluruh peserta yang masih harus mengikuti ujian sudah ditangani dan seluruh penilaian manual sudah selesai.'
             : 'Hitung ulang akan membuat snapshot nilai baru untuk seluruh Attempt yang sudah selesai berdasarkan kunci, bobot, VOID, dan koreksi saat ini.';
         $('scoringOperationConfirm').className = finalize ? 'btn btn-cbt-primary' : 'btn btn-outline-primary';
         $('scoringOperationConfirm').textContent = finalize ? 'Finalisasi' : 'Hitung Ulang';
