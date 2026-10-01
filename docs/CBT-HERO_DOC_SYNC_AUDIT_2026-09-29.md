@@ -120,9 +120,13 @@ nyata:
 
 bukan menunggu status Kegiatan yang tidak mempunyai tombol runtime.
 
-Status 2026-09-30: **DIKERJAKAN**. Ditambahkan `ExecutionDependencyService`; Jadwal,
-Kegiatan, membership, Ruang, Nomor Peserta, Peserta master, dan Bank mulai dipindah
-ke dependency nyata. Tetap harus diverifikasi pada regression.
+Status 2026-10-01: **CODE-LEVEL HARDENING SELESAI / REGRESSION DEFERRED**.
+`ExecutionDependencyService` sekarang mencakup Preparation, first START/Attempt,
+dan hasil final untuk lock struktur Kegiatan/keanggotaan/Ruang/Nomor. Sisa gate
+status Kegiatan pada Ruang, credential, komposisi Bank, readiness, editor soal,
+import soal, participant discovery, dan Monitoring telah dihapus. Jadwal tetap
+boleh diedit sebelum START sesuai P10 sehingga Prepared Assignment menjadi
+STALE/rebuild melalui fingerprint, bukan diblok oleh status Kegiatan.
 
 ## 2.2 No Urut Ujian pada slot waktu yang sama — IMPLEMENTED
 
@@ -289,6 +293,13 @@ Acceptance:
 `docs/CBT-HERO_PHASE_9_REPORT_LIVE_ACCEPTANCE.md`
 
 Status: **IMPLEMENTED / BELUM PASS REGRESSION**.
+
+Static audit 2026-10-01 juga memastikan:
+- Rekap hanya memakai `final_score` dari snapshot FINAL;
+- detail Hasil/Analisis mengikuti `scoring_revision_id` snapshot;
+- Paksa Selesai selalu menghasilkan snapshot provisional;
+- public Live Scoring tidak mengirim `jadwal_id` internal dan halaman public tidak
+  boleh di-cache.
 
 ## 3.6 Participant finish page
 
