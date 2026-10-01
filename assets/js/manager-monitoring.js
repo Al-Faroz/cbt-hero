@@ -126,8 +126,8 @@
             ...data.ruang.map(item => new Option(item.nama, item.id))
         );
 
-        const firstRunning = data.kegiatan.find(item => item.status === 'BERJALAN') ?? data.kegiatan[0] ?? null;
-        if (firstRunning) $('monitorKegiatan').value = String(firstRunning.id);
+        const firstAvailable = data.kegiatan[0] ?? null;
+        if (firstAvailable) $('monitorKegiatan').value = String(firstAvailable.id);
         populateSchedules();
     };
 
