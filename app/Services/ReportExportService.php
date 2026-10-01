@@ -152,6 +152,7 @@ class ReportExportService
                 (string) ($item['stable_key'] ?? ''),
                 $this->typeLabel((string) ($item['question_type'] ?? '')),
                 (int) ($item['participant_count'] ?? 0),
+                (int) ($item['pending_count'] ?? 0),
                 $item['average_percent'] === null ? '' : (float) $item['average_percent'],
                 $item['difficulty_index'] === null ? '' : (float) $item['difficulty_index'],
                 $item['full_score_rate'] === null ? '' : (float) $item['full_score_rate'],
@@ -170,7 +171,7 @@ class ReportExportService
             'title' => 'Analisis Soal',
             'subtitle' => $subtitle,
             'slug' => 'analisis_soal_' . date('Ymd_His'),
-            'headers' => ['Kode Soal', 'Tipe', 'Peserta', 'Rata-rata (%)', 'Indeks Skor (%)', 'Nilai Penuh (%)', 'Skor Nol (%)', 'Void'],
+            'headers' => ['Kode Soal', 'Tipe', 'Peserta', 'Belum Dinilai', 'Rata-rata (%)', 'Indeks Skor (%)', 'Nilai Penuh (%)', 'Skor Nol (%)', 'Void'],
             'rows' => $rows,
         ]];
     }
