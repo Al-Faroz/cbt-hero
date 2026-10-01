@@ -21,6 +21,7 @@ class MonitoringService
 
         $jadwal = $db->table('jadwal AS j')
             ->select('j.id, j.kegiatan_id, j.parent_jadwal_id, j.jenis_jadwal, j.mulai_at, j.access_state, '
+                . 'j.results_finalized_at, j.results_finalized_by, '
                 . 'k.nama AS kegiatan_nama, k.status AS kegiatan_status, b.nama_bank, b.tingkat, m.nama_mapel')
             ->join('kegiatan AS k', 'k.id = j.kegiatan_id')
             ->join('bank_soal AS b', 'b.id = j.bank_soal_id')
