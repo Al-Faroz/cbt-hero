@@ -214,7 +214,8 @@ class ParticipantExamDiscoveryService
                     'LANJUTKAN' => 0,
                     'BISA_DIMULAI' => 1,
                     'BELUM_DIBUKA' => 2,
-                    'SELESAI' => 3,
+                    'DITUTUP' => 3,
+                    'SELESAI' => 4,
                 ];
 
                 $left = $priority[$a['ui_state']] ?? 9;
