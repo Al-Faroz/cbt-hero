@@ -105,13 +105,13 @@
             state.page = Number(pg.page || 1);
             state.pages = Number(pg.pages || 1);
 
-            els.summary.textContent = (pg.total || 0) + ' hasil resmi';
+            els.summary.textContent = (pg.total || 0) + ' hasil aktif';
             els.pageInfo.textContent = 'Halaman ' + state.page + ' dari ' + state.pages;
             els.prev.disabled = state.page <= 1;
             els.next.disabled = state.page >= state.pages;
 
             if (!items.length) {
-                els.rows.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-4">Belum ada hasil resmi yang sesuai filter.</td></tr>';
+                els.rows.innerHTML = '<tr><td colspan="9" class="text-center text-secondary py-4">Belum ada hasil aktif yang sesuai filter.</td></tr>';
                 return;
             }
 
