@@ -150,7 +150,7 @@
         try {
             const data=await api(base+'?'+new URLSearchParams({type:$('advancedFilter').value||'ADVANCED',page:state.page,per_page:$('advancedSize').value}));
             if (seq!==state.seq) return;
-            state.editable=data.bank.status==='DRAFT'&&data.bank.kegiatan_status==='DRAFT';
+            state.editable=data.bank.status==='DRAFT';
             $('advancedContext').textContent=data.bank.nama_bank+' · '+data.bank.kegiatan_nama+' · '+data.bank.mapel_nama+' · Tingkat '+data.bank.tingkat+' · '+data.bank.status;
             $('advancedAdd').disabled=!state.editable||!state.configured.length;
             const body=$('advancedRows'); body.replaceChildren();
