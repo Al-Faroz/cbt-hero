@@ -216,3 +216,10 @@ Commit:
 - `42e513d96bc8b5804c6350700e375d0d92319d25`
 
 Belum diuji dengan fixture deterministic selection.
+
+
+### PREP-SEED-02 — urutan konfigurasi harus canonical sebelum hashing
+
+Seed selection sekarang mengurutkan key array `config` dan `selection` sebelum JSON encoding. Ini menghindari seed berubah hanya karena urutan baris query database berbeda, bukan karena isi konfigurasi berubah.
+
+Commit: `62143150aa5032a9ca12deeeb99892c33a6ed809`
