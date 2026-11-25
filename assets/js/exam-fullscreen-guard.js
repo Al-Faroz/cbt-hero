@@ -145,7 +145,4 @@
         if (!document.fullscreenElement) beginPause();
     });
 
-    if (!document.fullscreenElement) {
-        lock('Ujian memerlukan mode layar penuh. Tekan tombol di bawah untuk mengaktifkannya.');
-    }
 })();
