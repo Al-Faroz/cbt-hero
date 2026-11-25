@@ -95,3 +95,17 @@ File: `app/Services/JadwalOrderService.php`
 Commit: `73567e37c9fa2e632a0bf5c506b71f57ed4adb9b`
 
 Belum diuji melalui acceptance J17–J20.
+
+
+## Temuan PREP-INPUT-01 — scope SELECTED tidak boleh membuang ID invalid diam-diam
+
+Sebelumnya ID peserta pada scope SELECTED dikonversi dengan cast integer lalu nilai 0 dibuang. Payload campuran seperti `[123, "abc"]` dapat diterima sebagai peserta 123 tanpa memberi tahu operator bahwa sebagian ID request salah. Flag `force_rebuild` juga dikonversi ke boolean, sehingga string non-kosong dapat menjadi TRUE.
+
+Perbaikan:
+- Setiap ID peserta wajib lolos validasi integer positif; satu ID invalid menolak seluruh request.
+- Duplikasi ID tetap dinormalisasi satu kali.
+- `force_rebuild` wajib JSON boolean, bukan string/angka.
+- Scope dan opsi diperiksa sebelum transaksi dimulai.
+
+File: `app/Services/PreparationService.php`  
+Commit: `75b1721425e11618e8d35dd1868b5f58d61962d6`
