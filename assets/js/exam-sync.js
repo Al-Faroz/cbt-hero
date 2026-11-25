@@ -317,6 +317,34 @@
         } catch (_) {}
     };
 
+    document.addEventListener('cbt:bootstrap-ready', event => {
+        const attempt = event.detail?.data?.attempt || {};
+        if (!attempt.paused) return;
+
+        const reason = String(attempt.pause_reason || runtime.pauseReason || 'OPERATOR');
+        runtime.pauseReason = reason === 'FULLSCREEN_EXIT' ? 'FULLSCREEN_EXIT' : 'OPERATOR';
+        runtime.paused = true;
+        runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
+            ? 'Ujian dijeda · layar penuh diperlukan'
+            : 'Ujian dijeda oleh pengawas');
+
+        const overlay = document.getElementById('examLockOverlay');
+        const title = document.getElementById('examLockTitle');
+        const message = document.getElementById('examLockMessage');
+        const resumeButton = document.getElementById('examFullscreenResumeButton');
+        const exitLink = document.getElementById('examLockExitLink');
+        if (overlay) overlay.hidden = false;
+        if (title) title.textContent = 'Ujian dijeda';
+        if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
+            ? 'Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.'
+            : 'Pengawas sedang menjeda ujian. Tunggu sampai pengawas melanjutkan sesi.';
+        if (resumeButton) {
+            resumeButton.hidden = runtime.pauseReason !== 'FULLSCREEN_EXIT';
+            resumeButton.disabled = false;
+        }
+        if (exitLink) exitLink.hidden = true;
+    });
+
     document.addEventListener('cbt:sync-needed', syncOnce);
     document.addEventListener('cbt:client-event', event => {
         postEvent(event.detail?.event_type, event.detail?.metadata || {});
