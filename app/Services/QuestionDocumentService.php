@@ -80,11 +80,14 @@ class QuestionDocumentService
     {
         $result = []; $sequence = 0;
         foreach ($sheets as $sheet) {
-            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, null, false);
             $marker = trim((string) ($values[0][0] ?? ''));
             if (!preg_match('/^CBT-HERO-EXCEL-V2\|(PG|PG_KOMPLEKS|PG_BERTINGKAT|MATCHING|ISIAN_SINGKAT|URAIAN)\|(\d+)\|(.*)$/D', $marker, $match))
                 continue;
 
+            // Only question sheets may import embedded images. The guide sheet and
+            // unrelated workbook sheets must never create unattached media assets.
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
             $type = $match[1];
             $optionCount = (int) $match[2];
             $mode = trim((string) $match[3]);
