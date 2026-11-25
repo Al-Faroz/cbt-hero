@@ -105,12 +105,24 @@
                 }
             });
             const result = await response.json().catch(() => null);
-            if (!response.ok || result?.ok !== true)
-                throw new Error(result?.error?.message || 'Paket ujian gagal dimuat.');
+            if (!response.ok || result?.ok !== true) {
+                const error = new Error(result?.error?.message || 'Paket ujian gagal dimuat.');
+                error.authoritative = response.status >= 400
+                    && response.status < 500
+                    && ![408, 429].includes(response.status);
+                throw error;
+            }
 
             await storeNetworkPackage(result.data, result.meta?.server_time || null);
             runtime.setSyncState('Tersinkron', 'synced');
         } catch (error) {
+            if (error.authoritative) {
+                runtime.hardLock(
+                    'Sesi ujian tidak dapat dilanjutkan',
+                    error.message || 'Server menolak akses ke Attempt ini.'
+                );
+                return;
+            }
             const recovered = await loadCachedPackage().catch(() => false);
             if (!recovered) {
                 runtime.hardLock(
