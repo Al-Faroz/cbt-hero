@@ -127,6 +127,11 @@
             runtime.setSyncState('Tersinkron', 'synced');
         } catch (error) {
             if (error.authoritative) {
+                const state = await db.runtime_state.get(runtime.attemptId)
+                    || {attempt_id: runtime.attemptId};
+                state.server_attempt_status = 'BLOCKED';
+                state.updated_at = Date.now();
+                await db.runtime_state.put(state);
                 runtime.hardLock(
                     'Sesi ujian tidak dapat dilanjutkan',
                     error.message || 'Server menolak akses ke Attempt ini.'
