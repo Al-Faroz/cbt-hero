@@ -428,3 +428,27 @@ File: `app/Services/PreparationService.php`
 Commit: `a88944b2b6b9da8e5a90f2a6747431ab9717722c`
 
 Belum diuji dengan fixture media yang dipakai lintas soal; acceptance P13 tetap DEFERRED.
+
+
+## Penyempurnaan PREP-DETAIL-03 — detail assignment belum memperlihatkan opsi aktual
+
+Detail P21 sebelumnya sudah menampilkan stem, revisi, dan manifest media, tetapi tidak menampilkan isi opsi sesuai `option_order_json`; sisi Menjodohkan juga hanya menampilkan JSON mapping/alias mentah.
+
+Perbaikan:
+- API manager mengembalikan opsi dengan urutan persis seperti assignment yang dipin.
+- API manager mengembalikan sisi kiri/kanan Menjodohkan dalam urutan tampilan assignment dan pasangan acuan untuk troubleshooting.
+- UI menampilkan daftar opsi dan isi kedua sisi Menjodohkan menggunakan shared renderer/media map.
+- Data jawaban benar hanya berada pada endpoint manager berotorisasi; payload participant tetap memakai alias Matching dan tidak menerima pasangan acuan.
+
+File:
+- `app/Services/PreparationService.php`
+- `assets/js/manager-preparation.js`
+
+Commits:
+- `d31bf9d971d299e0fb5f761b80574a4354da7543`
+- `ad242efb1c1ebbdd5fbe04f1c4c7fb666af9ff90`
+- `ff251b56735ad615db9412d3a62e56490397f91c`
+- `8ce73b4812481f91f333a50bcf7b6568afcbb8f9`
+- Acceptance P21 updated at `bd4106999b4d487f400a2015174e557e9c155538`.
+
+Belum diuji melalui browser/HTTP fixture; P21 tetap DEFERRED.
