@@ -330,6 +330,87 @@ class PreparationService
             ->where('pai.prepared_assignment_id', $assignmentId)
             ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
 
+        $revisionIds = array_values(array_unique(array_filter(array_map(
+            static fn(array $item): int => (int) ($item['soal_revision_id'] ?? 0),
+            $items
+        ))));
+        $optionsByRevision = [];
+        $pairsByRevision = [];
+        if ($revisionIds) {
+            $optionRows = $db->table('soal_opsi')
+                ->select('soal_revision_id, option_key, content_html, sort_order, metadata_json')
+                ->whereIn('soal_revision_id', $revisionIds)
+                ->orderBy('soal_revision_id', 'ASC')->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')
+                ->get()->getResultArray();
+            foreach ($optionRows as $option) {
+                $optionsByRevision[(int) $option['soal_revision_id']][(string) $option['option_key']] = $option;
+            }
+
+            $pairRows = $db->table('soal_matching_pair')
+                ->select('soal_revision_id, left_key, left_html, right_key, right_html, sort_order')
+                ->whereIn('soal_revision_id', $revisionIds)
+                ->orderBy('soal_revision_id', 'ASC')->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')
+                ->get()->getResultArray();
+            foreach ($pairRows as $pair) {
+                $pairsByRevision[(int) $pair['soal_revision_id']][] = $pair;
+            }
+        }
+
+        foreach ($items as &$item) {
+            $revisionId = (int) ($item['soal_revision_id'] ?? 0);
+            $options = $optionsByRevision[$revisionId] ?? [];
+            $optionOrder = json_decode((string) ($item['option_order_json'] ?? ''), true);
+            if (!is_array($optionOrder)) $optionOrder = array_keys($options);
+            foreach (array_keys($options) as $key) {
+                if (!in_array($key, $optionOrder, true)) $optionOrder[] = $key;
+            }
+            $item['options'] = [];
+            foreach ($optionOrder as $key) {
+                if (!is_string($key) || !isset($options[$key])) continue;
+                $item['options'][] = [
+                    'option_key' => $key,
+                    'content_html' => (string) $options[$key]['content_html'],
+                    'metadata_json' => $options[$key]['metadata_json'],
+                ];
+            }
+
+            $pairs = $pairsByRevision[$revisionId] ?? [];
+            $pairMap = [];
+            $leftMap = [];
+            $rightMap = [];
+            foreach ($pairs as $pair) {
+                $leftKey = (string) $pair['left_key'];
+                $rightKey = (string) $pair['right_key'];
+                $pairMap[$leftKey] = $rightKey;
+                $leftMap[$leftKey] = (string) $pair['left_html'];
+                $rightMap[$rightKey] = (string) $pair['right_html'];
+            }
+            $mapping = json_decode((string) ($item['mapping_json'] ?? ''), true);
+            $mapping = is_array($mapping) ? $mapping : [];
+            $leftOrder = is_array($mapping['left_order'] ?? null) ? $mapping['left_order'] : array_keys($leftMap);
+            $rightOrder = is_array($mapping['right_order'] ?? null) ? $mapping['right_order'] : array_keys($rightMap);
+            foreach (array_keys($leftMap) as $key) if (!in_array($key, $leftOrder, true)) $leftOrder[] = $key;
+            foreach (array_keys($rightMap) as $key) if (!in_array($key, $rightOrder, true)) $rightOrder[] = $key;
+
+            $item['matching_left'] = [];
+            foreach ($leftOrder as $key) {
+                if (is_string($key) && isset($leftMap[$key])) {
+                    $item['matching_left'][] = ['key' => $key, 'content_html' => $leftMap[$key]];
+                }
+            }
+            $item['matching_right'] = [];
+            foreach ($rightOrder as $key) {
+                if (is_string($key) && isset($rightMap[$key])) {
+                    $item['matching_right'][] = ['key' => $key, 'content_html' => $rightMap[$key]];
+                }
+            }
+            $item['matching_pairs'] = [];
+            foreach ($pairMap as $leftKey => $rightKey) {
+                $item['matching_pairs'][] = ['left_key' => $leftKey, 'right_key' => $rightKey];
+            }
+        }
+        unset($item);
+
         $mediaRows = $db->table('prepared_assignment_media AS pam')
             ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.external_url, ma.status')
             ->join('media_assets AS ma', 'ma.id = pam.media_asset_id')
