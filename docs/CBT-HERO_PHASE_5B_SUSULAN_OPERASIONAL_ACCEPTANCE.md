@@ -88,6 +88,7 @@ Tambah Waktu bekerja pada Attempt yang masih `ACTIVE`:
 | S24 | Buka modal Target Susulan pada viewport 360–390px; navigasikan wrapper dengan keyboard. | Tabel target dapat digeser horizontal secara lokal; wrapper dapat difokuskan dan halaman tidak mengalami horizontal overflow. |
 | S25 | Kirim Tambah Waktu dua kali dengan Idempotency-Key dan payload sama (simulasikan response pertama hilang). | Tambahan waktu hanya diterapkan satu kali; request kedua mengembalikan replay tanpa mengubah deadline lagi. |
 | S26 | Gunakan Idempotency-Key yang sama untuk Jadwal/durasi/scope/Attempt berbeda. | Ditolak IDEMPOTENCY_CONFLICT; tidak ada Attempt yang berubah. |
+| S27 | Ulangi request Perpanjang Batas Mulai dengan nilai waktu yang sama setelah response pertama hilang. | Server mengembalikan sukses replay tanpa menulis ulang/audit duplikat; nilai batas tetap sama. |
 
 ## Status
 
