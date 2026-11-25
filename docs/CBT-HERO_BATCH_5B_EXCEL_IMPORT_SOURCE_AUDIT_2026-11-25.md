@@ -45,3 +45,14 @@ Commit:
 2. Cocokkan parser dengan `QuestionValidationService`, `AdvancedQuestionService`, dan renderer agar payload hasil impor tidak berubah makna saat commit.
 3. Periksa alur cleanup media saat parse gagal, staging gagal, item dikeluarkan, dan job dibatalkan.
 4. Lanjutkan ke hardening source-level yang terukur; acceptance fungsional tetap dilakukan pada Ujicoba Menyeluruh setelah implementasi Akademik dan Psikologi selesai.
+
+
+## Temuan lanjutan yang masih terbuka
+
+### EXCEL-MEDIA-03 — siklus hidup media staging belum memiliki kepemilikan eksplisit
+
+Parser membuat record `media_assets` berstatus ACTIVE sebelum staging job selesai digunakan. Ketika baris dikeluarkan dari staging atau job ditinggalkan sebelum commit, belum terlihat mekanisme yang mengikat aset hasil impor ke pemilik/job dan membersihkannya dengan aman.
+
+Pembersihan berdasarkan token saja belum aman: payload hasil perbaikan operator dapat mereferensikan aset yang sudah ada, dan satu aset mungkin dipakai lebih dari satu baris atau revisi. Skema saat ini belum menunjukkan relasi eksplisit `import_job_media` / `import_staging_media` yang membuktikan bahwa aset dimiliki oleh satu job impor.
+
+**Keputusan:** jangan menghapus aset secara heuristik. Sebelum cleanup otomatis dibuat, audit skema `media_assets`, tambahkan kepemilikan staging yang eksplisit atau mekanisme referensi yang setara, lalu pastikan rollback/commit/exclude/job-retention tidak menghapus media yang telah dipakai soal lain. Ini dicatat sebagai gap hardening, bukan disamarkan sebagai selesai.
