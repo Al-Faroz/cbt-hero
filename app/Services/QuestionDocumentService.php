@@ -67,7 +67,7 @@ class QuestionDocumentService
         $shared = $this->xlsxSharedStrings($zip);
         $sheets = $this->xlsxSheets($zip);
         foreach ($sheets as $sheet) {
-            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, null, false);
             $marker = trim((string) ($values[0][0] ?? ''));
             if ($marker === 'CBT-HERO-EXCEL-V2') {
                 return ['format' => 'CBT-HERO-EXCEL-V2', 'items' => $this->humanExcel($zip, $sheets, $shared, $imageImport)];
@@ -283,7 +283,7 @@ class QuestionDocumentService
         return $result;
     }
 
-    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport): array
+    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport, bool $includeDrawings = true): array
     {
         $source = $zip->getFromName($path);
         if ($source === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
@@ -306,7 +306,7 @@ class QuestionDocumentService
             $values[$row][$col] = $text;
         }
 
-        foreach ($this->xlsxDrawingTokens($zip, $path, $source, $imageImport) as $item) {
+        foreach ($includeDrawings ? $this->xlsxDrawingTokens($zip, $path, $source, $imageImport) : [] as $item) {
             $row = $item['row']; $col = $item['col'];
             $current = trim((string) ($values[$row][$col] ?? ''));
             $values[$row][$col] = $current === '' ? $item['token'] : $current . "\n" . $item['token'];
