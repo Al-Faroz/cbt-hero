@@ -366,7 +366,9 @@ class PreparationService
             }
             $item['options'] = [];
             foreach ($optionOrder as $key) {
-                if (!is_string($key) || !isset($options[$key])) continue;
+                if (!is_scalar($key)) continue;
+                $key = (string) $key;
+                if (!isset($options[$key])) continue;
                 $item['options'][] = [
                     'option_key' => $key,
                     'content_html' => (string) $options[$key]['content_html'],
@@ -387,26 +389,41 @@ class PreparationService
             }
             $mapping = json_decode((string) ($item['mapping_json'] ?? ''), true);
             $mapping = is_array($mapping) ? $mapping : [];
-            $leftOrder = is_array($mapping['left_order'] ?? null) ? $mapping['left_order'] : array_keys($leftMap);
-            $rightOrder = is_array($mapping['right_order'] ?? null) ? $mapping['right_order'] : array_keys($rightMap);
-            foreach (array_keys($leftMap) as $key) if (!in_array($key, $leftOrder, true)) $leftOrder[] = $key;
-            foreach (array_keys($rightMap) as $key) if (!in_array($key, $rightOrder, true)) $rightOrder[] = $key;
+            $leftOrder = is_array($mapping['left_order'] ?? null)
+                ? array_values(array_map('strval', array_filter($mapping['left_order'], 'is_scalar')))
+                : array_map('strval', array_keys($leftMap));
+            $rightOrder = is_array($mapping['right_order'] ?? null)
+                ? array_values(array_map('strval', array_filter($mapping['right_order'], 'is_scalar')))
+                : array_map('strval', array_keys($rightMap));
+            foreach (array_keys($leftMap) as $key) {
+                $key = (string) $key;
+                if (!in_array($key, $leftOrder, true)) $leftOrder[] = $key;
+            }
+            foreach (array_keys($rightMap) as $key) {
+                $key = (string) $key;
+                if (!in_array($key, $rightOrder, true)) $rightOrder[] = $key;
+            }
 
             $item['matching_left'] = [];
             foreach ($leftOrder as $key) {
-                if (is_string($key) && isset($leftMap[$key])) {
+                if (is_scalar($key) && isset($leftMap[(string) $key])) {
+                    $key = (string) $key;
                     $item['matching_left'][] = ['key' => $key, 'content_html' => $leftMap[$key]];
                 }
             }
             $item['matching_right'] = [];
             foreach ($rightOrder as $key) {
-                if (is_string($key) && isset($rightMap[$key])) {
+                if (is_scalar($key) && isset($rightMap[(string) $key])) {
+                    $key = (string) $key;
                     $item['matching_right'][] = ['key' => $key, 'content_html' => $rightMap[$key]];
                 }
             }
             $item['matching_pairs'] = [];
             foreach ($pairMap as $leftKey => $rightKey) {
-                $item['matching_pairs'][] = ['left_key' => $leftKey, 'right_key' => $rightKey];
+                $item['matching_pairs'][] = [
+                    'left_key' => (string) $leftKey,
+                    'right_key' => (string) $rightKey,
+                ];
             }
         }
         unset($item);
