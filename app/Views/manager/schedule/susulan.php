@@ -98,7 +98,8 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive border rounded">
+                    <div class="table-responsive border rounded manager-modal-table-responsive manager-modal-table-responsive--susulan-candidate"
+                         role="region" aria-label="Daftar peserta untuk Jadwal Susulan" tabindex="0">
                         <table class="table manager-table mb-0">
                             <thead><tr><th class="text-center"><input class="form-check-input" id="susulanCheckPage" type="checkbox" aria-label="Pilih peserta pada halaman ini"></th><th>No Peserta</th><th>Nama</th><th>Rombel</th><th>Status Susulan</th></tr></thead>
                             <tbody id="susulanCandidateRows"></tbody>
@@ -132,7 +133,8 @@
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body">
-                <div class="table-responsive">
+                <div class="table-responsive manager-modal-table-responsive manager-modal-table-responsive--susulan-targets"
+                     role="region" aria-label="Daftar target Jadwal Susulan" tabindex="0">
                     <table class="table manager-table mb-0">
                         <thead><tr><th>No Peserta</th><th>Nama</th><th>Rombel</th><th>Mode</th><th>Status</th><th>Aksi</th></tr></thead>
                         <tbody id="susulanTargetRows"></tbody>
