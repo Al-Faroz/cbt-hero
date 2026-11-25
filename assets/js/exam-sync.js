@@ -171,8 +171,8 @@
             const exitLink = document.getElementById('examLockExitLink');
 
             if (attemptStatus !== 'ACTIVE') {
-                runtime.paused = false;
-                runtime.pauseReason = null;
+                runtime.paused = true;
+                runtime.pauseReason = 'TERMINAL';
                 runtime.lockInputs('Ujian sudah selesai');
                 if (overlay) overlay.hidden = false;
                 if (title) title.textContent = 'Ujian sudah selesai';
