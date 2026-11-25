@@ -169,3 +169,8 @@ File: `app/Services/SusulanService.php`
 Commit: `e050414177a8e066960ba634642831bbee04df7d`
 
 Belum diuji dengan dua transaksi START/CREATE paralel; concurrency acceptance tetap DEFERRED.
+
+
+Renderer/KaTeX juga dimuat pada halaman Susulan, karena modal Preparation yang sama digunakan dari Jadwal MAIN maupun Susulan.
+
+Commit: `ed56499ab211e00340a2ed99be8c98db4ff3a3cd`
