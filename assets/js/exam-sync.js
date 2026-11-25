@@ -108,6 +108,7 @@
 
         runtime.paused = false;
         runtime.pauseReason = null;
+        if (runtime.bootstrap?.attempt) runtime.bootstrap.attempt.status = 'BLOCKED';
         runtime.lockInputs('Sesi ujian tidak dapat dilanjutkan');
         runtime.hardLock('Sesi ujian tidak dapat dilanjutkan', message);
 
