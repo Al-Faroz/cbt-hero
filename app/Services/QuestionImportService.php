@@ -107,7 +107,6 @@ class QuestionImportService
             }
             $configRows = $db->table('bank_type_config')->select('question_type, question_count, scoring_mode, option_count')->where('bank_soal_id', $bankId)
                 ->get()->getResultArray();
-            $configs = array_column($configRows, 'question_type');
             $configByType = array_column($configRows, null, 'question_type');
             $matchingMode = null;
             foreach ($configRows as $config) if ($config['question_type'] === 'MATCHING') $matchingMode = $config['scoring_mode'];
