@@ -155,3 +155,21 @@ File: `app/Services/QuestionDocumentService.php`
 Commit: `464ad592a183df170ddc4ddf91c49ec72840f8c4`
 
 Catatan: generator template CBT-HERO saat ini membuat worksheet biasa; pengujian kompatibilitas Excel/LibreOffice tetap bagian acceptance X01–X03.
+
+
+### EXCEL-COMMIT-01 — staging tervalidasi harus dicek ulang terhadap Komposisi saat Commit
+
+Audit menemukan bahwa job yang sudah berstatus VALIDATED dapat menunggu sementara operator mengubah Komposisi Bank. Validasi awal saja tidak menjamin payload masih cocok saat Commit. Hal ini terutama penting karena jalur simpan PG biasa tidak memeriksa ulang jumlah opsi terhadap `bank_type_config`.
+
+Perbaikan:
+- Validasi staging menghitung jumlah soal aktif per tipe dan menandai baris yang melampaui `question_count` pada Komposisi.
+- Commit mengunci row Bank, membaca Komposisi terkini, lalu memvalidasi ulang tipe aktif, batas jumlah soal per tipe, jumlah opsi/pasangan, mode Menjodohkan, payload domain, serta status seluruh media.
+- Jika Komposisi berubah dan staging tidak lagi sesuai, seluruh transaksi Commit dibatalkan; tidak ada subset soal yang boleh tertinggal.
+
+File: `app/Services/QuestionImportService.php`  
+Commit: `9cb3663c138e970993ff2228a3a126eb60b91096`  
+Cleanup kode tidak terpakai: `18576a929e9ad841581163f331c63dc4b65c4bc0`
+
+Kunci sinkronisasi: `BankTypeConfigService::save()` juga mengunci row Bank sebelum mengganti Komposisi, sehingga perubahan Komposisi dan Commit terserialisasi pada row yang sama.
+
+Acceptance fungsional tetap DEFERRED; belum ada klaim test PASS.
