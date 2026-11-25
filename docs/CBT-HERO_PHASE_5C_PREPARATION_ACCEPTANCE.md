@@ -123,7 +123,7 @@ nya masih sesuai tidak dibuat ulang.
 | P18 | Semua assignment READY dan preflight peserta lulus. | `can_start=true`. |
 | P19 | Preparation Susulan. | Hanya target TARGETED pada Susulan yang dibuatkan assignment. |
 | P20 | Replacement Susulan. | Fingerprint menyertakan mode replacement dan assignment baru terpisah dari histori lama. |
-| P21 | Buka detail Prepared Assignment. | Manager melihat item/revisi/media untuk troubleshooting tanpa API participant membuka answer key. |
+| P21 | Buka detail Prepared Assignment. | Manager melihat item/revisi, konten stimulus/soal, urutan opsi, sisi dan pasangan Menjodohkan, serta media untuk troubleshooting; API participant tidak membuka answer key. |
 | P22 | Audit Log. | Prepare/Rebuild tercatat dengan jumlah target yang diproses. |
 | P23 | Target FIRST_ATTEMPT dibuat, lalu peserta START pada MAIN sebelum Preparation Susulan. | Target terdeteksi invalid, tidak dibuatkan assignment, jumlah invalid tampil, dan Jadwal tidak READY/can_start. |
 | P24 | Target REPLACEMENT dibuat, lalu Attempt yang ditunjuk tidak lagi menjadi Attempt FINISHED terbaru. | Target terdeteksi invalid dan tidak dibuatkan assignment; START tetap menolak bila operator belum membatalkan/memperbaiki target. |
