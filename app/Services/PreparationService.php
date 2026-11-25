@@ -352,14 +352,18 @@ class PreparationService
         // question/option selection follows only content-affecting sources. A
         // time/access/visibility edit therefore requires rebuild without silently
         // changing the exam selection.
+        $seedConfig = $plan['config'];
+        $seedSelection = $plan['selection'];
+        ksort($seedConfig);
+        ksort($seedSelection);
         $selectionSeed = hash('sha256', json_encode([
             'jadwal_id' => (int) $context['id'],
             'parent_jadwal_id' => $context['parent_jadwal_id'] === null ? null : (int) $context['parent_jadwal_id'],
             'jenis_jadwal' => (string) $context['jenis_jadwal'],
             'bank_version' => (int) $context['bank_version'],
             'bank_fingerprint' => (string) $context['bank_fingerprint'],
-            'selection' => $plan['selection'],
-            'config' => $plan['config'],
+            'selection' => $seedSelection,
+            'config' => $seedConfig,
             'peserta_kegiatan_id' => $pkId,
             'peserta_id' => (int) ($target['peserta_id'] ?? 0),
             'target_mode' => (string) ($target['target_mode'] ?? 'MAIN'),
