@@ -239,7 +239,7 @@ Commit:
 - `c234040784876067c068bcae271628b0fa83b545`
 
 
-## Pemetaan source terhadap acceptance P01–P22
+## Pemetaan source terhadap acceptance P01–P29
 
 Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
 
@@ -262,15 +262,23 @@ Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
 | P19–P20 | target SUSULAN TARGETED; fingerprint participant mencakup target_mode dan supersede Attempt. |
 | P21 | API dan UI detail Prepared Assignment; runtime participant tetap hanya menerima alias Matching, bukan mapping asli. |
 | P22 | AuditService mencatat PREPARE/REBUILD per chunk dan jumlah assignment. |
+| P23–P27 | `invalidSusulanTargets()` mengevaluasi ulang eligibility; target invalid dikeluarkan dari queue, alasan ditampilkan, dan `can_start` diblokir. |
+| P28 | Target yang sudah mempunyai Attempt pada Susulan sendiri tidak dihitung invalid; assignment terpakai dipertahankan. |
+| P29 | Manifest media mengagregasi asset duplikat dan memilih sequence item paling awal sebagai prefetch_order. |
 
-## Gap yang masih perlu ditutup sebelum Batch 5C dinyatakan selesai
+## Status gap source audit sebelum Batch 5C ditutup
 
-1. Jika peserta yang sudah ditargetkan sebagai FIRST_ATTEMPT kemudian memulai Jadwal MAIN sebelum Preparation Susulan, assignment Susulan dapat tetap dibangun dari target lama. START Susulan tetap menolak melalui `FIRST_ATTEMPT_ALREADY_USED`, tetapi operator perlu membatalkan target secara manual. Perlu keputusan apakah target otomatis dibatalkan saat START MAIN atau Preparation menandainya sebagai invalid.
-2. Concurrency lock Create/Update Susulan sudah diselaraskan dengan urutan START (peserta → Jadwal → membership), tetapi harus diuji dengan transaksi paralel pada tahap acceptance.
-3. Seluruh J01–Jxx, S01–Sxx, P01–P22 tetap DEFERRED; PHP lint, PHPUnit, API/DB concurrency, dan browser belum dijalankan.
+Gap source yang sebelumnya tercatat telah ditangani:
+- FIRST_ATTEMPT/REPLACEMENT yang kedaluwarsa kini dideteksi ulang sebelum Preparation; target invalid dikeluarkan dari queue, disertai identitas/alasan, dan memblokir `can_start`.
+- Target yang sudah START pada Susulan itu sendiri dikecualikan dari daftar invalid.
+- Create/Update Susulan sudah memakai lock order peserta → Jadwal → membership yang searah dengan START.
 
+Yang masih DEFERRED adalah pembuktian melalui acceptance:
+- transaksi paralel START vs Create/Update Susulan;
+- FIRST_ATTEMPT/REPLACEMENT invalidation fixtures;
+- PHP lint, PHPUnit, API/DB integration, retry/fault injection, dan browser/mobile UI.
 
-## Pemetaan source terhadap acceptance J01–J21 dan S01–S24
+## Pemetaan source terhadap acceptance J01–J21 dan S01–S27
 
 | Rentang | Area source yang diaudit |
 |---|---|
@@ -290,8 +298,10 @@ Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
 | S20–S21 | Add Time mengunci Attempt ACTIVE, memperbarui added_seconds/deadline, menolak tanpa Attempt aktif. |
 | S22 | AuditService untuk create/update/cancel/access/extend/result visibility/add time. |
 | S23–S24 | Wrapper tabel modal dengan overflow-x lokal, touch-action, dan tabindex/role region. |
+| S25–S26 | Add Time idempotency: Idempotency-Key, payload hash, replay aman, dan conflict pada payload berbeda; UI MAIN/Susulan mengirim key. |
+| S27 | Extend Batas Mulai dengan nilai identik mengembalikan replay sukses tanpa update/audit duplikat.
 
-Pemetaan ini adalah audit source, bukan hasil acceptance. Seluruh J01–J21, S01–S24, dan P01–P22 tetap DEFERRED.
+Pemetaan ini adalah audit source, bukan hasil acceptance. Seluruh J01–J21, S01–S27, dan P01–P29 tetap DEFERRED.
 
 
 ## Temuan PREP-SUSULAN-INVALID-01 — target Susulan dapat kedaluwarsa setelah dibuat
