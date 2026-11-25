@@ -4,6 +4,7 @@ namespace App\Controllers\Api\Participant;
 
 use App\Controllers\BaseController;
 use App\Services\AttemptResumeService;
+use App\Services\AttemptFullscreenGuardService;
 use App\Services\AttemptRuntimeService;
 use App\Services\AttemptStartService;
 use App\Traits\ApiResponseTrait;
