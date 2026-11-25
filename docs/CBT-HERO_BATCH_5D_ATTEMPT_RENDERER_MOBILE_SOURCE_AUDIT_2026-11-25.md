@@ -80,21 +80,23 @@ Commits:
 - `9486f830d2ce8fbfc568db46d03141a2b9ea1732`
 - `f92b7b23f3c172ed8d97ed39b4975a49a18286f4`
 
-Acceptance E33–E38 ditambahkan pada `CBT-HERO_PHASE_6_ATTEMPT_ENGINE_ACCEPTANCE.md`.
+Acceptance E33–E55 ditambahkan pada `CBT-HERO_PHASE_6_ATTEMPT_ENGINE_ACCEPTANCE.md`.
 
 ## Acceptance yang masih DEFERRED
 
-- E01–E38: seluruh Attempt Engine, local-first, sync, timeout, pause/resume, finalisasi, cache, dan security.
+- E01–E55: seluruh Attempt Engine, local-first, sync, timeout, pause/resume, finalisasi, cache, dan security.
 - PRM01–PRM20: enam tipe soal, rich content, zoom, mobile viewport, offline, palette, dan jawaban.
 - Belum menjalankan PHP lint, PHPUnit, browser automation, Android device/browser tests, IndexedDB fault/reload tests, atau DB concurrency.
 - Belum ada klaim PASS.
 
-## Langkah source audit berikutnya
+## Sisa source audit sebelum Batch 5D ditutup
 
-1. Audit renderer dan Question Runtime Item contract untuk seluruh enam tipe soal serta live revision.
-2. Audit Answer Sync server-side terhadap ACK transient/permanent, pause, deadline, and revision policy.
-3. Audit offline re-entry, timeout pending, and finalize idempotency end-to-end.
-4. Sinkronkan master docs dan acceptance sebelum Batch 5D ditutup.
+1. Selesaikan review semantik enam tipe soal terhadap bank/import/scoring (termasuk PG Bertingkat dan Matching) serta mobile viewport.
+2. Selesaikan review Answer Sync server-side terhadap ACK transient/permanent, pause, deadline, dan revision policy.
+3. Review offline re-entry, timeout pending, dan finalize idempotency end-to-end.
+4. Sinkronkan master docs, route/API contract, dan acceptance setelah audit selesai.
+
+Semua perubahan pada dokumen ini tetap source-level; acceptance E01–E55 dan PRM01–PRM20 belum dieksekusi.
 
 
 ### 5D-06 — pause/resume server tidak tersinkron ke workspace dan timer
