@@ -106,8 +106,9 @@
         };
         const message = messages[code] || result?.error?.message || 'Server menolak akses ke Attempt ini.';
 
-        runtime.paused = false;
-        runtime.pauseReason = null;
+        const terminal = ['ATTEMPT_NOT_ACTIVE', 'NOT_FOUND'].includes(code);
+        runtime.paused = terminal;
+        runtime.pauseReason = terminal ? 'TERMINAL' : null;
         if (runtime.bootstrap?.attempt) runtime.bootstrap.attempt.status = 'BLOCKED';
         runtime.lockInputs('Sesi ujian tidak dapat dilanjutkan');
         runtime.hardLock('Sesi ujian tidak dapat dilanjutkan', message);
