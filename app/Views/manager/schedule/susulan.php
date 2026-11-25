@@ -172,6 +172,9 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
+<link rel="stylesheet" href="<?= base_url('assets/vendor/katex/katex.min.css') ?>">
+<script src="<?= base_url('assets/vendor/katex/katex.min.js') ?>" defer></script>
+<script src="<?= base_url('assets/js/question-renderer.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/manager-susulan.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/manager-preparation.js') ?>" defer></script>
 <?= $this->endSection() ?>
