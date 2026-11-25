@@ -337,3 +337,16 @@ Progress bar Preparation sekarang menggunakan denominator seluruh target aktif (
 Commits:
 - `2bff78504b24024f25266056ba892bfa991369c4`
 - `7d11e6220f098544d47622384c01864dca303720`
+
+
+## Sinkronisasi Master Dokumen
+
+Keputusan validasi ulang target Susulan sebelum Preparation telah disinkronkan ke:
+- `docs/CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, bagian 17.4.
+- `docs/CBT-HERO_PHASE_5C_PREPARATION_ACCEPTANCE.md`, acceptance tambahan P23–P27.
+
+Commit:
+- Master document: `9bf44a97f74b24125cb38f4f3c6705e49610a153`
+- Acceptance: `076b564bbb708d94fb9aed99cf57f027e1052fb9`
+
+Seluruh acceptance tetap DEFERRED sampai tahap uji integrasi Master Ujian Akademis.
