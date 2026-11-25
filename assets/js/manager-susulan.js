@@ -540,9 +540,10 @@
         let replayed = false;
         try {
             if (type === 'EXTEND') {
-                await api(jadwalBase + '/' + id + '/extend-start-window', 'POST', {
+                const result = await api(jadwalBase + '/' + id + '/extend-start-window', 'POST', {
                     batas_mulai_at: value,
                 });
+                replayed = Boolean(result.item?.replayed);
             } else {
                 const result = await api(jadwalBase + '/' + id + '/add-time', 'POST', {
                     seconds: Math.round(Number(value) * 60),
@@ -553,7 +554,9 @@
             }
             operationModal.hide();
             await load();
-            if (type === 'EXTEND') feedback('susulanFeedback', 'Batas Mulai berhasil diperpanjang.');
+            if (type === 'EXTEND') feedback('susulanFeedback', replayed
+                ? 'Perpanjangan Batas Mulai ini sudah diterapkan; tidak diubah ulang.'
+                : 'Batas Mulai berhasil diperpanjang.');
             else feedback('susulanFeedback', replayed
                 ? 'Permintaan Tambah Waktu ini sudah pernah diproses; tambahan tidak diterapkan ulang.'
                 : 'Tambahan waktu berhasil diterapkan.');
