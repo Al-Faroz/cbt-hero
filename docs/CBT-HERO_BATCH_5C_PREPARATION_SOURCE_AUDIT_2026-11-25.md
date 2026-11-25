@@ -474,3 +474,27 @@ Commits:
 - `f75ef07df9a49c5cd09605e6a2b63f402647594d`
 
 Acceptance S27 ditambahkan. Belum diuji melalui retry API/browser.
+
+
+### Penyempurnaan PREP-SUSULAN-INVALID-02 — Operator perlu tahu target invalid yang mana dan alasannya
+
+Status sebelumnya hanya mengembalikan jumlah target invalid. Itu cukup untuk memblokir START, tetapi belum cukup actionable untuk Operator membatalkan target yang tepat.
+
+Perbaikan:
+- Status Preparation kini mengembalikan daftar target invalid beserta nomor peserta, nama, rombel, mode target, dan alasan invalid.
+- Modal Preparation menampilkan daftar tersebut secara aman menggunakan textContent.
+- Penyebab dibedakan: membership/Kegiatan tidak sesuai, peserta/membership nonaktif, tingkat berubah, Attempt ACTIVE pada Jadwal lain, FIRST_ATTEMPT sudah mempunyai histori, REPLACEMENT bukan Attempt FINISHED terbaru, atau mode target tidak dikenal.
+- Target yang sudah mempunyai Attempt pada Susulan itu sendiri tetap dikecualikan dari daftar invalid.
+
+File:
+- `app/Services/PreparationService.php`
+- `app/Views/manager/schedule/_preparation_modal.php`
+- `assets/js/manager-preparation.js`
+
+Commits:
+- `4c498921d768a3d3395ff68072b575c7b726ebf5`
+- `d10561b6388c8287a95c5b151341c227c183abc6`
+- `dd20151b541ad89f42dacd2673573ab1cb8c971a`
+- Acceptance P23 updated at `a1428a5d4383875c74c2eaddd30bd5bce2c11434`.
+
+Belum diuji dengan fixture database/browser.
