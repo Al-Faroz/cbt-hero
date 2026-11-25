@@ -88,6 +88,9 @@ class QuestionDocumentService
             if ($sheetXml === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
             $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, null, false);
             $marker = trim((string) ($values[0][0] ?? ''));
+            if (strlen($marker) > 256) {
+                throw new RuntimeException('Marker sheet Excel terlalu panjang.');
+            }
 
             if ($index === 0) {
                 if ($marker !== 'CBT-HERO-EXCEL-V2') {
@@ -104,6 +107,14 @@ class QuestionDocumentService
             }
 
             $type = $match[1];
+            $expectedSheetName = [
+                'PG' => 'PG', 'PG_KOMPLEKS' => 'PG KOMPLEKS',
+                'PG_BERTINGKAT' => 'PG BERTINGKAT', 'MATCHING' => 'MENJODOHKAN',
+                'ISIAN_SINGKAT' => 'ISIAN SINGKAT', 'URAIAN' => 'URAIAN',
+            ][$type];
+            if (mb_strtoupper((string) $sheet['name'], 'UTF-8') !== $expectedSheetName) {
+                throw new RuntimeException('Nama sheet tidak sesuai dengan tipe soal pada marker.');
+            }
             if (isset($seenTypes[$type])) {
                 throw new RuntimeException('Sheet tipe soal ' . $type . ' muncul lebih dari satu kali.');
             }
@@ -324,7 +335,7 @@ class QuestionDocumentService
             $name = trim($sheet->getAttribute('name'));
             $id = $sheet->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
             $path = $rels[$id]['target'] ?? '';
-            if ($name === '' || $id === '' || $path === '') {
+            if ($name === '' || mb_strlen($name, 'UTF-8') > 31 || $id === '' || $path === '') {
                 throw new RuntimeException('Identitas atau relasi sheet Excel tidak valid.');
             }
             $nameKey = mb_strtolower($name, 'UTF-8');
