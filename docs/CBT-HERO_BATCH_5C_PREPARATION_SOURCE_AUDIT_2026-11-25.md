@@ -199,3 +199,20 @@ Tidak ada perubahan runtime peserta pada temuan ini. Ini merupakan hasil source 
 Sebelum UPDATE, Tambah Waktu sekarang menolak Attempt ACTIVE yang `deadline_at`-nya kosong. Ini mencegah `added_seconds` berubah sementara `DATE_ADD(NULL,...)` tetap NULL dan API melaporkan sukses tanpa memperpanjang deadline.
 
 Commit: `37af008c5b39ee6d0804c5b1ae237115686c298a`
+
+
+## Temuan PREP-SEED-01 — fingerprint staleness tidak boleh mengubah pilihan soal untuk perubahan non-konten
+
+Fingerprint lengkap kini memang membuat assignment STALE saat struktur Jadwal berubah (P10), tetapi jika fingerprint yang sama dipakai sebagai seed shuffle, perubahan jam/akses/visibilitas juga mengubah selection/urutan soal ketika dibangun ulang. Itu bukan sumber konten soal.
+
+Perbaikan:
+- Fingerprint assignment tetap mencakup struktur Jadwal lengkap untuk deteksi STALE.
+- Seed deterministik selection/order dipisahkan dan hanya mencakup Jadwal/root, Bank version/fingerprint, selection/config, identitas peserta, serta mode/Attempt replacement.
+- Perubahan waktu, access_state, dan visibilitas hasil tetap mewajibkan rebuild, tetapi tidak mengubah selection soal jika sumber kontennya sama.
+
+File: `app/Services/PreparationService.php`  
+Commit:
+- `e86ab74d0d09a8f98f7a357461e3db6954517aab`
+- `42e513d96bc8b5804c6350700e375d0d92319d25`
+
+Belum diuji dengan fixture deterministic selection.
