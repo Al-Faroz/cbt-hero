@@ -411,7 +411,7 @@ class PreparationService
                 usort($pool, fn(array $a, array $b): int =>
                     strcmp(
                         hash('sha256', $selectionSeed . '|Q|' . $type . '|' . $a['soal_id']),
-                        hash('sha256', $participantFingerprint . '|Q|' . $type . '|' . $b['soal_id'])
+                        hash('sha256', $selectionSeed . '|Q|' . $type . '|' . $b['soal_id'])
                     ));
             }
             $chosen = array_slice($pool, 0, $selection);
@@ -433,7 +433,7 @@ class PreparationService
                         usort($keys, fn(string $a, string $b): int =>
                             strcmp(
                                 hash('sha256', $selectionSeed . '|O|' . $revisionId . '|' . $a),
-                                hash('sha256', $participantFingerprint . '|O|' . $revisionId . '|' . $b)
+                                hash('sha256', $selectionSeed . '|O|' . $revisionId . '|' . $b)
                             ));
                     }
                     $optionOrder = json_encode($keys, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -449,7 +449,7 @@ class PreparationService
                         usort($right, fn(string $a, string $b): int =>
                             strcmp(
                                 hash('sha256', $selectionSeed . '|M|' . $revisionId . '|' . $a),
-                                hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $b)
+                                hash('sha256', $selectionSeed . '|M|' . $revisionId . '|' . $b)
                             ));
                     }
                     $leftAlias = [];
