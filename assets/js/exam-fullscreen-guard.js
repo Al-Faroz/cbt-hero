@@ -69,7 +69,7 @@
             runtime.setSyncState('Dijeda · layar penuh diperlukan', 'locked');
         } catch (error) {
             pausePending = false;
-            if (message) message(error.message + ' Sistem akan mencoba menyimpan status jeda kembali.');
+            if (message) message.textContent = error.message + ' Sistem akan mencoba menyimpan status jeda kembali.';
             window.setTimeout(() => {
                 if (runtime.paused && !document.fullscreenElement) sendPause();
             }, 1800);
