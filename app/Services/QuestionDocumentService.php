@@ -78,17 +78,39 @@ class QuestionDocumentService
 
     private function humanExcel(ZipArchive $zip, array $sheets, array $shared, ?callable $imageImport): array
     {
-        $result = []; $sequence = 0;
-        foreach ($sheets as $sheet) {
+        if (strtoupper((string) ($sheets[0]['name'] ?? '')) !== 'PETUNJUK') {
+            throw new RuntimeException('Sheet pertama template harus PETUNJUK.');
+        }
+
+        $result = []; $sequence = 0; $seenTypes = [];
+        foreach ($sheets as $index => $sheet) {
+            $sheetXml = $zip->getFromName($sheet['path']);
+            if ($sheetXml === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
             $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, null, false);
             $marker = trim((string) ($values[0][0] ?? ''));
-            if (!preg_match('/^CBT-HERO-EXCEL-V2\|(PG|PG_KOMPLEKS|PG_BERTINGKAT|MATCHING|ISIAN_SINGKAT|URAIAN)\|(\d+)\|(.*)$/D', $marker, $match))
-                continue;
 
-            // Only question sheets may import embedded images. The guide sheet and
-            // unrelated workbook sheets must never create unattached media assets.
-            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            if ($index === 0) {
+                if ($marker !== 'CBT-HERO-EXCEL-V2') {
+                    throw new RuntimeException('Marker sheet PETUNJUK tidak sesuai template CBT-HERO.');
+                }
+                if ($this->xlsxSheetHasDrawing($sheetXml)) {
+                    throw new RuntimeException('Gambar hanya boleh ditempatkan pada sel konten di sheet soal aktif.');
+                }
+                continue;
+            }
+
+            if (!preg_match('/^CBT-HERO-EXCEL-V2\\|(PG|PG_KOMPLEKS|PG_BERTINGKAT|MATCHING|ISIAN_SINGKAT|URAIAN)\\|(\\d+)\\|(.*)$/D', $marker, $match)) {
+                throw new RuntimeException('Sheet tambahan atau sheet soal tanpa marker resmi tidak didukung: ' . (string) $sheet['name'] . '.');
+            }
+
             $type = $match[1];
+            if (isset($seenTypes[$type])) {
+                throw new RuntimeException('Sheet tipe soal ' . $type . ' muncul lebih dari satu kali.');
+            }
+            $seenTypes[$type] = true;
+
+            // Only recognized question sheets may import embedded images.
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
             $optionCount = (int) $match[2];
             $mode = trim((string) $match[3]);
             foreach (array_slice($values, 5, null, true) as $zeroRow => $row) {
@@ -324,6 +346,12 @@ class QuestionDocumentService
             for ($c = 0; $c <= $maxCol; $c++) $matrix[$r][$c] = (string) ($values[$r][$c] ?? '');
         }
         return $matrix;
+    }
+
+    private function xlsxSheetHasDrawing(string $source): bool
+    {
+        $xp = new DOMXPath($this->xml($source));
+        return $xp->query('//*[local-name()="drawing"]')->length > 0;
     }
 
     private function xlsxCellValue(DOMXPath $xp, DOMElement $cell, array $shared): string
