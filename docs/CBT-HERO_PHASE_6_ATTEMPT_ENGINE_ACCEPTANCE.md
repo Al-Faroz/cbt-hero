@@ -94,6 +94,9 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E33 | Server mengembalikan ACK retryable (misalnya Attempt sedang dijeda) atau tidak mengembalikan ACK untuk mutation dalam batch. | Client memakai exponential backoff dan tidak mengulang request rapat, termasuk ketika drain dipanggil saat submit. Setelah kondisi pulih, queue dapat disinkronkan. |
 | E34 | Server sudah mengembalikan status Attempt non-ACTIVE, lalu browser di-refresh ketika jaringan putus. | Cache lokal tidak menghidupkan kembali workspace; participant dikunci karena status server terakhir sudah non-ACTIVE. |
 | E35 | Ada input teks pending debounce, lalu server menerapkan revision REANSWER/VOID pada item itu. | Client flush snapshot input lebih dulu, baru menerapkan policy revision; jawaban lama tidak muncul kembali setelah dihapus. |
+| E36 | Pengawas pause Attempt saat workspace peserta terbuka, lalu resume dari Manager. | Status poll mengunci input dan membekukan timer saat pause; setelah server resume, client membuka kembali sesi dan sinkronisasi berlanjut. |
+| E37 | Pause Fullscreen Guard gagal tersimpan karena jaringan putus, lalu koneksi kembali. | Pesan error tidak memutus retry; pause dikirim ulang dengan Idempotency-Key yang sama sampai terkonfirmasi. |
+| E38 | Attempt sudah paused sebelum workspace dibuka (termasuk Exambro-required). | Timer langsung menampilkan remaining_seconds yang dibekukan; input tetap terkunci sampai server resume atau Fullscreen Guard memvalidasi resume. |
 
 ## Catatan Exam Browser
 
