@@ -56,6 +56,22 @@ class AttemptController extends BaseController
         ));
     }
 
+    public function fullscreenResume(string $attemptId)
+    {
+        $auth = session()->get('participant_auth');
+        $payload = $this->payload();
+        $key = trim((string) $this->request->getHeaderLine('Idempotency-Key'));
+
+        return $this->respond((new AttemptFullscreenGuardService())->resume(
+            (int) $auth['peserta_id'],
+            (int) $attemptId,
+            $payload,
+            $this->clientUuid(),
+            $this->clientGeneration(),
+            $key
+        ));
+    }
+
     public function status(string $attemptId)
     {
         $auth = session()->get('participant_auth');
