@@ -127,7 +127,10 @@ class PreparationService
                     $status = $this->status($jadwalId);
                     if (!($status['ok'] ?? false)) return $status;
                     $status['data']['processed_count'] = 0;
-                    $status['data']['has_more'] = !$status['data']['can_start'];
+                    $status['data']['has_more'] =
+                        (int) ($status['data']['missing'] ?? 0)
+                        + (int) ($status['data']['stale'] ?? 0)
+                        + (int) ($status['data']['failed'] ?? 0) > 0;
                     $status['data']['replayed'] = true;
                     return $status;
                 }
