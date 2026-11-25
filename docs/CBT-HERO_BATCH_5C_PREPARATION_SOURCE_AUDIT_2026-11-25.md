@@ -223,3 +223,17 @@ Belum diuji dengan fixture deterministic selection.
 Seed selection sekarang mengurutkan key array `config` dan `selection` sebelum JSON encoding. Ini menghindari seed berubah hanya karena urutan baris query database berbeda, bukan karena isi konfigurasi berubah.
 
 Commit: `62143150aa5032a9ca12deeeb99892c33a6ed809`
+
+
+## Temuan PREP-MEDIA-ORDER-01 — urutan media harus stabil ketika sort_order sama
+
+Media manifest Preparation dan media per item runtime kini memakai `id` relasi sebagai tie-breaker setelah `sort_order`. Ini menghindari urutan media yang berubah-ubah jika beberapa relasi memiliki sort_order sama.
+
+File:
+- `app/Services/PreparationService.php`
+- `app/Services/QuestionRuntimeItemService.php`
+
+Commit:
+- `3054f6428db50f84dc871274b8dd3fabb1c0e16e`
+- `400e43d5b2ccfcbd99fdbbb69d464f5da34ca0da`
+- `c234040784876067c068bcae271628b0fa83b545`
