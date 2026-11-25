@@ -10,6 +10,18 @@
     const confirmButton = document.getElementById('examSubmitConfirm');
     const submitModal = modalNode ? bootstrap.Modal.getOrCreateInstance(modalNode) : null;
     let finalizing = false;
+    let timeoutRetryTimer = null;
+    let timeoutRetryDelay = 1000;
+
+    const scheduleTimeoutRetry = () => {
+        if (!navigator.onLine || timeoutRetryTimer) return;
+        const jitter = Math.floor(Math.random() * 500);
+        timeoutRetryTimer = setTimeout(() => {
+            timeoutRetryTimer = null;
+            void finalize('TIMEOUT', true);
+        }, timeoutRetryDelay + jitter);
+        timeoutRetryDelay = Math.min(30000, timeoutRetryDelay * 2);
+    };
 
     const key = () => 'finalize:' + (window.crypto?.randomUUID?.()
         ?? (Date.now() + '-' + Math.random().toString(36).slice(2)));
@@ -55,6 +67,7 @@
                         navigator.onLine ? 'Menunggu sinkron jawaban' : 'Waktu habis · menunggu koneksi',
                         'pending'
                     );
+                    scheduleTimeoutRetry();
                     return false;
                 }
                 throw new Error('Masih ada jawaban yang belum diterima server. Tunggu koneksi stabil lalu coba Selesai lagi.');
@@ -84,6 +97,9 @@
             if (!response.ok || result?.ok !== true)
                 throw new Error(result?.error?.message ?? 'Ujian belum dapat diselesaikan.');
 
+            if (timeoutRetryTimer) clearTimeout(timeoutRetryTimer);
+            timeoutRetryTimer = null;
+            timeoutRetryDelay = 1000;
             await cleanup();
             window.location.assign(result.data.redirect);
             return true;
@@ -94,6 +110,7 @@
                 state.timeout_pending = true;
                 state.finish_key = state.finish_key || key();
                 await saveRuntimeState(state);
+                scheduleTimeoutRetry();
             } else {
                 runtime.unlockInputs();
                 if (button) button.disabled = false;
@@ -153,6 +170,9 @@
     window.addEventListener('online', async () => {
         const state = await runtimeState().catch(() => null);
         if (state?.timeout_pending) {
+            if (timeoutRetryTimer) clearTimeout(timeoutRetryTimer);
+            timeoutRetryTimer = null;
+            timeoutRetryDelay = 1000;
             runtime.lockInputs('Waktu habis · menyelesaikan');
             await finalize('TIMEOUT', true);
         }
