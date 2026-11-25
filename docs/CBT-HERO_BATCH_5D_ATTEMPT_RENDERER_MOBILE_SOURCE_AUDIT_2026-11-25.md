@@ -262,3 +262,8 @@ Commits:
 - `ae7fd517929fe96f6bd62c42a6916f486967bc23`
 
 Acceptance E48–E49 ditambahkan; belum diuji dengan IndexedDB quota/reload/offline/device fixtures.
+
+
+Critical image prefetch kini dibatasi 8 detik per asset menggunakan AbortController agar koneksi media yang macet tidak menahan bootstrap tanpa batas.
+
+Commit: `8aec7317e22596e4d53fbba390cd19802e28c78b`. Acceptance E50 ditambahkan; belum diuji dengan network throttling.
