@@ -39,7 +39,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table manager-table mb-0">
+            <table class="table manager-table jadwal-table mb-0">
                 <thead>
                     <tr>
                         <th>Kegiatan / Bank</th>
