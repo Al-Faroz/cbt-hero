@@ -190,8 +190,11 @@ class QuestionDocumentService
             $maxPoint = $this->control($value($row, 2 + ($optionCount * 2)));
             $meaningful = $meaningful || $maxPoint !== '';
             if (!$meaningful) return null;
+            if (!in_array($mode, ['PARTIAL', 'ALL_OR_NOTHING'], true)) {
+                throw new RuntimeException('Mode Menjodohkan pada marker template tidak valid.');
+            }
             return ['question_type' => 'MATCHING', 'question_text' => $question, 'pairs' => $pairs,
-                'scoring_mode' => $mode === 'ALL_OR_NOTHING' ? 'ALL_OR_NOTHING' : 'PARTIAL',
+                'scoring_mode' => $mode,
                 'max_point' => $maxPoint];
         }
 
