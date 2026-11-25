@@ -97,6 +97,7 @@ $routes->group(
     static function (RouteCollection $routes): void {
         $routes->post('(:num)/resume', 'Api\\Participant\\AttemptController::resume/$1');
         $routes->post('(:num)/fullscreen-pause', 'Api\\Participant\\AttemptController::fullscreenPause/$1');
+        $routes->post('(:num)/fullscreen-resume', 'Api\\Participant\\AttemptController::fullscreenResume/$1');
         $routes->get('(:num)/status', 'Api\\Participant\\AttemptController::status/$1');
         $routes->get('(:num)/revisions', 'Api\\Participant\\AttemptController::revisions/$1');
         $routes->get('(:num)/bootstrap', 'Api\\Participant\\BootstrapController::show/$1');
