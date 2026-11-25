@@ -205,3 +205,13 @@ Perbaikan:
 File: `assets/js/exam-sync.js`, `assets/js/exam-bootstrap.js`  
 Commits: `b5e25bf9c1d90fb39b700d0f729018f2a4f2ee4e`, `dc916b194ca4776aa2f0d8459da7f7d0dc6a3d1c`.  
 Acceptance E45 ditambahkan; belum diuji dengan IndexedDB reload/offline fixture.
+
+
+### 5D-13 — bootstrap 4xx belum menandai cache sebagai BLOCKED
+Status polling sudah mempersist BLOCKED pada penolakan client, tetapi bootstrap 4xx hanya menampilkan hard-lock. Jika peserta kemudian offline dan reload, runtime_state lama masih ACTIVE dan cache dapat dipulihkan.
+
+Perbaikan: bootstrap authoritative 4xx juga menyimpan `server_attempt_status=BLOCKED`; hanya bootstrap network yang berhasil dapat mengembalikannya ke ACTIVE.
+
+File: `assets/js/exam-bootstrap.js`  
+Commit: `8f4a01e4e6b5ba20a70b45e1c8151802ac0bf5ad`.  
+Acceptance E46 ditambahkan; belum diuji melalui reload sequence.
