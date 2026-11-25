@@ -122,6 +122,31 @@
             if (!response.ok || result?.ok !== true)
                 throw new Error(result?.error?.message || 'Ujian belum dapat dilanjutkan.');
 
+            if (result.data?.paused === true) {
+                const reason = String(result.data.pause_reason || 'OPERATOR');
+                runtime.paused = true;
+                runtime.pauseReason = reason === 'FULLSCREEN_EXIT' ? 'FULLSCREEN_EXIT' : 'OPERATOR';
+                runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Ujian dijeda · layar penuh diperlukan'
+                    : 'Ujian dijeda oleh pengawas');
+                if (runtime.bootstrap?.attempt) {
+                    runtime.bootstrap.attempt.paused = true;
+                    runtime.bootstrap.attempt.pause_reason = runtime.pauseReason;
+                }
+                if (overlay) overlay.hidden = false;
+                if (title) title.textContent = 'Ujian dijeda';
+                if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Attempt masih dijeda. Pastikan layar penuh aktif lalu tekan Lanjutkan.'
+                    : 'Pengawas sedang menjeda ujian. Tunggu sampai pengawas melanjutkan sesi.';
+                if (resumeButton) {
+                    resumeButton.hidden = runtime.pauseReason !== 'FULLSCREEN_EXIT';
+                    resumeButton.disabled = false;
+                }
+                if (exitLink) exitLink.hidden = true;
+                resumeKey = '';
+                return;
+            }
+
             runtime.paused = false;
             runtime.pauseReason = null;
             runtime.unlockInputs();
