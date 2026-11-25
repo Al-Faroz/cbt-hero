@@ -92,6 +92,8 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E31 | Setelah Reset Akses (Phase 7) generation berubah dan pause server dibuat. | Client lama invalid; resume generation baru melanjutkan Attempt yang sama dan deadline bergeser sebesar pause. |
 | E32 | Pindah device/cache hilang tetapi server ACK sudah ada. | Bootstrap membangun ulang jawaban yang sudah ACK; jawaban local-only device lama tidak dapat dipulihkan. |
 | E33 | Server mengembalikan ACK retryable (misalnya Attempt sedang dijeda) atau tidak mengembalikan ACK untuk mutation dalam batch. | Client memakai exponential backoff dan tidak mengulang request rapat, termasuk ketika drain dipanggil saat submit. Setelah kondisi pulih, queue dapat disinkronkan. |
+| E34 | Server sudah mengembalikan status Attempt non-ACTIVE, lalu browser di-refresh ketika jaringan putus. | Cache lokal tidak menghidupkan kembali workspace; participant dikunci karena status server terakhir sudah non-ACTIVE. |
+| E35 | Ada input teks pending debounce, lalu server menerapkan revision REANSWER/VOID pada item itu. | Client flush snapshot input lebih dulu, baru menerapkan policy revision; jawaban lama tidak muncul kembali setelah dihapus. |
 
 ## Catatan Exam Browser
 
