@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Services;
+
+use Config\Database;
+use RuntimeException;
+use Throwable;
+
+class AttemptFullscreenGuardService
+{
+    public function pause(
+        int $participantId,
+        int $attemptId,
+        array $payload,
+        string $clientUuid,
+        int $generation,
+        string $idempotencyKey
+    ): array {
+        $ops = new ParticipantOperationService();
+        $ownership = new AttemptOwnershipService();
+
+        if (!$ops->validKey($idempotencyKey))
+            return $this->error(422, 'IDEMPOTENCY_REQUIRED', 'Idempotency-Key wajib dan formatnya tidak valid.');
+        if (!$ownership->validClientUuid($clientUuid) || $generation < 1)
+            return $this->error(422, 'CLIENT_ID_INVALID', 'Identitas client tidak valid.');
+        if (($payload['fullscreen_active'] ?? true) !== false)
+            return $this->error(422, 'FULLSCREEN_STATE_INVALID', 'Event pause harus melaporkan bahwa fullscreen telah keluar.');
+
+        $proof = trim(is_scalar($payload['exam_browser_proof'] ?? null) ? (string) $payload['exam_browser_proof'] : '');
+        $hash = hash('sha256', json_encode([
+            'attempt_id' => $attemptId,
+            'client_uuid' => $clientUuid,
+            'generation' => $generation,
+            'reason' => 'FULLSCREEN_EXIT',
+            'proof_hash' => hash('sha256', $proof),
+        ], JSON_UNESCAPED_SLASHES));
+
+        $db = Database::connect();
+        $db->transBegin();
+        try {
+            $db->query('SELECT id FROM peserta WHERE id = ? FOR UPDATE', [$participantId])->getRowArray();
+            $attempt = $ownership->owned($db, $participantId, $attemptId, true);
+            if ($attempt === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Attempt tidak ditemukan.');
+            }
+
+            $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
+            if ($clientError !== null) {
+                $db->transRollback();
+                return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
+            }
+            if ($attempt['status'] !== 'ACTIVE') {
+                $db->transRollback();
+                return $this->error(409, 'ATTEMPT_NOT_ACTIVE', 'Attempt tidak sedang aktif.');
+            }
+            if ($attempt['access_state'] !== 'BUKA') {
+                $db->transRollback();
+                return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan.');
+            }
+            if ((int) $attempt['exam_browser_required'] === 1) {
+                $db->transRollback();
+                return $this->error(409, 'EXAM_BROWSER_MODE', 'Kegiatan ini menggunakan Exam Browser wajib.');
+            }
+            if ($proof !== '') {
+                $db->transRollback();
+                return $this->error(409, 'EXAM_BROWSER_CLIENT', 'Fullscreen Guard browser biasa tidak diterapkan pada client Exam Browser.');
+            }
+
+            $operation = $ops->begin(
+                $db,
+                $idempotencyKey,
+                $participantId,
+                'FULLSCREEN_PAUSE',
+                (int) $attempt['jadwal_id'],
+                $hash
+            );
+            if (!($operation['ok'] ?? false)) {
+                $db->transRollback();
+                return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah digunakan untuk permintaan berbeda.');
+            }
+
+            if (empty($attempt['pause_started_at'])) {
+                $now = $ownership->now()->format('Y-m-d H:i:s');
+                $db->table('attempt')->where('id', $attemptId)->update([
+                    'pause_started_at' => $now,
+                    'last_activity_at' => $now,
+                ]);
+                $db->table('attempt_pause_event')->insert([
+                    'attempt_id' => $attemptId,
+                    'started_at' => $now,
+                    'reason' => 'FULLSCREEN_EXIT',
+                ]);
+            }
+
+            $db->table('attempt_client_event')->insert([
+                'attempt_id' => $attemptId,
+                'client_generation' => $generation,
+                'event_type' => 'FULLSCREEN_EXIT',
+                'metadata_json' => json_encode([
+                    'source' => 'BROWSER_FULLSCREEN_API',
+                    'client_mode' => 'BROWSER',
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ]);
+
+            $ops->complete($db, $idempotencyKey, $attemptId);
+            if ($db->transStatus() === false || $db->transCommit() === false)
+                throw new RuntimeException('Commit Fullscreen Pause gagal.');
+
+            return ['ok' => true, 'status' => 200, 'data' => [
+                'attempt_id' => $attemptId,
+                'status' => 'ACTIVE',
+                'paused' => true,
+                'pause_reason' => 'FULLSCREEN_EXIT',
+                'message' => 'Ujian dijeda karena fullscreen telah keluar.',
+            ]];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Fullscreen Guard pause gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'FULLSCREEN_PAUSE_FAILED', 'Ujian belum dapat dijeda. Pertahankan layar ini dan hubungi pengawas.');
+        }
+    }
+
+    private function error(int $status, string $code, string $message): array
+    {
+        return compact('status', 'code', 'message') + ['ok' => false];
+    }
+}
