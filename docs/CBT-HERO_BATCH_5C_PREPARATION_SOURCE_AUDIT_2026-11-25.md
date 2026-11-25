@@ -24,3 +24,19 @@ Belum ada PHPUnit/database test; perubahan ini belum dinyatakan PASS.
 2. Audit operational commands: access gate, extend start window, result visibility lock, add time.
 3. Audit Preparation: target MAIN/SUSULAN, chunking/resume, selective rebuild, deterministic selection/order, matching aliases, media manifest, preflight, detail authorization.
 4. Sinkronkan dengan Master Document, API contract, ERD, dan acceptance.
+
+
+## Temuan OP-ADD-TIME-01 — Tambah Waktu harus mengunci Attempt yang dipilih
+
+Sebelumnya `JadwalOperationalService::addTime()` membaca Attempt ACTIVE tanpa `FOR UPDATE`, lalu menjalankan UPDATE bersyarat status ACTIVE. Jika Attempt selesai di antara SELECT dan UPDATE, request dapat tetap melaporkan ID tersebut sebagai affected walaupun UPDATE tidak mengubah baris.
+
+Perbaikan:
+- Daftar ID pada scope IDS divalidasi ketat; ID invalid tidak lagi dibuang diam-diam.
+- Attempt dipilih dengan `SELECT ... FOR UPDATE` dalam transaksi.
+- Update tetap mensyaratkan status ACTIVE dan jumlah baris terdampak harus tepat satu; perubahan status di tengah operasi menggagalkan transaksi.
+- Audit Log hanya ditulis setelah seluruh update berhasil.
+
+File: `app/Services/JadwalOperationalService.php`  
+Commit: `05927a156afb530812afd89ee59467b367727ea9`
+
+Belum diuji dengan konkurensi database; tidak ada klaim PASS.
