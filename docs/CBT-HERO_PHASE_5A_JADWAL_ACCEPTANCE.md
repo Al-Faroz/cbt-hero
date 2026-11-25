@@ -61,6 +61,7 @@ Preparation. Bobot dan aturan penilaian tetap berasal dari Bank.
 | J18 | Jadwal A urutan 1 dan B urutan 2 pada slot sama. | B tampil tetapi START ditahan sampai A selesai. |
 | J19 | Participant bukan target salah satu Jadwal urutan lebih kecil. | Jadwal yang bukan hak participant tidak mengunci urutan berikutnya. |
 | J20 | Selesaikan seluruh Jadwal urutan lebih kecil. | Jadwal urutan berikutnya otomatis dapat START bila gate waktu/Preparation/akses lain lulus. |
+| J21 | Buka daftar Jadwal pada desktop 1366px dan mobile 360–390px. | Kegiatan/Bank dan Urutan/Durasi memakai kolom ringkas; Soal Diambil tampil sebagai ringkasan dengan rincian yang dapat dibuka; aksi sekunder dikelompokkan tanpa kehilangan fungsi; desktop tidak mengalami horizontal scroll yang tidak perlu dan mobile hanya menggulir wrapper tabel. |
 
 ## PASS
 
