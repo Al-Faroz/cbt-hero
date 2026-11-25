@@ -60,17 +60,24 @@ class PreparationService
 
         $scope = strtoupper(trim($this->scalar($payload['scope'] ?? 'ALL')));
         $selectedIds = $payload['peserta_kegiatan_ids'] ?? [];
-        $force = (bool) ($payload['force_rebuild'] ?? false);
-        if (!in_array($scope, ['ALL', 'SELECTED'], true))
-            return $this->error(422, 'VALIDATION_FAILED', 'Scope Preparation tidak valid.');
+        $forceValue = $payload['force_rebuild'] ?? false;
+        if (!in_array($scope, ['ALL', 'SELECTED'], true) || !is_bool($forceValue))
+            return $this->error(422, 'VALIDATION_FAILED', 'Scope atau opsi force rebuild Preparation tidak valid.');
+        $force = $forceValue;
 
         if ($scope === 'SELECTED') {
             if (!is_array($selectedIds) || !$selectedIds)
                 return $this->error(422, 'VALIDATION_FAILED', 'Pilih peserta untuk Preparation terpilih.');
-            $selectedIds = array_values(array_unique(array_filter(array_map(
-                static fn($value): int => is_scalar($value) ? (int) $value : 0,
-                $selectedIds
-            ), static fn(int $value): bool => $value > 0)));
+            $normalizedIds = [];
+            foreach ($selectedIds as $value) {
+                $id = is_scalar($value)
+                    ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])
+                    : false;
+                if (!is_int($id))
+                    return $this->error(422, 'VALIDATION_FAILED', 'Daftar peserta berisi ID yang tidak valid.');
+                $normalizedIds[$id] = $id;
+            }
+            $selectedIds = array_values($normalizedIds);
             if (!$selectedIds)
                 return $this->error(422, 'VALIDATION_FAILED', 'Pilih peserta yang valid.');
             sort($selectedIds);
