@@ -27,6 +27,7 @@
     const lock = (text = 'Ujian dijeda karena Anda keluar dari mode layar penuh.', confirmed = false) => {
         if (confirmed) pauseConfirmed = true;
         runtime.paused = true;
+        runtime.pauseReason = 'FULLSCREEN_EXIT';
         runtime.lockInputs('Ujian dijeda · layar penuh diperlukan');
         if (title) title.textContent = 'Ujian dijeda';
         if (message) message.textContent = text;
@@ -107,9 +108,11 @@
                 throw new Error(result?.error?.message || 'Ujian belum dapat dilanjutkan.');
 
             runtime.paused = false;
+            runtime.pauseReason = null;
             runtime.unlockInputs();
             runtime.setSyncState('Tersinkron', 'synced');
             runtime.emit('cbt:deadline-updated', {deadline_at: result.data.deadline_at});
+            runtime.emit('cbt:sync-needed');
             if (overlay) overlay.hidden = true;
             if (resumeButton) resumeButton.hidden = true;
             if (exitLink) exitLink.hidden = false;
@@ -132,12 +135,18 @@
         }
     });
 
+    document.addEventListener('cbt:server-resumed', () => {
+        if (!document.fullscreenElement) beginPause();
+    });
+
     document.addEventListener('cbt:bootstrap-ready', event => {
         const paused = event.detail?.data?.attempt?.paused === true;
         if (paused) {
             if (event.detail?.data?.attempt?.pause_reason === 'FULLSCREEN_EXIT') {
                 lock('Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.', true);
             } else {
+                runtime.paused = true;
+                runtime.pauseReason = 'OPERATOR';
                 runtime.hardLock(
                     'Ujian dijeda oleh pengawas',
                     'Ikuti arahan pengawas ujian. Jangan mencoba melanjutkan sendiri.'
