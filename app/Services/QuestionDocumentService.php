@@ -380,18 +380,28 @@ class QuestionDocumentService
             if (!$drawing instanceof DOMElement) continue;
             $id = $drawing->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
             $drawingPath = $rels[$id]['target'] ?? '';
-            if ($drawingPath === '') continue;
+            if ($drawingPath === '') {
+                throw new RuntimeException('Relasi gambar Excel tidak valid.');
+            }
             $drawingXml = $zip->getFromName($drawingPath);
-            if ($drawingXml === false) continue;
+            if ($drawingXml === false) {
+                throw new RuntimeException('Data drawing Excel tidak ditemukan.');
+            }
             $drawingXp = new DOMXPath($this->xml($drawingXml));
             $drawingRels = $this->officeRelationships($zip, $drawingPath);
+            $pictureCount = $drawingXp->query('//*[local-name()="pic"]')->length;
+            $processedPictures = 0;
+
             foreach ($drawingXp->query('//*[local-name()="oneCellAnchor" or local-name()="twoCellAnchor"]') as $anchor) {
+                $picture = $drawingXp->query('.//*[local-name()="pic"]', $anchor)->item(0);
+                if ($picture === null) continue;
                 $from = $drawingXp->query('./*[local-name()="from"]', $anchor)->item(0);
-                if ($from === null) continue;
-                $colNode = $drawingXp->query('./*[local-name()="col"]', $from)->item(0);
-                $rowNode = $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
-                $blip = $drawingXp->query('.//*[local-name()="blip"]', $anchor)->item(0);
-                if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) continue;
+                $colNode = $from === null ? null : $drawingXp->query('./*[local-name()="col"]', $from)->item(0);
+                $rowNode = $from === null ? null : $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
+                $blip = $drawingXp->query('.//*[local-name()="blip"]', $picture)->item(0);
+                if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) {
+                    throw new RuntimeException('Anchor gambar Excel tidak didukung atau tidak lengkap.');
+                }
 
                 $rowValue = trim((string) $rowNode->textContent);
                 $colValue = trim((string) $colNode->textContent);
@@ -406,7 +416,9 @@ class QuestionDocumentService
 
                 $relId = $blip->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
                 $mediaPath = $drawingRels[$relId]['target'] ?? '';
-                if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) continue;
+                if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) {
+                    throw new RuntimeException('Referensi file gambar Excel tidak valid.');
+                }
                 if ($imageImport === null) throw new RuntimeException('Gambar Excel tidak dapat diproses.');
 
                 if (!isset($cache[$mediaPath])) {
@@ -419,6 +431,11 @@ class QuestionDocumentService
                     'col' => $colIndex,
                     'token' => '[[media:' . $cache[$mediaPath] . ']]',
                 ];
+                $processedPictures++;
+            }
+
+            if ($processedPictures !== $pictureCount) {
+                throw new RuntimeException('Jenis anchor gambar Excel tidak didukung oleh template CBT-HERO.');
             }
         }
         return $result;
