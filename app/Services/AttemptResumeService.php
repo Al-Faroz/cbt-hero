@@ -74,9 +74,9 @@ class AttemptResumeService
                 $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
                     ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
                 $pauseReason = (string) ($openPause['reason'] ?? '');
-                if ($pauseReason === 'FULLSCREEN_EXIT' && ($payload['fullscreen_active'] ?? false) !== true) {
+                if ($pauseReason === 'FULLSCREEN_EXIT') {
                     $db->transRollback();
-                    return $this->error(423, 'FULLSCREEN_REQUIRED', 'Aktifkan layar penuh sebelum melanjutkan ujian.');
+                    return $this->error(423, 'FULLSCREEN_GUARD_REQUIRED', 'Gunakan pemulihan layar penuh untuk melanjutkan ujian.');
                 }
                 $pauseStart = new \DateTimeImmutable((string) $attempt['pause_started_at'], $ownership->timezone());
                 $pauseSeconds = max(0, $now->getTimestamp() - $pauseStart->getTimestamp());
