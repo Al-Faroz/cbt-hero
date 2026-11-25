@@ -174,3 +174,10 @@ Belum diuji dengan dua transaksi START/CREATE paralel; concurrency acceptance te
 Renderer/KaTeX juga dimuat pada halaman Susulan, karena modal Preparation yang sama digunakan dari Jadwal MAIN maupun Susulan.
 
 Commit: `ed56499ab211e00340a2ed99be8c98db4ff3a3cd`
+
+
+### PREP-TARGET-02 — verifikasi ulang Kegiatan pada target Susulan
+
+Query target Susulan pada Preparation sekarang memastikan membership peserta masih terhubung ke Kegiatan sumber MAIN, selain status aktif dan tingkat Bank. Ini merupakan defensive check terhadap perubahan relasi membership setelah target dibuat.
+
+Commit: `d8bb41113c0b6c31d9ac0a82bd83aa703642b070`
