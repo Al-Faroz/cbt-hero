@@ -57,13 +57,14 @@ class MonitoringService
             ->select($this->listSelect())
             ->get()->getResultArray();
 
-        $summary = ['total' => count($rows), 'belum' => 0, 'sedang' => 0, 'selesai' => 0, 'tidak_terdeteksi' => 0];
+        $summary = ['total' => count($rows), 'belum' => 0, 'sedang' => 0, 'selesai' => 0, 'dijeda' => 0, 'tidak_terdeteksi' => 0];
         foreach ($rows as $row) {
             $state = $this->rowState($row);
             if ($state['status'] === 'BELUM') $summary['belum']++;
             elseif ($state['status'] === 'SEDANG') $summary['sedang']++;
             elseif ($state['status'] === 'SELESAI') $summary['selesai']++;
             if ($state['connection_state'] === 'TIDAK_TERDETEKSI') $summary['tidak_terdeteksi']++;
+            if (!empty($row['pause_started_at'])) $summary['dijeda']++;
         }
 
         return ['ok' => true, 'status' => 200, 'data' => [
@@ -122,6 +123,7 @@ class MonitoringService
                 'last_activity_at' => $row['last_activity_at'],
                 'connection_state' => $state['connection_state'],
                 'paused' => $row['pause_started_at'] !== null,
+                'pause_reason' => $row['pause_reason'] ?? null,
                 'pending_sync_risk' => $this->pendingSyncRisk($row),
                 'client_generation' => $row['client_generation'] === null ? null : (int) $row['client_generation'],
             ];
@@ -306,7 +308,9 @@ class MonitoringService
             . 'pk.rombel_snapshot AS rombel, r.nama AS ruang, '
             . 'a.id AS attempt_id, a.status AS attempt_status, a.finish_reason, a.start_at, a.finish_at, '
             . 'a.deadline_at, a.pause_started_at, a.duration_seconds_snapshot, a.added_seconds, '
-            . 'a.client_generation, a.server_sync_revision, a.last_sync_at, a.last_activity_at';
+            . 'a.client_generation, a.server_sync_revision, a.last_sync_at, a.last_activity_at, '
+            . '(SELECT ape.reason FROM attempt_pause_event ape WHERE ape.attempt_id = a.id '
+            . 'AND ape.ended_at IS NULL ORDER BY ape.id DESC LIMIT 1) AS pause_reason';
     }
 
     private function rowState(array $row): array

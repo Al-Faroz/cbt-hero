@@ -18,6 +18,11 @@ class AttemptBootstrapService
         if ($clientError !== null)
             return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
 
+        $pauseEvent = !empty($attempt['pause_started_at'])
+            ? $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray()
+            : null;
+
         $items = (new QuestionRuntimeItemService())->items($db, $attemptId, (int) $attempt['prepared_assignment_id']);
         $responses = $db->table('attempt_response AS ar')
             ->select('ar.prepared_assignment_item_id, ar.answer_payload, ar.client_revision, ar.server_revision, ar.is_flagged, '
@@ -76,6 +81,7 @@ class AttemptBootstrapService
                 'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
                 'remaining_seconds' => $ownership->remainingSeconds($attempt),
                 'paused' => $attempt['pause_started_at'] !== null,
+                'pause_reason' => $pauseEvent['reason'] ?? null,
                 'duration_seconds' => (int) $attempt['duration_seconds_snapshot'],
                 'added_seconds' => (int) $attempt['added_seconds'],
                 'server_sync_revision' => (int) $attempt['server_sync_revision'],

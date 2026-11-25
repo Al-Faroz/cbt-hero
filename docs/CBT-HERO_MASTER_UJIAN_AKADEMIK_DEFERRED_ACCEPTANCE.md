@@ -7,8 +7,10 @@ Keputusan: 2026-09-28
 Acceptance terperinci **mulai Phase 4D2** tidak dijalankan per subphase untuk sementara.
 Implementasi tetap dilanjutkan sampai rangkaian **Master Ujian Akademis** selesai.
 
-Sebelum pekerjaan Master Ujian Psikologi dimulai, seluruh acceptance yang ditunda
-harus dijalankan sebagai regression/acceptance terpadu.
+Setelah implementasi Master Ujian Akademik **dan** Master Ujian Psikologi selesai,
+seluruh acceptance yang ditunda dijalankan sebagai Ujicoba Menyeluruh terpadu.
+Tidak ada functional/browser acceptance di tengah batch implementasi, kecuali pemeriksaan
+statis atau validasi teknis source yang tidak menjalankan skenario ujian.
 
 Status yang ditunda mulai keputusan ini:
 
@@ -38,18 +40,20 @@ Batch 5A Pre-Regression Readiness juga selesai pada 2026-11-25:
 - parser Excel mendapat hardening edge case.
 
 Seluruh item di atas **tidak mengubah status DEFERRED** acceptance browser/database.
-Acceptance mulai Phase 4D2 tetap belum diuji dan harus dijalankan sebelum Phase 10.
+Acceptance mulai Phase 4D2 tetap belum diuji dan harus dijalankan setelah implementasi Phase 10 selesai.
 
 ## Checkpoint
 
 Urutan:
 
 ```text
-Selesaikan Master Ujian Akademis
+Selesaikan seluruh implementasi Master Ujian Akademik
         ↓
-Jalankan acceptance tertunda + regression terintegrasi
+Selesaikan seluruh implementasi Master Ujian Psikologi
         ↓
-Perbaiki seluruh temuan sampai PASS
+Pre-Test Readiness Review (statis, tanpa skenario ujian)
         ↓
-Baru mulai Master Ujian Psikologi
+Ujicoba Menyeluruh Akademik + Psikologi
+        ↓
+Perbaiki seluruh temuan dan retest sampai PASS
 ```

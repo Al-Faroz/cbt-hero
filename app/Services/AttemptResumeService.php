@@ -29,6 +29,7 @@ class AttemptResumeService
             'client_uuid' => $clientUuid,
             'client_generation' => $generation,
             'exam_proof_hash' => hash('sha256', $examProof),
+            'fullscreen_active' => ($payload['fullscreen_active'] ?? false) === true,
         ], JSON_UNESCAPED_SLASHES));
 
         $tokenError = (new TokenService())->validateParticipantToken($token);
@@ -62,8 +63,21 @@ class AttemptResumeService
                 return $this->error(409, 'CLIENT_GENERATION_MISMATCH', 'Akses ujian sudah berubah. Muat ulang identitas client.');
             }
 
+            $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
+            if ($clientError !== null) {
+                $db->transRollback();
+                return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
+            }
+
             $now = $ownership->now();
             if (!empty($attempt['pause_started_at'])) {
+                $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                    ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
+                $pauseReason = (string) ($openPause['reason'] ?? '');
+                if ($pauseReason === 'FULLSCREEN_EXIT') {
+                    $db->transRollback();
+                    return $this->error(423, 'FULLSCREEN_GUARD_REQUIRED', 'Gunakan pemulihan layar penuh untuk melanjutkan ujian.');
+                }
                 $pauseStart = new \DateTimeImmutable((string) $attempt['pause_started_at'], $ownership->timezone());
                 $pauseSeconds = max(0, $now->getTimestamp() - $pauseStart->getTimestamp());
                 $deadline = (new \DateTimeImmutable((string) $attempt['deadline_at'], $ownership->timezone()))
@@ -85,11 +99,6 @@ class AttemptResumeService
                     ]);
                 }
             } else {
-                $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
-                if ($clientError !== null) {
-                    $db->transRollback();
-                    return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
-                }
                 $db->table('attempt')->where('id', $attemptId)->update([
                     'last_activity_at' => $now->format('Y-m-d H:i:s'),
                 ]);

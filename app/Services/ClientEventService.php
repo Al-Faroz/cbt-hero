@@ -6,7 +6,7 @@ use Config\Database;
 
 class ClientEventService
 {
-    private const EVENTS = ['CACHE_RECOVERED', 'PACKAGE_READY', 'SYNC_RECOVERED', 'CLIENT_WARNING'];
+    private const EVENTS = ['CACHE_RECOVERED', 'PACKAGE_READY', 'SYNC_RECOVERED', 'CLIENT_WARNING', 'FULLSCREEN_EXIT', 'FULLSCREEN_RESTORED'];
 
     public function record(int $participantId, int $attemptId, array $payload, string $clientUuid, int $generation): array
     {

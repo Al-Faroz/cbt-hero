@@ -10,7 +10,8 @@
     class="exam-workspace"
     data-attempt-id="<?= (int) $attempt['id'] ?>"
     data-api-base="<?= esc(base_url('api/attempt/' . (int) $attempt['id']), 'attr') ?>"
-    data-exam-list-url="<?= esc(base_url('ujian'), 'attr') ?>">
+    data-exam-list-url="<?= esc(base_url('ujian'), 'attr') ?>"
+    data-exam-browser-required="<?= !empty($attempt['exam_browser_required']) ? '1' : '0' ?>">
 
     <section class="exam-workspace-bar">
         <div class="exam-workspace-title">
@@ -86,7 +87,8 @@
         <div class="exam-lock-card">
             <h2 id="examLockTitle">Ujian dikunci</h2>
             <p id="examLockMessage">Silakan ikuti petunjuk pengawas.</p>
-            <a class="btn btn-outline-secondary" href="<?= base_url('ujian') ?>">Kembali ke Daftar Ujian</a>
+            <button class="btn btn-cbt-primary mt-2" type="button" id="examFullscreenResumeButton" hidden>Kembali ke layar penuh dan lanjutkan</button>
+            <a class="btn btn-outline-secondary mt-2" id="examLockExitLink" href="<?= base_url('ujian') ?>">Kembali ke Daftar Ujian</a>
         </div>
     </div>
 </div>
@@ -154,6 +156,7 @@
 <script src="<?= base_url('assets/js/exam-display.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-db.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-runtime-state.js') ?>"></script>
+<script src="<?= base_url('assets/js/exam-fullscreen-guard.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-tab-lock.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-renderer.js') ?>"></script>
 <script src="<?= base_url('assets/js/exam-answer-store.js') ?>"></script>

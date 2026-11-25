@@ -62,7 +62,7 @@
     </section>
 
     <div class="monitoring-summary">
-        <?php foreach (['Total' => 'monitorTotal', 'Belum' => 'monitorBelum', 'Sedang' => 'monitorSedang', 'Selesai' => 'monitorSelesai', 'Tidak Terdeteksi' => 'monitorUndetected'] as $label => $id): ?>
+        <?php foreach (['Total' => 'monitorTotal', 'Belum' => 'monitorBelum', 'Sedang' => 'monitorSedang', 'Dijeda' => 'monitorPaused', 'Selesai' => 'monitorSelesai', 'Tidak Terdeteksi' => 'monitorUndetected'] as $label => $id): ?>
             <div class="monitoring-summary-item">
                 <span><?= esc($label) ?></span>
                 <strong id="<?= esc($id) ?>">0</strong>

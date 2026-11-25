@@ -4,6 +4,7 @@ namespace App\Controllers\Api\Participant;
 
 use App\Controllers\BaseController;
 use App\Services\AttemptResumeService;
+use App\Services\AttemptFullscreenGuardService;
 use App\Services\AttemptRuntimeService;
 use App\Services\AttemptStartService;
 use App\Traits\ApiResponseTrait;
@@ -36,6 +37,38 @@ class AttemptController extends BaseController
             (int) $auth['peserta_id'],
             (int) $attemptId,
             $payload,
+            $key
+        ));
+    }
+
+    public function fullscreenPause(string $attemptId)
+    {
+        $auth = session()->get('participant_auth');
+        $payload = $this->payload();
+        $key = trim((string) $this->request->getHeaderLine('Idempotency-Key'));
+
+        return $this->respond((new AttemptFullscreenGuardService())->pause(
+            (int) $auth['peserta_id'],
+            (int) $attemptId,
+            $payload,
+            $this->clientUuid(),
+            $this->clientGeneration(),
+            $key
+        ));
+    }
+
+    public function fullscreenResume(string $attemptId)
+    {
+        $auth = session()->get('participant_auth');
+        $payload = $this->payload();
+        $key = trim((string) $this->request->getHeaderLine('Idempotency-Key'));
+
+        return $this->respond((new AttemptFullscreenGuardService())->resume(
+            (int) $auth['peserta_id'],
+            (int) $attemptId,
+            $payload,
+            $this->clientUuid(),
+            $this->clientGeneration(),
             $key
         ));
     }
