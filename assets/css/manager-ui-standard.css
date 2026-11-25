@@ -344,6 +344,35 @@
     margin-bottom: 0;
 }
 
+/* Phase 5B modal tables are outside .manager-section-card,
+ * so give them the same local horizontal-scroll behavior explicitly.
+ */
+.manager-modal-table-responsive {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+}
+
+.manager-modal-table-responsive > .manager-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+@media (max-width: 991.98px) {
+    .manager-modal-table-responsive--susulan-candidate > .manager-table {
+        min-width: 720px;
+    }
+
+    .manager-modal-table-responsive--susulan-targets > .manager-table {
+        min-width: 780px;
+    }
+}
+
 .manager-weight-input {
     width: 88px !important;
     min-width: 88px !important;
