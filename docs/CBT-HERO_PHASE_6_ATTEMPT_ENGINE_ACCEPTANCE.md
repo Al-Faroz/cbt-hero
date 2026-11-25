@@ -99,6 +99,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E38 | Attempt sudah paused sebelum workspace dibuka (termasuk Exambro-required). | Timer langsung menampilkan remaining_seconds yang dibekukan; input tetap terkunci sampai server resume atau Fullscreen Guard memvalidasi resume. |
 | E39 | Client menerima 401/403/404/409 otoritatif dari status API (misalnya CLIENT_MISMATCH atau CLIENT_GENERATION_MISMATCH). | Workspace hard-lock, tombol resume fullscreen tidak ditawarkan, cache ditandai BLOCKED, dan answer sync berhenti. |
 | E40 | Attempt diakhiri Manager saat workspace peserta masih terbuka. | Poll status mengunci input dan menampilkan overlay selesai dengan tautan kembali ke daftar ujian. |
+| E41 | Server berhasil memproses Fullscreen Resume tetapi response hilang; peserta mencoba lagi. | Client mengirim Idempotency-Key resume yang sama dan menerima replay sukses tanpa menambah paused_seconds/deadline dua kali. |
 
 ## Catatan Exam Browser
 
