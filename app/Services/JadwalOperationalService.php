@@ -75,7 +75,7 @@ class JadwalOperationalService
         }
     }
 
-    public function addTime(int $jadwalId, array $payload, array $actor): array
+    public function addTime(int $jadwalId, array $payload, string $idempotencyKey, array $actor): array
     {
         $seconds = $this->positive($payload['seconds'] ?? null, 0);
         $scope = strtoupper(trim($this->scalar($payload['scope'] ?? 'ALL_ACTIVE')));
@@ -99,10 +99,20 @@ class JadwalOperationalService
                 $normalized[$id] = $id;
             }
             $normalized = array_values($normalized);
+            sort($normalized);
             if (!$normalized) {
                 return $this->error(422, 'VALIDATION_FAILED', 'Pilih Attempt aktif yang valid.');
             }
         }
+        if (!$this->validIdempotencyKey($idempotencyKey))
+            return $this->error(422, 'IDEMPOTENCY_REQUIRED', 'Idempotency-Key wajib dan formatnya tidak valid.');
+
+        $payloadHash = hash('sha256', json_encode([
+            'jadwal_id' => $jadwalId,
+            'seconds' => $seconds,
+            'scope' => $scope,
+            'attempt_ids' => $normalized,
+        ], JSON_UNESCAPED_SLASHES));
 
         $db = Database::connect(); $db->transBegin();
         try {
@@ -110,9 +120,53 @@ class JadwalOperationalService
             if ($jadwal === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal tidak ditemukan.');
             }
+            $rootJadwalId = ($jadwal['jenis_jadwal'] ?? 'MAIN') === 'SUSULAN'
+                ? (int) ($jadwal['parent_jadwal_id'] ?? 0)
+                : $jadwalId;
+            if ($rootJadwalId < 1) {
+                $db->transRollback();
+                return $this->error(409, 'STATE_CONFLICT', 'Root Jadwal tidak valid untuk operasi Tambah Waktu.');
+            }
+
+            $operation = $db->query(
+                'SELECT * FROM jadwal_operations WHERE idempotency_key = ? FOR UPDATE',
+                [$idempotencyKey]
+            )->getRowArray();
+            if ($operation !== null) {
+                if ($operation['action'] !== 'ADD_TIME_JADWAL'
+                    || (int) $operation['root_jadwal_id'] !== $rootJadwalId
+                    || $operation['payload_hash'] !== $payloadHash
+                    || (int) ($operation['result_jadwal_id'] ?? 0) !== $jadwalId) {
+                    $db->transRollback();
+                    return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah dipakai untuk operasi berbeda.');
+                }
+                if ($operation['status'] === 'COMPLETED') {
+                    $db->transCommit();
+                    return ['ok' => true, 'status' => 200, 'item' => [
+                        'jadwal_id' => $jadwalId,
+                        'seconds' => $seconds,
+                        'affected_count' => 0,
+                        'attempt_ids' => [],
+                        'replayed' => true,
+                    ]];
+                }
+                $db->transRollback();
+                return $this->error(409, 'OPERATION_IN_PROGRESS', 'Operasi Tambah Waktu dengan kunci ini sedang diproses.');
+            }
+
             if ($jadwal['results_finalized_at'] !== null) {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Hasil Jadwal sudah difinalkan.');
             }
+
+            $db->table('jadwal_operations')->insert([
+                'idempotency_key' => $idempotencyKey,
+                'action' => 'ADD_TIME_JADWAL',
+                'root_jadwal_id' => $rootJadwalId,
+                'result_jadwal_id' => $jadwalId,
+                'payload_hash' => $payloadHash,
+                'status' => 'IN_PROGRESS',
+                'created_by' => (int) ($actor['user_id'] ?? 0),
+            ]);
 
             $sql = 'SELECT id, jadwal_id, status, deadline_at, added_seconds FROM attempt WHERE jadwal_id = ? AND status = ?';
             $params = [$jadwalId, 'ACTIVE'];
@@ -154,6 +208,11 @@ class JadwalOperationalService
                 (string) ($actor['ip'] ?? ''), (string) ($actor['agent'] ?? ''),
                 'jadwal', $jadwalId, null, ['seconds' => $seconds, 'attempt_ids' => $attemptIds]);
 
+            $db->table('jadwal_operations')->where('idempotency_key', $idempotencyKey)->update([
+                'status' => 'COMPLETED',
+                'finished_at' => date('Y-m-d H:i:s'),
+            ]);
+
             if ($db->transStatus() === false || $db->transCommit() === false)
                 throw new RuntimeException('Commit Tambah Waktu gagal.');
             return ['ok' => true, 'status' => 200, 'item' => [
@@ -161,12 +220,18 @@ class JadwalOperationalService
                 'seconds' => $seconds,
                 'affected_count' => count($attemptIds),
                 'attempt_ids' => $attemptIds,
+                'replayed' => false,
             ]];
         } catch (Throwable $e) {
             $db->transRollback();
             log_message('error', 'Tambah Waktu gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'STATE_CONFLICT', 'Tambahan waktu tidak dapat diterapkan.');
         }
+    }
+
+    private function validIdempotencyKey(string $key): bool
+    {
+        return (bool) preg_match('/^[A-Za-z0-9._:-]{8,100}$/D', $key);
     }
 
     private function dateTime(mixed $value): ?string
