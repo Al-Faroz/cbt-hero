@@ -113,6 +113,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E52 | Dua tab membuka Attempt hampir bersamaan sebelum localStorage lock sempat terlihat oleh tab lain. | BroadcastChannel ALIVE mendeteksi race; paling banyak satu tab melanjutkan, tab lain hard-lock. |
 | E53 | Tab masuk Back-Forward Cache lalu dipulihkan dengan pageshow persisted. | Tab memeriksa lock terbaru dan mengaktifkan heartbeat kembali; tab lain tidak dapat membuka Attempt bersamaan. |
 | E54 | Resume operation lama di-replay setelah Attempt mengalami pause baru. | Server mengembalikan pause state terkini; client tetap terkunci dan tidak menampilkan resume sukses palsu. |
+| E55 | Bank memakai option_key numerik (misalnya "1", "2", "3"). | Runtime mempertahankan semua opsi dalam urutan Prepared Assignment; tidak ada opsi yang hilang karena key berubah menjadi integer saat decode JSON/PHP. |
 
 ## Catatan Exam Browser
 
