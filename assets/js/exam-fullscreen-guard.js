@@ -19,6 +19,7 @@
     let pausePending = false;
     let pauseConfirmed = false;
     let pauseKey = '';
+    let resumeKey = '';
     let busy = false;
 
     const key = prefix => prefix + ':' + (window.crypto?.randomUUID?.()
@@ -80,6 +81,7 @@
     const beginPause = () => {
         if (runtime.paused || busy) return;
         pauseKey = key('fullscreen-pause');
+        resumeKey = '';
         lock();
         sendPause();
     };
@@ -100,7 +102,7 @@
             const response = await fetch(runtime.apiBase + '/fullscreen-resume', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {...headers(), 'Idempotency-Key': key('fullscreen-resume')},
+                headers: {...headers(), 'Idempotency-Key': (resumeKey ||= key('fullscreen-resume'))},
                 body: JSON.stringify({fullscreen_active: true})
             });
             const result = await response.json().catch(() => null);
@@ -117,6 +119,7 @@
             if (resumeButton) resumeButton.hidden = true;
             if (exitLink) exitLink.hidden = false;
             pauseKey = '';
+            resumeKey = '';
         } catch (error) {
             lock(error.message + ' Aktifkan layar penuh lalu coba kembali.');
         } finally {
