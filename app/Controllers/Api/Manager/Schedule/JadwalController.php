@@ -70,8 +70,11 @@ class JadwalController extends BaseController
     public function access(string $id)
     {
         $payload = $this->payload();
-        return $this->respond((new JadwalService())->changeAccess((int) $id,
-            is_scalar($payload['access_state'] ?? null) ? (string) $payload['access_state'] : '', $this->actor()));
+        $target = is_scalar($payload['access_state'] ?? null) ? (string) $payload['access_state'] : '';
+        $susulan = (new SusulanService())->find((int) $id);
+        return $susulan !== null
+            ? $this->respond((new SusulanService())->changeAccess((int) $id, $target, $this->actor()))
+            : $this->respond((new JadwalService())->changeAccess((int) $id, $target, $this->actor()));
     }
 
     public function remove(string $id)
