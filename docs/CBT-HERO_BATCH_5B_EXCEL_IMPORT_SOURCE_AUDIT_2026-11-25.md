@@ -206,3 +206,11 @@ Perbaikan: parser memeriksa rentang marker sebelum membentuk daftar kolom:
 
 File: `app/Services/QuestionDocumentService.php`  
 Commit: `5b43d862ff6a13d4683556f05548c599bcf5d03b`
+
+
+### EXCEL-STRUCTURE-02 — nama sheet dan panjang marker template
+
+Parser sekarang membatasi marker hingga 256 byte, membatasi nama sheet sesuai batas workbook Excel (31 karakter), dan mewajibkan nama sheet cocok dengan tipe marker (PG, PG KOMPLEKS, PG BERTINGKAT, MENJODOHKAN, ISIAN SINGKAT, URAIAN). Ini mencegah sheet soal yang diganti nama tetap diproses sebagai template resmi.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `1ccd56e4350510ba84a9059189f422eab2b3dbcb`
