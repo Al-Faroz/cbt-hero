@@ -131,6 +131,7 @@ nya masih sesuai tidak dibuat ulang.
 | P26 | Semua target Susulan sudah invalid, lalu operator mencoba Siapkan Semua. | API menolak dengan INVALID_SUSULAN_TARGET; tidak membuat assignment untuk target invalid. |
 | P27 | Scope SELECTED memuat satu target invalid. | Seluruh request ditolak INVALID_SUSULAN_TARGET; tidak ada assignment parsial yang dibuat. |
 | P28 | Peserta sudah START pada Susulan itu sendiri; Attempt masih ACTIVE atau sudah FINISHED. | Target tidak dihitung invalid hanya karena Attempt pada Susulan tersebut sudah ada; assignment terpakai tetap dipertahankan dan status target tidak menghambat peserta lain. |
+| P29 | Satu media asset dipakai pada beberapa soal dengan sort_order relasi berbeda. | Manifest hanya menyimpan satu asset dan prefetch_order memakai sequence soal paling awal yang menggunakannya. |
 
 ## Status
 
