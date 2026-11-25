@@ -389,3 +389,15 @@ File: `assets/js/manager-susulan.js`
 Commit: `140a575e7daae625791c7e776644a0d1fbc79e82`
 
 Acceptance S25 berlaku untuk Tambah Waktu MAIN maupun Susulan. Belum diuji melalui browser/API.
+
+
+## Temuan PREP-IDEMPOTENCY-01 — replay chunk memakai can_start sebagai has_more
+
+Replay operasi Preparation yang sudah COMPLETED sebelumnya menetapkan `has_more = !can_start`. Kondisi ini salah ketika assignment sudah lengkap tetapi preflight peserta belum lulus atau ada target Susulan invalid: UI/API dapat menyatakan masih ada chunk meskipun tidak ada assignment tersisa.
+
+Perbaikan: replay menghitung `has_more` hanya dari jumlah MISSING + STALE + FAILED. Gate `can_start` tetap memeriksa preflight, target invalid, dan validitas Jadwal secara terpisah.
+
+File: `app/Services/PreparationService.php`  
+Commit: `87f9f8350f7bec895c0456bb1c444afc3b1d80eb`
+
+Belum diuji melalui request replay; acceptance P14–P16 tetap DEFERRED.
