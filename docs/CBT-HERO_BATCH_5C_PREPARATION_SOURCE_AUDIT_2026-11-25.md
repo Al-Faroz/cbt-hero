@@ -401,3 +401,14 @@ File: `app/Services/PreparationService.php`
 Commit: `87f9f8350f7bec895c0456bb1c444afc3b1d80eb`
 
 Belum diuji melalui request replay; acceptance P14–P16 tetap DEFERRED.
+
+
+### Koreksi PREP-SUSULAN-INVALID-01 — target yang sudah START pada Susulan sendiri bukan target invalid
+
+Audit lanjutan terhadap `AttemptStartService` memastikan baris target Susulan tetap berstatus TARGETED setelah Attempt dibuat. Karena itu, pemeriksaan invalid target harus membedakan Attempt aktif pada jadwal lain dari Attempt yang memang sudah dimulai pada Susulan tersebut.
+
+Perbaikan: `invalidSusulanTargetIds()` mengecualikan target yang sudah mempunyai Attempt pada Susulan itu sendiri. Dengan demikian, target yang sudah START/FINISHED tidak keliru dihitung sebagai invalid hanya karena Attempt-nya sendiri ada atau karena Attempt replacement lama sudah berubah menjadi SUPERSEDED.
+
+Commit: `167ed3bb61282cac1b2b8b474c6961562a8c3eed`
+
+Belum diuji dengan fixture Attempt ACTIVE/FINISHED pada Susulan.
