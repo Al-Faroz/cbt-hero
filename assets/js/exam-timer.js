@@ -18,7 +18,7 @@
     };
 
     const tick = () => {
-        if (!Number.isFinite(deadlineMs)) return;
+        if (!Number.isFinite(deadlineMs) || runtime.paused) return;
         const remaining = Math.max(0, (deadlineMs - runtime.serverNowMs()) / 1000);
         const text = format(remaining);
         if (node && text !== lastText) {
@@ -46,7 +46,11 @@
     document.addEventListener('cbt:bootstrap-ready', event => {
         setDeadline(event.detail?.data?.attempt?.deadline_at);
     });
-    document.addEventListener('cbt:deadline-updated', event => setDeadline(event.detail?.deadline_at));
+    document.addEventListener('cbt:deadline-updated', event => {
+        runtime.paused = false;
+        setDeadline(event.detail?.deadline_at);
+    });
+    document.addEventListener('cbt:attempt-paused', () => { runtime.paused = true; });
     document.addEventListener('cbt:timeout-authority', () => {
         if (!timeoutSent) {
             timeoutSent = true;
