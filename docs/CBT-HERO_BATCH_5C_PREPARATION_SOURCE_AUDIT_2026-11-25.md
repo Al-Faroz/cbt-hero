@@ -353,7 +353,7 @@ Commits:
 
 Keputusan validasi ulang target Susulan sebelum Preparation telah disinkronkan ke:
 - `docs/CBT-HERO_DOKUMEN_ACUAN_UTAMA.md`, bagian 17.4.
-- `docs/CBT-HERO_PHASE_5C_PREPARATION_ACCEPTANCE.md`, acceptance tambahan P23–P27.
+- `docs/CBT-HERO_PHASE_5C_PREPARATION_ACCEPTANCE.md`, acceptance tambahan P23–P29.
 
 Commit:
 - Master document: `9bf44a97f74b24125cb38f4f3c6705e49610a153`
