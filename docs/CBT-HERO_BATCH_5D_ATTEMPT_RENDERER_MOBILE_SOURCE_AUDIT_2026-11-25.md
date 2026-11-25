@@ -131,3 +131,13 @@ File: `assets/js/exam-sync.js`
 Commits: `3dd57f0bccbe6516d127e1b564f34f9709a94448`, `89d2253f9eb39ed53d6b0dcab89ebc63d048e252`.
 
 Acceptance E36–E40 ditambahkan pada Phase 6; masih DEFERRED.
+
+
+### 5D-08 — retry Fullscreen Resume memakai key baru
+Service Fullscreen Guard sudah mendukung replay melalui `participant_operations`, tetapi client sebelumnya membuat Idempotency-Key baru pada setiap klik. Jika server berhasil resume tetapi response hilang, retry baru akan mendapat FULLSCREEN_PAUSE_NOT_FOUND.
+
+Perbaikan: client menyimpan `resumeKey` selama satu operasi resume; key baru dibuat hanya untuk siklus pause/resume berikutnya. Key di-reset setelah sukses dan ketika pause fullscreen baru dimulai.
+
+File: `assets/js/exam-fullscreen-guard.js`  
+Commit: `edd543fc643e005018c2f80431ad277224076bf7`  
+Acceptance E41 ditambahkan; belum diuji melalui retry API/browser.
