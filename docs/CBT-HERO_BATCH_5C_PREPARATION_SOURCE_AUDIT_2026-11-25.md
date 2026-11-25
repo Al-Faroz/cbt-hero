@@ -452,3 +452,25 @@ Commits:
 - Acceptance P21 updated at `bd4106999b4d487f400a2015174e557e9c155538`.
 
 Belum diuji melalui browser/HTTP fixture; P21 tetap DEFERRED.
+
+
+## Temuan OP-EXTEND-REPLAY-01 — retry perpanjangan Batas Mulai yang sudah commit dianggap gagal
+
+Perpanjangan memakai nilai waktu absolut sehingga retry dengan nilai yang sama tidak menggandakan perubahan. Namun sebelumnya server menolak nilai yang sama karena tidak lebih besar dari batas saat ini, sehingga response retry setelah kehilangan response pertama terlihat gagal.
+
+Perbaikan:
+- Nilai baru yang lebih kecil tetap ditolak.
+- Nilai yang sama dengan batas saat ini dikembalikan sebagai replay sukses tanpa UPDATE dan tanpa audit duplikat.
+- UI MAIN dan Susulan membedakan replay dari perpanjangan baru.
+
+File:
+- `app/Services/JadwalOperationalService.php`
+- `assets/js/manager-jadwal.js`
+- `assets/js/manager-susulan.js`
+
+Commits:
+- `14469e52401b4417186f29eb0bf54286c2a18487`
+- `49cf296ceb1a2d8e9ba25e829327dc31c04aa1c1`
+- `f75ef07df9a49c5cd09605e6a2b63f402647594d`
+
+Acceptance S27 ditambahkan. Belum diuji melalui retry API/browser.
