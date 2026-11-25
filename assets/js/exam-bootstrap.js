@@ -54,6 +54,7 @@
 
                 const state = await db.runtime_state.get(attemptId) || {attempt_id: attemptId};
                 state.server_sync_revision = Number(data.attempt?.server_sync_revision || 0);
+                state.server_attempt_status = String(data.attempt?.status || 'ACTIVE');
                 state.deadline_at = data.attempt?.deadline_at || null;
                 state.updated_at = Date.now();
                 await db.runtime_state.put(state);
@@ -73,6 +74,8 @@
 
         const media = await db.media_manifest.where('attempt_id').equals(attemptId).sortBy('prefetch_order');
         const state = await db.runtime_state.get(attemptId);
+        const cachedStatus = String(state?.server_attempt_status || meta.attempt?.status || 'ACTIVE');
+        if (cachedStatus !== 'ACTIVE') return false;
         const data = {
             attempt: {
                 ...(meta.attempt || {}),
