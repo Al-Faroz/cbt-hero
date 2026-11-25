@@ -20,18 +20,23 @@
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     let pausePending = false;
+    let pauseConfirmed = false;
     let pauseKey = '';
     let busy = false;
 
     const key = prefix => prefix + ':' + (window.crypto?.randomUUID?.()
         ?? (Date.now() + '-' + Math.random().toString(36).slice(2)));
 
-    const lock = (text = 'Ujian dijeda karena Anda keluar dari mode layar penuh.') => {
+    const lock = (text = 'Ujian dijeda karena Anda keluar dari mode layar penuh.', confirmed = false) => {
+        if (confirmed) pauseConfirmed = true;
         runtime.paused = true;
         runtime.lockInputs('Ujian dijeda · layar penuh diperlukan');
         if (title) title.textContent = 'Ujian dijeda';
         if (message) message.textContent = text;
-        if (resumeButton) resumeButton.hidden = false;
+        if (resumeButton) {
+            resumeButton.hidden = false;
+            resumeButton.disabled = !pauseConfirmed;
+        }
         if (exitLink) exitLink.hidden = true;
         if (overlay) overlay.hidden = false;
         runtime.emit('cbt:attempt-paused', {reason: 'FULLSCREEN_EXIT'});
@@ -62,6 +67,8 @@
             if (!response.ok || result?.ok !== true)
                 throw new Error(result?.error?.message || 'Status jeda belum tersimpan ke server.');
             pausePending = false;
+            pauseConfirmed = true;
+            if (resumeButton) resumeButton.disabled = false;
             runtime.setSyncState('Dijeda · layar penuh diperlukan', 'locked');
         } catch (error) {
             pausePending = false;
@@ -132,7 +139,7 @@
         const paused = event.detail?.data?.attempt?.paused === true;
         if (paused) {
             if (event.detail?.data?.attempt?.pause_reason === 'FULLSCREEN_EXIT') {
-                lock('Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.');
+                lock('Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.', true);
             } else {
                 runtime.hardLock(
                     'Ujian dijeda oleh pengawas',
