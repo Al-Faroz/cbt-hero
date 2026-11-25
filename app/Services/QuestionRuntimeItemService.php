@@ -79,13 +79,18 @@ class QuestionRuntimeItemService
                 ->get()->getResultArray();
             $byKey = array_column($options, null, 'option_key');
             $order = json_decode((string) ($row['option_order_json'] ?? ''), true);
-            if (!is_array($order)) $order = array_keys($byKey);
+            $order = is_array($order)
+                ? array_values(array_map('strval', array_filter($order, 'is_scalar')))
+                : array_map('strval', array_keys($byKey));
             foreach (array_keys($byKey) as $key) {
+                $key = (string) $key;
                 if (!in_array($key, $order, true)) $order[] = $key;
             }
             $item['options'] = [];
             foreach ($order as $key) {
-                if (!is_string($key) || !isset($byKey[$key])) continue;
+                if (!is_scalar($key)) continue;
+                $key = (string) $key;
+                if (!isset($byKey[$key])) continue;
                 $item['options'][] = [
                     'option_key' => $key,
                     'content_text' => (string) $byKey[$key]['content_html'],
