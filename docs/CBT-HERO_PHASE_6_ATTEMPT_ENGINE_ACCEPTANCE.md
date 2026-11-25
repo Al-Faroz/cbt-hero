@@ -102,6 +102,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E41 | Server berhasil memproses Fullscreen Resume tetapi response hilang; peserta mencoba lagi. | Client mengirim Idempotency-Key resume yang sama dan menerima replay sukses tanpa menambah paused_seconds/deadline dua kali. |
 | E42 | Fullscreen Pause berhasil, lalu Manager sudah resume sebelum retry pause dengan key lama tiba. | Replay pause melaporkan state server terkini (paused=false); client tidak menampilkan tombol resume palsu dan mengunci ulang jika browser masih keluar fullscreen. |
 | E43 | Server menyatakan Attempt FINISHED/SUPERSEDED atau status API mengembalikan ATTEMPT_NOT_ACTIVE. | Timer berhenti, input tetap terkunci, dan workspace menampilkan status terminal tanpa mengirim TIMEOUT kedua. |
+| E44 | Timeout finalization gagal sementara ketika koneksi sudah online (misalnya 5xx setelah sync drain). | State TIMEOUT_PENDING tetap tersimpan dan client mencoba ulang finalisasi dengan exponential backoff; Idempotency-Key tetap sama sampai sukses. |
 
 ## Catatan Exam Browser
 
