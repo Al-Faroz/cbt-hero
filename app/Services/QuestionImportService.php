@@ -168,6 +168,9 @@ class QuestionImportService
             }
             $row = $db->table('import_staging_items')->where('import_job_id', $id)->where('id', $itemId)->get()->getRowArray();
             if ($row === null) { $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Baris tidak ditemukan.'); }
+            $previousPayload = json_decode((string) $row['payload_json'], true) ?: [];
+            $previousMediaIds = array_values(array_unique(array_map('intval',
+                array_column((new QuestionMediaService())->references($previousPayload), 'media_asset_id'))));
             $update = match ($action) {
                 'EXCLUDE' => ['validation_status' => 'EXCLUDED', 'errors_json' => null],
                 'INCLUDE' => ['validation_status' => 'INVALID', 'errors_json' => null],
@@ -181,6 +184,10 @@ class QuestionImportService
             $db->table('import_staging_items')->where('id', $itemId)->update($update);
             $db->table('import_jobs')->where('id', $id)->update(['status' => 'PARSED', 'valid_items' => 0, 'invalid_items' => 0]);
             if ($db->transStatus() === false || $db->transCommit() === false) throw new RuntimeException('Perubahan gagal.');
+            if ($action === 'FIX') {
+                $media = new QuestionMediaService();
+                foreach ($previousMediaIds as $mediaId) $media->discardImport($mediaId);
+            }
             return $this->job($bankId, $id);
         } catch (Throwable $e) {
             $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Baris tidak dapat diubah.');
