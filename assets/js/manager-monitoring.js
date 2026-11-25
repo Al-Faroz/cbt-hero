@@ -97,6 +97,13 @@
             : row.status === 'SELESAI' ? 'SELESAI' : 'BELUM';
         wrapper.append(main);
 
+        if (row.status === 'SEDANG' && row.paused) {
+            const pause = document.createElement('div');
+            pause.className = 'small mt-1 text-warning fw-semibold';
+            pause.textContent = row.pause_reason === 'FULLSCREEN_EXIT' ? 'Dijeda · keluar layar penuh' : 'Dijeda · pengawas';
+            wrapper.append(pause);
+        }
+
         if (row.status === 'SEDANG') {
             const connection = document.createElement('div');
             connection.className = 'small mt-1 '
@@ -165,6 +172,7 @@
         $('monitorTotal').textContent = String(summary.total ?? 0);
         $('monitorBelum').textContent = String(summary.belum ?? 0);
         $('monitorSedang').textContent = String(summary.sedang ?? 0);
+        $('monitorPaused').textContent = String(summary.dijeda ?? 0);
         $('monitorSelesai').textContent = String(summary.selesai ?? 0);
         $('monitorUndetected').textContent = String(summary.tidak_terdeteksi ?? 0);
     };
@@ -318,6 +326,7 @@
                 ['Rombel / Ruang', attempt.rombel + ' · ' + (attempt.ruang || '-')],
                 ['Ujian', attempt.ujian + ' · ' + attempt.jenis_jadwal],
                 ['Status', attempt.status + (attempt.finish_reason ? ' · ' + attempt.finish_reason : '')],
+                ['Status Jeda', attempt.paused ? 'Dijeda' : 'Tidak dijeda'],
                 ['Mulai', formatDate(attempt.start_at)],
                 ['Deadline', formatDate(attempt.deadline_at)],
                 ['Sisa Waktu', formatDuration(attempt.remaining_seconds)],
@@ -363,7 +372,28 @@
             }
             events.append(list);
 
-            $('monitorDetailBody').replaceChildren(grid, events);
+            const pauses = document.createElement('div');
+            pauses.className = 'mt-4';
+            const pauseTitle = document.createElement('h3');
+            pauseTitle.className = 'fs-6';
+            pauseTitle.textContent = 'Riwayat Jeda Attempt';
+            pauses.append(pauseTitle);
+            const pauseList = document.createElement('ul');
+            pauseList.className = 'small mb-0';
+            for (const pause of data.pause_events || []) {
+                const li = document.createElement('li');
+                const duration = pause.paused_seconds == null ? 'masih berlangsung' : pause.paused_seconds + ' detik';
+                li.textContent = formatDate(pause.started_at) + ' · ' + (pause.reason || 'Jeda') + ' · ' + duration;
+                pauseList.append(li);
+            }
+            if (!(data.pause_events || []).length) {
+                const li = document.createElement('li');
+                li.textContent = 'Belum ada riwayat jeda.';
+                pauseList.append(li);
+            }
+            pauses.append(pauseList);
+
+            $('monitorDetailBody').replaceChildren(grid, events, pauses);
         } catch (error) {
             $('monitorDetailBody').textContent = error.message;
         }
