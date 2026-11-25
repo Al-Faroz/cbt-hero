@@ -1,7 +1,7 @@
 # CBT-HERO — DOKUMEN ACUAN UTAMA
 
-**Versi:** 1.4  
-**Tanggal baseline:** 25 September 2026  
+**Versi:** 1.5  
+**Tanggal revisi:** 25 November 2026  
 **Status:** **BASELINE FINAL / SINGLE SOURCE OF TRUTH**  
 **Platform:** CodeIgniter 4  
 **Ruang lingkup:** CBT akademik + tes psikologis berbasis inventori/psychometric questionnaire  
@@ -90,8 +90,9 @@ Ringkasnya:
 8. **Server Authority, Client Protects Experience**.
 9. **Graceful Degradation Under Load**.
 10. **Simple Operation, Strong Internal Design**.
-11. **Practical Security** — keamanan aplikasi kuat, tetapi browser biasa tidak dipaksa menjadi Exam Browser palsu dengan JavaScript berat.
-12. **Tidak ada anti-cheat absolut pada browser biasa**; kontrol perangkat ketat adalah ranah Exam Browser.
+11. **Practical Security** — keamanan aplikasi kuat; browser biasa tidak diklaim setara Exam Browser dan tidak menjalankan pseudo-kiosk/anti-cheat agresif.
+12. **Fullscreen Guard browser biasa** adalah kontrol alur ujian: fullscreen wajib, keluar fullscreen memicu PAUSED server-side, tetapi tidak diklaim mencegah perpindahan aplikasi atau menggantikan device lockdown Exam Browser.
+13. **Tidak ada anti-cheat absolut pada browser biasa**; kontrol perangkat ketat tetap ranah Exam Browser.
 
 ## 1.4 Target Pola Beban
 
@@ -1060,7 +1061,7 @@ Selama Attempt ACTIVE:
 - HP mati → waktu tetap berjalan;
 - background → waktu tetap berjalan.
 
-Pause hanya karena **Reset Akses oleh Operator**.
+Pause dapat terjadi karena **Reset Akses oleh Operator** atau **Fullscreen Guard** pada browser biasa. Kedua sumber pause dicatat terpisah pada audit event; pause fullscreen tidak boleh mengubah client generation atau menghapus jawaban.
 
 Client menghitung countdown dari `deadline_at` authority + offset waktu server,
 bukan counter yang berhenti ketika browser ditutup/background. Saat mencapai 0,
@@ -1184,9 +1185,11 @@ Phase 2:
 - Android Exam Browser;
 - jika Kegiatan `Exam Browser = ON`, START/RESUME hanya dari client Exam Browser tervalidasi.
 
-CBT-HERO **tidak** meniru anti-cheat agresif browser biasa ala aplikasi yang bergantung pada banyak event/polling JS karena kompromi performa dan tetap mudah dilewati oleh kemampuan OS Android modern.
+Jika Exam Browser OFF, peserta boleh memakai Exam Browser atau browser biasa. Browser biasa wajib masuk fullscreen sebelum START/RESUME. Jika status fullscreen keluar selama Attempt ACTIVE, client segera mengunci interaksi workspace dan mengirim event ke server; server mem-pause Attempt secara atomik, membekukan deadline sesuai durasi pause, dan mencatat kejadian. RESUME hanya diizinkan setelah fullscreen aktif kembali, identitas client/generation dan status Attempt tervalidasi server. Kejadian berulang dicatat untuk monitoring; tidak otomatis menggugurkan peserta.
 
-Exam Browser/kiosk client adalah jalur kontrol perangkat yang lebih ketat.
+Fullscreen Guard memakai event browser yang relevan (terutama fullscreenchange) tanpa polling anti-cheat berat. Browser biasa tetap bukan lingkungan terkunci: peserta masih mungkin berpindah aplikasi, membuka perangkat lain, atau mengambil screenshot. Mekanisme ini bukan pengganti Exam Browser.
+
+Jika Exam Browser ON, START/RESUME hanya dari client Exam Browser tervalidasi; aturan fullscreen browser biasa tidak menggantikan validasi Exambro. Exam Browser/kiosk client tetap menjadi jalur kontrol perangkat yang lebih ketat.
 
 Kamera/proctoring bukan core V1 dan bukan kewajiban Phase 2 awal.
 
