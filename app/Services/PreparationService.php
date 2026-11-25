@@ -348,6 +348,23 @@ class PreparationService
             (string) ($target['target_mode'] ?? 'MAIN'),
             (string) ($target['supersede_attempt_id'] ?? ''),
         ]));
+        // Staleness follows the full schedule fingerprint, while deterministic
+        // question/option selection follows only content-affecting sources. A
+        // time/access/visibility edit therefore requires rebuild without silently
+        // changing the exam selection.
+        $selectionSeed = hash('sha256', json_encode([
+            'jadwal_id' => (int) $context['id'],
+            'parent_jadwal_id' => $context['parent_jadwal_id'] === null ? null : (int) $context['parent_jadwal_id'],
+            'jenis_jadwal' => (string) $context['jenis_jadwal'],
+            'bank_version' => (int) $context['bank_version'],
+            'bank_fingerprint' => (string) $context['bank_fingerprint'],
+            'selection' => $plan['selection'],
+            'config' => $plan['config'],
+            'peserta_kegiatan_id' => $pkId,
+            'peserta_id' => (int) ($target['peserta_id'] ?? 0),
+            'target_mode' => (string) ($target['target_mode'] ?? 'MAIN'),
+            'supersede_attempt_id' => $target['supersede_attempt_id'] ?? null,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $existing = $db->table('prepared_assignment')
             ->where('generated_for_jadwal_id', (int) $context['id'])
@@ -393,7 +410,7 @@ class PreparationService
             if ((int) $config['shuffle_questions'] === 1) {
                 usort($pool, fn(array $a, array $b): int =>
                     strcmp(
-                        hash('sha256', $participantFingerprint . '|Q|' . $type . '|' . $a['soal_id']),
+                        hash('sha256', $selectionSeed . '|Q|' . $type . '|' . $a['soal_id']),
                         hash('sha256', $participantFingerprint . '|Q|' . $type . '|' . $b['soal_id'])
                     ));
             }
@@ -415,7 +432,7 @@ class PreparationService
                     if ((int) $config['shuffle_options'] === 1) {
                         usort($keys, fn(string $a, string $b): int =>
                             strcmp(
-                                hash('sha256', $participantFingerprint . '|O|' . $revisionId . '|' . $a),
+                                hash('sha256', $selectionSeed . '|O|' . $revisionId . '|' . $a),
                                 hash('sha256', $participantFingerprint . '|O|' . $revisionId . '|' . $b)
                             ));
                     }
@@ -431,7 +448,7 @@ class PreparationService
                     if ((int) $config['shuffle_options'] === 1) {
                         usort($right, fn(string $a, string $b): int =>
                             strcmp(
-                                hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $a),
+                                hash('sha256', $selectionSeed . '|M|' . $revisionId . '|' . $a),
                                 hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $b)
                             ));
                     }
