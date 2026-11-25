@@ -141,3 +141,22 @@ Perbaikan: client menyimpan `resumeKey` selama satu operasi resume; key baru dib
 File: `assets/js/exam-fullscreen-guard.js`  
 Commit: `edd543fc643e005018c2f80431ad277224076bf7`  
 Acceptance E41 ditambahkan; belum diuji melalui retry API/browser.
+
+
+### 5D-09 — replay Fullscreen Pause dapat melaporkan state lama
+Jika pause request berhasil tetapi response hilang, lalu Manager sudah resume sebelum retry pause tiba, service sebelumnya mengembalikan `paused=true` hanya berdasarkan operasi lama meskipun Attempt sudah tidak paused.
+
+Perbaikan:
+- Replay pause membaca state Attempt terkini.
+- Jika pause sudah diakhiri, response replay mengembalikan `paused=false` dan deadline terkini.
+- Client menutup overlay lama dan memicu pemeriksaan ulang fullscreen; jika browser masih keluar fullscreen, pause cycle baru dimulai dengan key baru.
+
+File:
+- `app/Services/AttemptFullscreenGuardService.php`
+- `assets/js/exam-fullscreen-guard.js`
+
+Commits:
+- `1d68428cbb0833d879a0d0f4d08472bea3cbdaa5`
+- `b4b8104a0e12a511be87f2c60fd60083ef66610e`
+
+Acceptance E42 ditambahkan; belum diuji dengan concurrency/retry fixture.
