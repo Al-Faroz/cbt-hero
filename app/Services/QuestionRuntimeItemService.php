@@ -149,7 +149,7 @@ class QuestionRuntimeItemService
     private function media($db, int $attemptId, int $revisionId): array
     {
         $rows = $db->table('soal_revision_media AS srm')
-            ->select('ma.id, ma.storage_type, ma.media_kind, ma.provider, ma.external_url, ma.status')
+            ->select('ma.id, ma.storage_type, ma.media_kind, ma.provider, ma.external_url, ma.status, srm.sort_order AS prefetch_order')
             ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
             ->where('srm.soal_revision_id', $revisionId)
             ->orderBy('srm.sort_order', 'ASC')->orderBy('srm.id', 'ASC')
@@ -165,6 +165,8 @@ class QuestionRuntimeItemService
                 'url' => $row['storage_type'] === 'LOCAL'
                     ? base_url('api/attempt/' . $attemptId . '/media/' . $id)
                     : (string) $row['external_url'],
+                'critical' => (string) $row['media_kind'] === 'IMAGE',
+                'prefetch_order' => (int) $row['prefetch_order'],
             ];
         }
         return $result;
