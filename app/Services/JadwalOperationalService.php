@@ -133,6 +133,9 @@ class JadwalOperationalService
             $attemptIds = [];
             foreach ($attempts as $attempt) {
                 $attemptId = (int) $attempt['id'];
+                if (trim((string) ($attempt['deadline_at'] ?? '')) === '') {
+                    throw new RuntimeException('Attempt aktif tidak mempunyai deadline.');
+                }
                 $db->query(
                     'UPDATE attempt SET added_seconds = added_seconds + ' . $seconds
                         . ', deadline_at = DATE_ADD(deadline_at, INTERVAL ' . $seconds
