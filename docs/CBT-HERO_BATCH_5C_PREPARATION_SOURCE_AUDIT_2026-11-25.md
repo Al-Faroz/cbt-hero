@@ -375,3 +375,17 @@ Commits:
 - `66e2c74772e4b1590e6552790488feee20be2482`
 
 Acceptance S25–S26 ditambahkan. Belum diuji dengan retry API/DB; tetap DEFERRED.
+
+
+### OP-ADD-TIME-IDEMPOTENCY-02 — halaman Susulan juga harus mengirim key
+
+Setelah endpoint Tambah Waktu diwajibkan memakai Idempotency-Key, audit menemukan halaman Susulan masih mengirim request tanpa header tersebut. UI Jadwal MAIN sudah diperbaiki, dan halaman Susulan kini juga:
+- membuat key baru saat modal Tambah Waktu dibuka;
+- mempertahankan key selama retry request yang sama;
+- mengganti key jika nilai tambahan berubah;
+- menampilkan pesan khusus jika server mengembalikan replay.
+
+File: `assets/js/manager-susulan.js`  
+Commit: `140a575e7daae625791c7e776644a0d1fbc79e82`
+
+Acceptance S25 berlaku untuk Tambah Waktu MAIN maupun Susulan. Belum diuji melalui browser/API.
