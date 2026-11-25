@@ -90,6 +90,38 @@
         return changed;
     };
 
+    const lockForStatusError = async (response, result) => {
+        const authoritative = response.status >= 400
+            && response.status < 500
+            && ![408, 429].includes(response.status);
+        if (!authoritative) return;
+
+        const code = String(result?.error?.code || '');
+        const messages = {
+            CLIENT_MISMATCH: 'Attempt sudah aktif pada client lain. Hubungi pengawas untuk pemeriksaan atau Reset Akses.',
+            CLIENT_GENERATION_MISMATCH: 'Akses ujian telah diubah oleh pengawas. Kembali ke daftar ujian dan buka kembali melalui Konfirmasi.',
+            CLIENT_ID_INVALID: 'Identitas client tidak valid. Kembali ke daftar ujian dan buka kembali melalui Konfirmasi.',
+            ATTEMPT_NOT_ACTIVE: 'Attempt ini sudah tidak aktif.',
+            NOT_FOUND: 'Attempt tidak ditemukan atau aksesnya telah berakhir.'
+        };
+        const message = messages[code] || result?.error?.message || 'Server menolak akses ke Attempt ini.';
+
+        runtime.paused = false;
+        runtime.pauseReason = null;
+        runtime.lockInputs('Sesi ujian tidak dapat dilanjutkan');
+        runtime.hardLock('Sesi ujian tidak dapat dilanjutkan', message);
+
+        const resumeButton = document.getElementById('examFullscreenResumeButton');
+        const exitLink = document.getElementById('examLockExitLink');
+        if (resumeButton) resumeButton.hidden = true;
+        if (exitLink) exitLink.hidden = false;
+
+        const state = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
+        state.server_attempt_status = 'BLOCKED';
+        state.updated_at = Date.now();
+        await db.runtime_state.put(state);
+    };
+
     const checkStatus = async () => {
         if (statusChecking || !navigator.onLine || runtime.tabBlocked) return;
         statusChecking = true;
@@ -100,7 +132,10 @@
                 headers: {'Accept': 'application/json', ...runtime.clientHeaders()}
             });
             const result = await response.json().catch(() => null);
-            if (!response.ok || result?.ok !== true) return;
+            if (!response.ok || result?.ok !== true) {
+                await lockForStatusError(response, result);
+                return;
+            }
 
             const data = result.data || {};
             const nextServerRevision = Math.max(
@@ -138,7 +173,11 @@
                 runtime.paused = false;
                 runtime.pauseReason = null;
                 runtime.lockInputs('Ujian sudah selesai');
-                if (overlay) overlay.hidden = true;
+                if (overlay) overlay.hidden = false;
+                if (title) title.textContent = 'Ujian sudah selesai';
+                if (message) message.textContent = 'Attempt telah diakhiri oleh server. Kembali ke daftar ujian.';
+                if (resumeButton) resumeButton.hidden = true;
+                if (exitLink) exitLink.hidden = false;
                 runtime.emit('cbt:attempt-status-changed', {status: attemptStatus});
             } else if (serverPaused) {
                 const reason = String(data.pause_reason || runtime.pauseReason || 'OPERATOR');
