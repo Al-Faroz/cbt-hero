@@ -110,6 +110,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E49 | Live revision menambahkan/mengganti gambar critical. | Media baru ikut diprefetch/cache sebelum renderer menerapkan perubahan; tidak mengirim PACKAGE_READY duplikat. |
 | E50 | Endpoint image lambat/tidak merespons saat bootstrap. | Prefetch berhenti maksimal 8 detik per asset; bootstrap tetap dapat menampilkan soal dan tidak menunggu request media tanpa batas. |
 | E51 | Paket memiliki banyak gambar critical pada banyak participant bersamaan. | Tiap client membatasi maksimal empat fetch gambar bersamaan agar prefetch tidak membuat burst request tak terbatas. |
+| E52 | Dua tab membuka Attempt hampir bersamaan sebelum localStorage lock sempat terlihat oleh tab lain. | BroadcastChannel ALIVE mendeteksi race; paling banyak satu tab melanjutkan, tab lain hard-lock. |
 
 ## Catatan Exam Browser
 
