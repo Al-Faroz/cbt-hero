@@ -17,11 +17,13 @@ class PreparationService
         $context = $this->context($db, $jadwalId);
         if ($context === null) return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
 
-        $targets = $this->targets($db, $context);
+        $allTargets = $this->targets($db, $context);
+        $invalidTargetIds = $this->invalidSusulanTargetIds($db, $context);
+        $invalidTargetCount = count($invalidTargetIds);
+        $targets = array_diff_key($allTargets, array_flip($invalidTargetIds));
         $fingerprint = $this->scheduleFingerprint($db, $context);
         $summary = $this->summarize($db, $context, $targets, $fingerprint);
         $preflight = $this->participantPreflight($db, $context, array_keys($targets));
-        $invalidTargetCount = $this->invalidSusulanTargetCount($db, $context);
         $assignmentsReady = $summary['total'] > 0
             && $summary['ready'] === $summary['total']
             && $summary['stale'] === 0
@@ -142,6 +144,12 @@ class PreparationService
             }
 
             $targets = $this->targets($db, $context);
+            $invalidTargetIds = $this->invalidSusulanTargetIds($db, $context);
+            if ($scope === 'SELECTED' && array_intersect($selectedIds, $invalidTargetIds)) {
+                $db->transRollback();
+                return $this->error(409, 'INVALID_SUSULAN_TARGET', 'Sebagian target Susulan sudah tidak memenuhi syarat. Batalkan atau perbaiki target pada halaman Susulan.');
+            }
+            $targets = array_diff_key($targets, array_flip($invalidTargetIds));
             if ($scope === 'SELECTED') {
                 $unknown = array_diff($selectedIds, array_keys($targets));
                 if ($unknown) {
@@ -152,7 +160,13 @@ class PreparationService
             }
             if (!$targets) {
                 $db->transRollback();
-                return $this->error(409, 'NO_TARGET', 'Belum ada peserta target untuk Preparation.');
+                return $this->error(
+                    409,
+                    $invalidTargetIds ? 'INVALID_SUSULAN_TARGET' : 'NO_TARGET',
+                    $invalidTargetIds
+                        ? 'Semua target Susulan sudah tidak memenuhi syarat. Batalkan atau perbaiki target pada halaman Susulan.'
+                        : 'Belum ada peserta target untuk Preparation.'
+                );
             }
             $fingerprint = $this->scheduleFingerprint($db, $context);
             $states = $this->assignmentStates($db, $context, $targets, $fingerprint);
@@ -603,13 +617,13 @@ class PreparationService
         return $states;
     }
 
-    private function invalidSusulanTargetCount($db, array $context): int
+    private function invalidSusulanTargetIds($db, array $context): array
     {
-        if (($context['jenis_jadwal'] ?? '') !== 'SUSULAN') return 0;
+        if (($context['jenis_jadwal'] ?? '') !== 'SUSULAN') return [];
 
         $mainId = (int) ($context['parent_jadwal_id'] ?? 0);
-        $row = $db->query(
-            "SELECT COUNT(*) AS total
+        $rows = $db->query(
+            "SELECT t.peserta_kegiatan_id
              FROM jadwal_peserta_target t
              JOIN peserta_kegiatan pk ON pk.id = t.peserta_kegiatan_id
              LEFT JOIN peserta p ON p.id = pk.peserta_id
@@ -652,7 +666,8 @@ class PreparationService
                         )
                     )
                     OR t.target_mode NOT IN ('FIRST_ATTEMPT', 'REPLACEMENT')
-               )",
+               )
+             ORDER BY t.peserta_kegiatan_id ASC",
             [
                 (int) $context['id'],
                 (int) $context['kegiatan_id'],
@@ -660,9 +675,12 @@ class PreparationService
                 $mainId,
                 $mainId,
             ]
-        )->getRowArray();
+        )->getResultArray();
 
-        return (int) ($row['total'] ?? 0);
+        return array_values(array_unique(array_map(
+            static fn(array $row): int => (int) $row['peserta_kegiatan_id'],
+            $rows
+        )));
     }
 
     private function targets($db, array $context): array
