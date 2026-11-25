@@ -225,3 +225,8 @@ Perbaikan: bootstrap menolak `access_state != BUKA` dengan `423 SCHEDULE_HELD`. 
 File: `app/Services/AttemptBootstrapService.php`  
 Commit: `11d5493d41f785c1b13ca505008d29fdaaddb734`.  
 Acceptance E47 ditambahkan; belum diuji dengan perubahan access state saat sesi aktif.
+
+
+Routes/API contract Phase 6 juga disinkronkan untuk guard `SCHEDULE_HELD` pada bootstrap re-entry dan membedakannya dari sesi yang sudah aktif.
+
+Commit: `0ad99e6b645f00a709f8e77ecd2d4a6510e68a26`.
