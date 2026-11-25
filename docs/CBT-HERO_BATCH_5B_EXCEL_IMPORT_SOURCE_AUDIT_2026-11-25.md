@@ -173,3 +173,22 @@ Cleanup kode tidak terpakai: `18576a929e9ad841581163f331c63dc4b65c4bc0`
 Kunci sinkronisasi: `BankTypeConfigService::save()` juga mengunci row Bank sebelum mengganti Komposisi, sehingga perubahan Komposisi dan Commit terserialisasi pada row yang sama.
 
 Acceptance fungsional tetap DEFERRED; belum ada klaim test PASS.
+
+
+### EXCEL-AREA-01 — posisi gambar dan baris soal harus berada pada area template
+
+Perbaikan lanjutan untuk X20:
+- Anchor gambar dibatasi pada baris data soal (bukan marker/header/petunjuk), maksimum 200 slot soal.
+- Kolom gambar dibatasi pada kolom konten yang sesuai tipe: pertanyaan, pilihan, pasangan, jawaban, atau rubrik. Kolom nomor, kunci, mode, toleransi, dan poin tidak menerima gambar.
+- Sel Excel di luar batas 200 slot ditolak bila berisi data.
+- Baris sumber Excel yang melewati jumlah slot `question_count` pada Komposisi ditandai INVALID saat validasi staging.
+
+File:
+- `app/Services/QuestionDocumentService.php`
+- `app/Services/QuestionImportService.php`
+
+Commit:
+- `36dc72fd68dbb89d6615db25e0598e7b5c997147`
+- `376336e2ed115089a96511a961888c1ba9a244e1`
+
+X20 tetap perlu fixture nyata untuk memastikan variasi anchor Excel/LibreOffice tertangani benar.
