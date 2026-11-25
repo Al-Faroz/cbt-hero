@@ -670,6 +670,11 @@ X-CBT-Client-Id
 X-CBT-Client-Generation
 ```
 
+Bootstrap re-entry memeriksa `jadwal.access_state`. Jika TAHAN, server mengembalikan
+`423 SCHEDULE_HELD`; participant harus menunggu akses dibuka sebelum reload/RESUME.
+Attempt yang sudah berada di workspace tetap berjalan saat Jadwal ditahan karena
+status polling aktif tidak mengubah TAHAN menjadi pause.
+
 Mengembalikan:
 
 ```text
