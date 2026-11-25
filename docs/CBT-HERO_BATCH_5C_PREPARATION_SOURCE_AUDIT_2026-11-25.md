@@ -40,3 +40,26 @@ File: `app/Services/JadwalOperationalService.php`
 Commit: `05927a156afb530812afd89ee59467b367727ea9`
 
 Belum diuji dengan konkurensi database; tidak ada klaim PASS.
+
+
+## Temuan SUSULAN-ELIG-01 — eligibility target harus sesuai tingkat Bank dan bebas Attempt ACTIVE global
+
+Audit menemukan dua celah pada kandidat/validasi Susulan:
+- Kandidat hanya difilter berdasarkan Kegiatan dan status aktif, bukan tingkat peserta terhadap tingkat Bank Jadwal MAIN. Target salah tingkat dapat tersimpan, lalu baru ditolak saat START.
+- Pemeriksaan Attempt sebelumnya hanya melihat riwayat pada root Jadwal tersebut. Peserta yang sedang mempunyai Attempt ACTIVE pada Jadwal lain masih dapat dipilih sebagai target, padahal aturan Susulan melarang target dengan Attempt aktif.
+
+Perbaikan:
+- Daftar kandidat dibatasi ke tingkat Bank MAIN.
+- Validasi server mengulang pemeriksaan tingkat melalui relasi Rombel, sehingga request manual tidak dapat melewati filter UI.
+- Kandidat dan validasi target memeriksa Attempt ACTIVE peserta secara global.
+- Preparation Susulan juga hanya menghasilkan assignment untuk target aktif yang masih sesuai tingkat Bank.
+
+File:
+- `app/Services/SusulanService.php`
+- `app/Services/PreparationService.php`
+
+Commit:
+- `7aa3832ebd1558a8061e12aef76c35e98172b63d`
+- `c46bce1e7dabcf778fc94011126677e259e53668`
+
+Catatan: perubahan tingkat peserta setelah target dibuat akan membuat peserta tidak masuk target Preparation; operator perlu memperbaiki target sebelum persiapan. Concurrency antara START MAIN dan pembuatan target Susulan masih diaudit.
