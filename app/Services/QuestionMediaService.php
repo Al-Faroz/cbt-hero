@@ -39,7 +39,8 @@ class QuestionMediaService
         $db = Database::connect();
         $asset = $db->table('media_assets')->where('id', $id)->get()->getRowArray();
         if ($asset === null || $asset['storage_type'] !== 'LOCAL'
-            || !is_string($asset['file_path'] ?? null) || $asset['file_path'] === '') return;
+            || !is_string($asset['file_path'] ?? null)
+            || !preg_match('~^question-media/[a-f0-9]{40}\\.(?:jpg|png|webp)$~D', $asset['file_path'])) return;
 
         // Imported assets may be shared by multiple staging rows or already attached
         // to a committed question revision. Never delete an asset while either
