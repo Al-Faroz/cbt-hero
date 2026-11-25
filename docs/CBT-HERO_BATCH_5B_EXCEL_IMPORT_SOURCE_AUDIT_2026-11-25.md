@@ -214,3 +214,35 @@ Parser sekarang membatasi marker hingga 256 byte, membatasi nama sheet sesuai ba
 
 File: `app/Services/QuestionDocumentService.php`  
 Commit: `1ccd56e4350510ba84a9059189f422eab2b3dbcb`
+
+
+## Pemetaan source terhadap acceptance X01–X21
+
+Pemetaan ini menunjukkan bagian kode yang telah diaudit/diperkuat; ini **bukan hasil uji acceptance**.
+
+| ID | Komponen source yang harus membuktikan perilaku |
+|---|---|
+| X01–X03 | `QuestionExcelTemplateService` membangun workbook dari Komposisi; `QuestionDocumentService::xlsxSheets/humanExcel` memeriksa struktur, sheet, marker, opsi, dan baris; `QuestionImportService` memeriksa batas komposisi. |
+| X04 | Parser PG + `QuestionValidationService` + `QuestionService`. |
+| X05 | Parser PG Kompleks + validasi boolean kunci, opsi benar/salah, dan huruf jawaban. |
+| X06 | Parser PG Bertingkat + validasi poin opsi dan maksimum. |
+| X07 | Parser Matching + mode, jumlah pasangan, keunikan sisi, dan poin. |
+| X08–X09 | Parser Isian Singkat + validasi TEXT/NUMERIC, jawaban diterima, target, toleransi. |
+| X10 | Parser Uraian + rubrik dan poin. |
+| X11–X12 | Drawing parser, pemetaan kolom konten, token media, preview media, dan relasi revisi. |
+| X13 | Directive Audio/Video Google Drive, validasi URL, renderer preview. |
+| X14 | Shared strings/inline strings XML, Unicode, dan normalisasi teks. |
+| X15 | Deteksi formula node `<f>` pada sheet Excel. |
+| X16 | Baris kosong dilewati oleh `excelQuestionRow()`. |
+| X17 | Commit transaksional ke `QuestionService` / `AdvancedQuestionService`, lalu tampil pada daftar/pratinjau. |
+| X18 | `excelLetters()` menolak huruf di luar opsi dan duplikasi. |
+| X19 | Mode Isian Singkat hanya TEKS/ANGKA; marker Matching juga strict. |
+| X20 | Batas ukuran ZIP/XML, worksheet relationship, baris/kolom, tipe anchor, dan kolom gambar. |
+| X21 | Beberapa anchor gambar di satu sel digabung dengan teks dan token media pada sel yang sama. |
+
+### Status Batch 5B
+
+- Source audit dan hardening utama Excel parser/import sudah masuk PR #2.
+- Temuan media ownership per job dan penyimpanan Idempotency-Key tetap dicatat sebagai pekerjaan desain/kontrak terpisah; tidak dibuat cleanup heuristik.
+- Tidak ada acceptance X01–X21 yang dinyatakan PASS.
+- Belum menjalankan PHP lint, PHPUnit, fixture XLSX, Excel/LibreOffice, browser, atau database integration test. Sesuai keputusan proyek, semua acceptance tetap DEFERRED sampai seluruh implementasi Akademik dan Psikologi selesai.
