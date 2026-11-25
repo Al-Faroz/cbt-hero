@@ -87,6 +87,23 @@ class JadwalOperationalService
         if ($scope === 'IDS' && (!is_array($ids) || !$ids))
             return $this->error(422, 'VALIDATION_FAILED', 'Pilih Attempt aktif yang akan diberi tambahan waktu.');
 
+        $normalized = [];
+        if ($scope === 'IDS') {
+            foreach ($ids as $value) {
+                $id = is_scalar($value)
+                    ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])
+                    : false;
+                if (!is_int($id)) {
+                    return $this->error(422, 'VALIDATION_FAILED', 'Daftar Attempt berisi ID yang tidak valid.');
+                }
+                $normalized[$id] = $id;
+            }
+            $normalized = array_values($normalized);
+            if (!$normalized) {
+                return $this->error(422, 'VALIDATION_FAILED', 'Pilih Attempt aktif yang valid.');
+            }
+        }
+
         $db = Database::connect(); $db->transBegin();
         try {
             $jadwal = $db->query('SELECT * FROM jadwal WHERE id = ? FOR UPDATE', [$jadwalId])->getRowArray();
@@ -97,19 +114,15 @@ class JadwalOperationalService
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Hasil Jadwal sudah difinalkan.');
             }
 
-            $builder = $db->table('attempt')->select('id, jadwal_id, status, deadline_at, added_seconds')
-                ->where('jadwal_id', $jadwalId)->where('status', 'ACTIVE');
+            $sql = 'SELECT id, jadwal_id, status, deadline_at, added_seconds FROM attempt WHERE jadwal_id = ? AND status = ?';
+            $params = [$jadwalId, 'ACTIVE'];
             if ($scope === 'IDS') {
-                $normalized = array_values(array_unique(array_filter(array_map(
-                    static fn($value): int => is_scalar($value) ? (int) $value : 0,
-                    $ids
-                ), static fn(int $value): bool => $value > 0)));
-                if (!$normalized) {
-                    $db->transRollback(); return $this->error(422, 'VALIDATION_FAILED', 'Attempt aktif belum dipilih.');
-                }
-                $builder->whereIn('id', $normalized);
+                $placeholders = implode(',', array_fill(0, count($normalized), '?'));
+                $sql .= ' AND id IN (' . $placeholders . ')';
+                array_push($params, ...$normalized);
             }
-            $attempts = $builder->get()->getResultArray();
+            $sql .= ' ORDER BY id ASC FOR UPDATE';
+            $attempts = $db->query($sql, $params)->getResultArray();
             if (!$attempts) {
                 $db->transRollback(); return $this->error(409, 'NO_ACTIVE_ATTEMPT', 'Tidak ada Attempt aktif yang dapat diberi tambahan waktu.');
             }
@@ -126,6 +139,9 @@ class JadwalOperationalService
                         . ' SECOND) WHERE id = ? AND status = ?',
                     [$attemptId, 'ACTIVE']
                 );
+                if ($db->affectedRows() !== 1) {
+                    throw new RuntimeException('Attempt berubah status saat Tambah Waktu diproses.');
+                }
                 $attemptIds[] = $attemptId;
             }
 
