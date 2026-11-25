@@ -192,3 +192,16 @@ Routes/API contract juga disinkronkan: status participant sekarang mendokumentas
 
 Commit: `3e3b478545c18ee2605fa5d8fa00ee63ff94edf1`.
 
+
+
+### 5D-12 — pause state hasil polling belum disimpan untuk offline reload
+Status polling sudah mengunci workspace ketika server pause, tetapi hanya menyimpan status ACTIVE/deadline/sync revision. Jika browser refresh saat offline, cache dapat memulihkan `paused=false` dari bootstrap lama dan membuka input.
+
+Perbaikan:
+- IndexedDB runtime_state menyimpan `server_paused`, `server_pause_reason`, dan `server_remaining_seconds` setiap status poll.
+- Bootstrap cache memulihkan nilai terakhir tersebut; status resume terbaru juga menghapus pause cache.
+- Bootstrap network menyimpan state pause yang diterima dari server.
+
+File: `assets/js/exam-sync.js`, `assets/js/exam-bootstrap.js`  
+Commits: `b5e25bf9c1d90fb39b700d0f729018f2a4f2ee4e`, `dc916b194ca4776aa2f0d8459da7f7d0dc6a3d1c`.  
+Acceptance E45 ditambahkan; belum diuji dengan IndexedDB reload/offline fixture.
