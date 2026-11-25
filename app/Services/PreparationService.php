@@ -151,21 +151,16 @@ class PreparationService
                 $db->transRollback();
                 return $this->error(409, 'NO_TARGET', 'Belum ada peserta target untuk Preparation.');
             }
-            if ($force && count($targets) > self::CHUNK_SIZE) {
-                $db->transRollback();
-                return $this->error(
-                    422,
-                    'FORCE_REBUILD_SCOPE_TOO_LARGE',
-                    'Force rebuild dibatasi maksimal ' . self::CHUNK_SIZE . ' peserta per request. Gunakan scope SELECTED atau Bangun Ulang Terdampak.'
-                );
-            }
-
             $fingerprint = $this->scheduleFingerprint($db, $context);
             $states = $this->assignmentStates($db, $context, $targets, $fingerprint);
 
             $queue = [];
             foreach ($targets as $pkId => $target) {
                 $state = $states[$pkId]['state'] ?? 'MISSING';
+                $assignment = $states[$pkId]['assignment'] ?? null;
+                $used = $assignment !== null && $assignment['used_at'] !== null;
+                if ($used) continue;
+
                 if ($rebuildOnly) {
                     if (in_array($state, ['STALE', 'FAILED'], true)) $queue[$pkId] = $target;
                 } elseif ($force || in_array($state, ['MISSING', 'STALE', 'FAILED'], true)) {
@@ -173,12 +168,20 @@ class PreparationService
                 }
             }
             ksort($queue);
+            if ($force && count($queue) > self::CHUNK_SIZE) {
+                $db->transRollback();
+                return $this->error(
+                    422,
+                    'FORCE_REBUILD_SCOPE_TOO_LARGE',
+                    'Force rebuild dibatasi maksimal ' . self::CHUNK_SIZE . ' assignment belum terpakai per request. Gunakan scope SELECTED atau Bangun Ulang Terdampak.'
+                );
+            }
             $chunk = array_slice($queue, 0, self::CHUNK_SIZE, true);
 
             $plan = $this->buildPlan($db, $context);
             $processed = 0;
             foreach ($chunk as $pkId => $target) {
-                $this->buildAssignment($db, $context, $target, $fingerprint, $plan, $actor);
+                $this->buildAssignment($db, $context, $target, $fingerprint, $plan, $actor, $force);
                 $processed++;
             }
 
@@ -297,7 +300,7 @@ class PreparationService
         ]];
     }
 
-    private function buildAssignment($db, array $context, array $target, string $scheduleFingerprint, array $plan, array $actor): void
+    private function buildAssignment($db, array $context, array $target, string $scheduleFingerprint, array $plan, array $actor, bool $forceRebuild = false): void
     {
         $pkId = (int) $target['peserta_kegiatan_id'];
         $participantFingerprint = hash('sha256', implode('|', [
@@ -313,8 +316,11 @@ class PreparationService
             ->where('peserta_kegiatan_id', $pkId)
             ->orderBy('assignment_seq', 'DESC')->get()->getRowArray();
 
+        if ($existing !== null && $existing['status'] === 'READY' && $existing['used_at'] !== null) {
+            return;
+        }
         if ($existing !== null && $existing['status'] === 'READY'
-            && hash_equals((string) $existing['fingerprint'], $participantFingerprint)) {
+            && hash_equals((string) $existing['fingerprint'], $participantFingerprint) && !$forceRebuild) {
             return;
         }
         if ($existing !== null && $existing['used_at'] === null && $existing['status'] === 'READY') {
@@ -523,7 +529,8 @@ class PreparationService
                 (string) ($target['target_mode'] ?? 'MAIN'),
                 (string) ($target['supersede_attempt_id'] ?? ''),
             ]));
-            if ($row['status'] === 'READY' && hash_equals((string) $row['fingerprint'], $expected)) {
+            if ($row['status'] === 'READY' && ($row['used_at'] !== null
+                || hash_equals((string) $row['fingerprint'], $expected))) {
                 $states[$pkId] = ['state' => 'READY', 'assignment' => $row];
             } elseif ($row['status'] === 'FAILED') {
                 $states[$pkId] = ['state' => 'FAILED', 'assignment' => $row];
