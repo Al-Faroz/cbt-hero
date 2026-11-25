@@ -330,3 +330,10 @@ Penyempurnaan setelah audit implementasi:
 Commit: `4f0cb3f29c0cece62a84dc8be584bb249cba1c9c`
 
 Masih source-level; belum diuji dengan database fixture.
+
+
+Progress bar Preparation sekarang menggunakan denominator seluruh target aktif (target valid + invalid), sedangkan kartu jumlah target diberi label "Target Valid". Dengan demikian progress tidak menampilkan 100% ketika masih ada target Susulan invalid yang wajib ditangani operator.
+
+Commits:
+- `2bff78504b24024f25266056ba892bfa991369c4`
+- `7d11e6220f098544d47622384c01864dca303720`
