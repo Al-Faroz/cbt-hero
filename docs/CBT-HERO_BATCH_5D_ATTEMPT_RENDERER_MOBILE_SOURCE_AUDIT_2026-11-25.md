@@ -230,3 +230,35 @@ Acceptance E47 ditambahkan; belum diuji dengan perubahan access state saat sesi 
 Routes/API contract Phase 6 juga disinkronkan untuk guard `SCHEDULE_HELD` pada bootstrap re-entry dan membedakannya dari sesi yang sudah aktif.
 
 Commit: `0ad99e6b645f00a709f8e77ecd2d4a6510e68a26`.
+
+
+### 5D-15 — critical image hanya dipre-fetch ke HTTP cache, bukan penyimpanan offline yang durable
+`exam-media.js` sebelumnya membuat `Image()` untuk critical image dan menunggu load, tetapi tidak menyimpan blob di IndexedDB. Browser cache dapat dieviction sehingga reload offline tidak menjamin gambar tersedia.
+
+Perbaikan:
+- Dexie v2 menambahkan `media_cache` keyed per Attempt + media asset.
+- Critical local image di-fetch dengan same-origin credentials dan disimpan sebagai Blob.
+- Bootstrap network/cache menghidupkan object URL dari Blob sebelum event bootstrap-ready/render.
+- Live revision juga memprefetch/cache media baru; event PACKAGE_READY tidak dikirim ulang.
+- Cleanup finalisasi menghapus blob media untuk Attempt tersebut.
+- Media external Google Drive tetap berupa referensi; tidak diklaim offline-cached.
+
+File:
+- `assets/js/exam-db.js`
+- `assets/js/exam-media.js`
+- `assets/js/exam-bootstrap.js`
+- `assets/js/exam-sync.js`
+- `assets/js/exam-submit.js`
+- `app/Services/QuestionRuntimeItemService.php`
+
+Commits:
+- `ad25c427dda857688156ed7484d9bfd3b24f6283`
+- `3f5adf790ea6950d3ee1f49f2bec5f02050ec025`
+- `81e6629698cf1da4d42394713413c37eb220258a`
+- `298e664bfcea43bba20f04dec1e0d699768d802e`
+- `7fddb5a5b450f055a68c676baa35db520e877668`
+- `0628fbf51d4b09f8ef50784b5d86272bae7c6966`
+- `3753c7aa8e8a33f7ec0c14d501a19ffa745ff295`
+- `ae7fd517929fe96f6bd62c42a6916f486967bc23`
+
+Acceptance E48–E49 ditambahkan; belum diuji dengan IndexedDB quota/reload/offline/device fixtures.
