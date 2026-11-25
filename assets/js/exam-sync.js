@@ -24,6 +24,9 @@
         let changed = false;
         let rerender = false;
 
+        // Persist any debounced text input before applying REANSWER/VOID policy.
+        await window.CbtExamRenderer?.flushPending?.();
+
         await db.transaction('rw', db.question_cache, db.answer_store, db.sync_queue, db.media_manifest, async () => {
             for (const change of changes) {
                 const itemId = Number(change.item_id || 0);
