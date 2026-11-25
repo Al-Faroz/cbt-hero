@@ -63,3 +63,23 @@ Commit:
 - `c46bce1e7dabcf778fc94011126677e259e53668`
 
 Catatan: perubahan tingkat peserta setelah target dibuat akan membuat peserta tidak masuk target Preparation; operator perlu memperbaiki target sebelum persiapan. Concurrency antara START MAIN dan pembuatan target Susulan masih diaudit.
+
+
+## Temuan SUSULAN-OPS-01 — tombol BUKA/TAHAN Susulan mengarah ke handler MAIN
+
+UI `manager-susulan.js` sudah menampilkan tombol Buka/Tahan dan mengirim PATCH ke `/manager/api/jadwal/{id}/access`, tetapi controller selalu memanggil `JadwalService::changeAccess()`, yang hanya menerima jenis MAIN. Akibatnya aksi akses pada Susulan ditolak 404 meskipun tombol tersedia.
+
+Perbaikan:
+- `SusulanService::changeAccess()` mengunci row Susulan, memvalidasi jenis dan parent, menolak perubahan setelah hasil final, memperbarui gate akses, dan mencatat audit.
+- `JadwalController::access()` sekarang mengarahkan ID Susulan ke handler Susulan, sedangkan MAIN tetap memakai `JadwalService`.
+- Toggle akses tidak diblok hanya karena Preparation/Attempt sudah ada; ia adalah gate operasional dan tidak mengubah timer Attempt aktif.
+
+File:
+- `app/Services/SusulanService.php`
+- `app/Controllers/Api/Manager/Schedule/JadwalController.php`
+
+Commit:
+- `1529b1063e6ed0500d53185c5021a0f20c944584`
+- `f8deb51c3330cc094c855668e474319b462d9ab3`
+
+Belum diuji melalui browser/API.
