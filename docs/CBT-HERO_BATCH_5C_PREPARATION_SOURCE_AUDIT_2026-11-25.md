@@ -268,3 +268,27 @@ Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
 1. Jika peserta yang sudah ditargetkan sebagai FIRST_ATTEMPT kemudian memulai Jadwal MAIN sebelum Preparation Susulan, assignment Susulan dapat tetap dibangun dari target lama. START Susulan tetap menolak melalui `FIRST_ATTEMPT_ALREADY_USED`, tetapi operator perlu membatalkan target secara manual. Perlu keputusan apakah target otomatis dibatalkan saat START MAIN atau Preparation menandainya sebagai invalid.
 2. Concurrency lock Create/Update Susulan sudah diselaraskan dengan urutan START (peserta → Jadwal → membership), tetapi harus diuji dengan transaksi paralel pada tahap acceptance.
 3. Seluruh J01–Jxx, S01–Sxx, P01–P22 tetap DEFERRED; PHP lint, PHPUnit, API/DB concurrency, dan browser belum dijalankan.
+
+
+## Pemetaan source terhadap acceptance J01–J21 dan S01–S24
+
+| Rentang | Area source yang diaudit |
+|---|---|
+| J01–J10 | `JadwalService::list/options/save/normalizeSelection`, API controller, dan UI Jadwal. |
+| J11 | `JadwalService::save()` melakukan update jadwal + selection dalam satu transaksi; fingerprint Preparation mencakup field struktur Jadwal. |
+| J12 | `JadwalService::changeAccess()` dan AuditService. |
+| J13–J16 | `JadwalService::delete()`, dependency check, lock first START/finalisasi, serta lifecycle Bank. |
+| J17–J20 | `JadwalOrderService::blockerForStart()` memakai slot yang sama, tingkat peserta, target Susulan, dan histori Attempt root. |
+| J21 | UI Jadwal + CSS manager responsive/table wrapper dan ringkasan selection. |
+| S01–S06 | `SusulanService::list/candidates/create/validateTargets`; child langsung MAIN, FIRST_ATTEMPT/REPLACEMENT, copy selection. |
+| S07–S08 | Kandidat/server menolak Attempt ACTIVE global dan pending target; create/update mengunci peserta dan Jadwal. |
+| S09–S11 | Selection disalin dari MAIN; operasi create memakai payload hash + Idempotency-Key. |
+| S12–S14 | Update struktural hanya sebelum Preparation/START; cancel target mengubah status CANCELED dan menolak target yang sudah START. |
+| S15 | Handler BUKA/TAHAN Susulan terpisah dari handler MAIN; timer Attempt tidak diubah. |
+| S16–S17 | Extend Start Window hanya menerima batas baru yang lebih akhir. |
+| S18–S19 | Result visibility hanya sebelum first START. |
+| S20–S21 | Add Time mengunci Attempt ACTIVE, memperbarui added_seconds/deadline, menolak tanpa Attempt aktif. |
+| S22 | AuditService untuk create/update/cancel/access/extend/result visibility/add time. |
+| S23–S24 | Wrapper tabel modal dengan overflow-x lokal, touch-action, dan tabindex/role region. |
+
+Pemetaan ini adalah audit source, bukan hasil acceptance. Seluruh J01–J21, S01–S24, dan P01–P22 tetap DEFERRED.
