@@ -138,3 +138,20 @@ File: `app/Services/QuestionDocumentService.php`
 Commit: `8d8c4ea38145c96673d1419b4755c418ea85f014`
 
 Acceptance X20/X21 masih DEFERRED sampai fixture XLSX nyata diuji.
+
+
+### EXCEL-WORKBOOK-02 — relasi sheet workbook harus lengkap dan bertipe worksheet
+
+Parser sebelumnya melewati sheet yang relasinya tidak ditemukan atau targetnya bukan `xl/worksheets/`. Workbook dengan chart sheet/jenis sheet lain dapat diproses sebagian tanpa penolakan eksplisit.
+
+Perbaikan:
+- Nama sheet dan relationship ID wajib tersedia.
+- Relationship target wajib ditemukan dan menunjuk ke worksheet biasa.
+- File worksheet harus benar-benar ada di paket XLSX.
+- Nama sheet duplikat (case-insensitive) ditolak.
+- Jenis sheet non-worksheet ditolak, bukan dilewati.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `464ad592a183df170ddc4ddf91c49ec72840f8c4`
+
+Catatan: generator template CBT-HERO saat ini membuat worksheet biasa; pengujian kompatibilitas Excel/LibreOffice tetap bagian acceptance X01–X03.
