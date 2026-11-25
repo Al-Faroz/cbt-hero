@@ -113,6 +113,12 @@
             }
             await applyRevisionChanges(data.revision_changes || []);
             runtime.serverSyncRevision = nextServerRevision;
+            const persistedState = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
+            persistedState.server_attempt_status = String(data.status || 'ACTIVE');
+            persistedState.server_sync_revision = nextServerRevision;
+            persistedState.deadline_at = data.deadline_at || persistedState.deadline_at || null;
+            persistedState.updated_at = Date.now();
+            await db.runtime_state.put(persistedState);
             if (String(data.status || '') !== 'ACTIVE') {
                 runtime.lockInputs('Ujian sudah selesai');
                 runtime.emit('cbt:attempt-status-changed', {status: data.status});
