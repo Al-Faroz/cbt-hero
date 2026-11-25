@@ -56,3 +56,20 @@ Parser membuat record `media_assets` berstatus ACTIVE sebelum staging job selesa
 Pembersihan berdasarkan token saja belum aman: payload hasil perbaikan operator dapat mereferensikan aset yang sudah ada, dan satu aset mungkin dipakai lebih dari satu baris atau revisi. Skema saat ini belum menunjukkan relasi eksplisit `import_job_media` / `import_staging_media` yang membuktikan bahwa aset dimiliki oleh satu job impor.
 
 **Keputusan:** jangan menghapus aset secara heuristik. Sebelum cleanup otomatis dibuat, audit skema `media_assets`, tambahkan kepemilikan staging yang eksplisit atau mekanisme referensi yang setara, lalu pastikan rollback/commit/exclude/job-retention tidak menghapus media yang telah dipakai soal lain. Ini dicatat sebagai gap hardening, bukan disamarkan sebagai selesai.
+
+
+### EXCEL-STRUCTURE-01 — sheet tambahan / tidak dikenal sebelumnya diabaikan
+
+Parser sebelumnya hanya memproses sheet dengan marker tipe soal yang dikenal dan melewati sheet lain. Workbook yang ditambah sheet non-template atau menggandakan sheet tipe soal berpotensi tetap diterima sementara isinya tidak ikut staging.
+
+Perbaikan source-level:
+- Memastikan sheet pertama bernama `PETUNJUK` dan memiliki marker workbook resmi.
+- Menolak gambar pada sheet `PETUNJUK`; gambar hanya diperbolehkan pada sheet soal aktif.
+- Menolak sheet tambahan atau sheet soal tanpa marker resmi.
+- Menolak duplikasi sheet untuk tipe soal yang sama.
+- Deteksi marker tetap dilakukan tanpa mengimpor gambar; gambar baru diproses setelah sheet soal dikenali.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `2685bee0e8912fcf076b2eb3c5f7e052dfe8a9bb`
+
+Catatan: validasi ini menjaga struktur workbook yang dikenali. Kecocokan tipe/opsi dengan Komposisi tetap diperiksa pada tahap validasi staging. Acceptance X01–X21 tetap DEFERRED.
