@@ -292,3 +292,26 @@ Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
 | S23–S24 | Wrapper tabel modal dengan overflow-x lokal, touch-action, dan tabindex/role region. |
 
 Pemetaan ini adalah audit source, bukan hasil acceptance. Seluruh J01–J21, S01–S24, dan P01–P22 tetap DEFERRED.
+
+
+## Temuan PREP-SUSULAN-INVALID-01 — target Susulan dapat kedaluwarsa setelah dibuat
+
+Gap yang sebelumnya tercatat: peserta yang dibuat sebagai FIRST_ATTEMPT dapat kemudian START MAIN sebelum Preparation Susulan. Target tetap berstatus TARGETED, sehingga operator bisa melihat target itu sebagai bagian dari daftar persiapan meskipun START Susulan nantinya ditolak oleh AttemptStartService.
+
+Keputusan implementasi:
+- Tidak mengubah status target secara otomatis. Pembatalan target harus tetap menjadi tindakan eksplisit operator dan tercatat dalam audit.
+- Preparation kini menghitung target Susulan TARGETED yang sudah tidak valid: membership/Kegiatan/rombel tidak lagi sesuai, peserta tidak aktif, peserta mempunyai Attempt ACTIVE, FIRST_ATTEMPT sudah mempunyai histori Attempt root, atau REPLACEMENT tidak lagi menunjuk Attempt FINISHED terbaru.
+- Target invalid tidak dibuatkan Prepared Assignment dan tidak dapat membuat status Jadwal `can_start=true`.
+- Status Preparation menampilkan jumlah target invalid dan instruksi untuk membatalkan/memperbaiki target dari halaman Susulan.
+- Tombol Siapkan Semua hanya aktif ketika masih ada assignment MISSING/STALE/FAILED; target invalid tidak menyebabkan request Preparation kosong berulang.
+
+File:
+- `app/Services/PreparationService.php`
+- `assets/js/manager-preparation.js`
+
+Commits:
+- `afbf81472b6347d4906e5979dfbf20ef1136e4a2`
+- `1625c8c8a855d1f58a4fb99f851d9d4834e53607`
+- `252359e4687b61a53b8d41ae8084fbcd4d3e9aea`
+
+Belum diuji dengan fixture Attempt MAIN/Susulan atau UI browser. Acceptance P19–P20 dan skenario target invalid tetap DEFERRED.
