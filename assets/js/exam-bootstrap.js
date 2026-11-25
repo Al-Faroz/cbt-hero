@@ -55,6 +55,9 @@
                 const state = await db.runtime_state.get(attemptId) || {attempt_id: attemptId};
                 state.server_sync_revision = Number(data.attempt?.server_sync_revision || 0);
                 state.server_attempt_status = String(data.attempt?.status || 'ACTIVE');
+                state.server_paused = Boolean(data.attempt?.paused);
+                state.server_pause_reason = data.attempt?.pause_reason || null;
+                state.server_remaining_seconds = Number(data.attempt?.remaining_seconds ?? 0);
                 state.deadline_at = data.attempt?.deadline_at || null;
                 state.updated_at = Date.now();
                 await db.runtime_state.put(state);
@@ -80,6 +83,10 @@
             attempt: {
                 ...(meta.attempt || {}),
                 server_sync_revision: Number(state?.server_sync_revision ?? meta.attempt?.server_sync_revision ?? 0),
+                status: String(state?.server_attempt_status || meta.attempt?.status || 'ACTIVE'),
+                paused: Boolean(state?.server_paused ?? meta.attempt?.paused),
+                pause_reason: state?.server_pause_reason ?? meta.attempt?.pause_reason ?? null,
+                remaining_seconds: Number(state?.server_remaining_seconds ?? meta.attempt?.remaining_seconds ?? 0),
                 deadline_at: state?.deadline_at || meta.attempt?.deadline_at
             },
             participant: meta.participant || {},
