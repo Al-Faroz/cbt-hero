@@ -534,8 +534,10 @@ class PreparationService
                 ->select('t.peserta_kegiatan_id, t.target_mode, t.supersede_attempt_id, pk.peserta_id')
                 ->join('peserta_kegiatan AS pk', 'pk.id = t.peserta_kegiatan_id')
                 ->join('peserta AS p', 'p.id = pk.peserta_id')
+                ->join('rombel AS rb', 'rb.id = p.rombel_id')
                 ->where('t.jadwal_id', (int) $context['id'])
                 ->where('t.status', 'TARGETED')->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE')
+                ->where('rb.tingkat', (int) $context['tingkat'])
                 ->get()->getResultArray();
         } else {
             $rows = $db->table('peserta_kegiatan AS pk')
