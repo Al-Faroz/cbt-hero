@@ -112,6 +112,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E51 | Paket memiliki banyak gambar critical pada banyak participant bersamaan. | Tiap client membatasi maksimal empat fetch gambar bersamaan agar prefetch tidak membuat burst request tak terbatas. |
 | E52 | Dua tab membuka Attempt hampir bersamaan sebelum localStorage lock sempat terlihat oleh tab lain. | BroadcastChannel ALIVE mendeteksi race; paling banyak satu tab melanjutkan, tab lain hard-lock. |
 | E53 | Tab masuk Back-Forward Cache lalu dipulihkan dengan pageshow persisted. | Tab memeriksa lock terbaru dan mengaktifkan heartbeat kembali; tab lain tidak dapat membuka Attempt bersamaan. |
+| E54 | Resume operation lama di-replay setelah Attempt mengalami pause baru. | Server mengembalikan pause state terkini; client tetap terkunci dan tidak menampilkan resume sukses palsu. |
 
 ## Catatan Exam Browser
 
