@@ -124,7 +124,7 @@
     };
 
     const syncOnce = async () => {
-        if (syncing || !navigator.onLine || runtime.inputLocked && runtime.bootstrap?.attempt?.status !== 'ACTIVE') return false;
+        if (syncing || retryTimer || !navigator.onLine || runtime.inputLocked && runtime.bootstrap?.attempt?.status !== 'ACTIVE') return false;
         const queue = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).sortBy('queued_at');
         if (!queue.length) {
             runtime.setSyncState('Tersinkron', 'synced');
@@ -132,7 +132,6 @@
         }
 
         syncing = true;
-        clearTimeout(retryTimer);
         runtime.setSyncState('Menyinkronkan...', 'syncing');
 
         const batch = queue.slice(0, 20);
@@ -216,7 +215,10 @@
                 retryDelay = 1000;
             } else if (retryableBatch) {
                 const jitter = Math.floor(Math.random() * 350);
-                retryTimer = setTimeout(syncOnce, retryDelay + jitter);
+                retryTimer = setTimeout(() => {
+                    retryTimer = null;
+                    void syncOnce();
+                }, retryDelay + jitter);
                 retryDelay = Math.min(30000, retryDelay * 2);
             } else {
                 retryDelay = 1000;
