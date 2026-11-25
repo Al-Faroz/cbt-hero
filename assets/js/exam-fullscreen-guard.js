@@ -66,6 +66,19 @@
             if (!response.ok || result?.ok !== true)
                 throw new Error(result?.error?.message || 'Status jeda belum tersimpan ke server.');
             pausePending = false;
+            if (result.data?.paused !== true) {
+                pauseConfirmed = false;
+                runtime.paused = false;
+                runtime.pauseReason = null;
+                runtime.unlockInputs();
+                if (result.data?.deadline_at)
+                    runtime.emit('cbt:deadline-updated', {deadline_at: result.data.deadline_at});
+                if (overlay) overlay.hidden = true;
+                if (resumeButton) resumeButton.hidden = true;
+                if (exitLink) exitLink.hidden = false;
+                runtime.emit('cbt:server-resumed');
+                return;
+            }
             pauseConfirmed = true;
             if (resumeButton) resumeButton.disabled = false;
             runtime.setSyncState('Dijeda · layar penuh diperlukan', 'locked');
