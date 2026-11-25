@@ -73,3 +73,33 @@ File: `app/Services/QuestionDocumentService.php`
 Commit: `2685bee0e8912fcf076b2eb3c5f7e052dfe8a9bb`
 
 Catatan: validasi ini menjaga struktur workbook yang dikenali. Kecocokan tipe/opsi dengan Komposisi tetap diperiksa pada tahap validasi staging. Acceptance X01–X21 tetap DEFERRED.
+
+
+## Temuan lanjutan: media cleanup dan staging
+
+### EXCEL-MEDIA-04 — cleanup harus menghormati referensi aktif
+
+Audit menemukan `QuestionMediaService::discardImport()` sebelumnya langsung menghapus row `media_assets` dan file lokal berdasarkan ID, tanpa memeriksa apakah aset telah dipakai oleh revisi soal atau masih direferensikan staging lain.
+
+Perbaikan:
+- Cleanup sekarang hanya untuk aset lokal dengan path valid.
+- Pengecekan dilakukan terhadap `soal_revision_media` dan token media pada seluruh `import_staging_items.payload_json`.
+- Sebelum penghapusan dilakukan transaksi dan pemeriksaan ulang setelah row aset dikunci.
+- Jika masih ada referensi atau terjadi kegagalan, cleanup dilewati; file tidak dihapus.
+
+File: `app/Services/QuestionMediaService.php`  
+Commit: `824ec46cad8c97634a56d64f6b5fd1cc06bb66e0`
+
+**Batasan kepemilikan tetap ada:** skema belum membedakan aset yang dibuat oleh import job dari aset lokal yang diunggah operator. Karena itu cleanup saat operator mengubah/mengeluarkan staging row tidak boleh dilakukan hanya berdasarkan token lama; aset bisa merupakan upload manual atau dipakai ulang. Percobaan menambahkan cleanup otomatis saat FIX dibatalkan agar tidak menghapus aset tanpa bukti ownership. Relasi ownership job-media tetap menjadi pekerjaan desain terpisah.
+
+### EXCEL-IMPORT-01 — parameter Idempotency-Key pada commit
+
+`QuestionImportService::commit()` memvalidasi format `Idempotency-Key`, tetapi tidak menyimpan key tersebut. Duplikasi commit saat job sudah COMMITTED tetap tidak membuat soal ganda karena status job dikunci dan diperiksa, tetapi kontrak idempotensi per-key tidak diterapkan. Ini perlu diselaraskan dengan kontrak API: bila idempotensi memang berbasis job-state, dokumentasikan demikian dan jangan mengiklankan key sebagai deduplikasi; bila berbasis key, simpan key + hasil secara atomik pada schema upgrade. Belum diubah pada batch ini agar tidak menambah migrasi tanpa audit kontrak.
+
+## Status audit saat ini
+
+- Parser workbook: hardening struktur sheet dan pembatasan media sudah diterapkan.
+- Media cleanup pada jalur gagal: sekarang memeriksa referensi aktif sebelum menghapus.
+- Media ownership per import job: belum tersedia; cleanup otomatis untuk FIX/EXCLUDE/job retention ditahan.
+- Commit idempotency key: format diperiksa, key belum dipersistenkan.
+- X01–X21 tetap DEFERRED; tidak ada PHP lint, PHPUnit, fixture XLSX, atau browser test yang diklaim PASS.
