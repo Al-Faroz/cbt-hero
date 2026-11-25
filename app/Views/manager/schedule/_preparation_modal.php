@@ -44,6 +44,7 @@
                 <div class="border rounded p-3 mb-3">
                     <div class="fw-semibold mb-1">Pemeriksaan Peserta</div>
                     <div class="small" id="prepPreflightText">-</div>
+                    <div class="small text-warning mt-2" id="prepInvalidTargets" hidden></div>
                 </div>
 
                 <div class="alert alert-light border small mb-3">
