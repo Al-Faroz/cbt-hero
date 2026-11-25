@@ -21,11 +21,13 @@ class PreparationService
         $fingerprint = $this->scheduleFingerprint($db, $context);
         $summary = $this->summarize($db, $context, $targets, $fingerprint);
         $preflight = $this->participantPreflight($db, $context, array_keys($targets));
+        $invalidTargetCount = $this->invalidSusulanTargetCount($db, $context);
         $assignmentsReady = $summary['total'] > 0
             && $summary['ready'] === $summary['total']
             && $summary['stale'] === 0
             && $summary['failed'] === 0
-            && $summary['missing'] === 0;
+            && $summary['missing'] === 0
+            && $invalidTargetCount === 0;
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'jadwal' => $this->publicContext($context),
@@ -34,6 +36,7 @@ class PreparationService
             'stale' => $summary['stale'],
             'failed' => $summary['failed'],
             'missing' => $summary['missing'],
+            'invalid_target_count' => $invalidTargetCount,
             'progress' => $summary['total'] > 0
                 ? (int) floor(($summary['ready'] / $summary['total']) * 100)
                 : 0,
@@ -598,6 +601,66 @@ class PreparationService
             }
         }
         return $states;
+    }
+
+    private function invalidSusulanTargetCount($db, array $context): int
+    {
+        if (($context['jenis_jadwal'] ?? '') !== 'SUSULAN') return 0;
+
+        $mainId = (int) ($context['parent_jadwal_id'] ?? 0);
+        $row = $db->query(
+            "SELECT COUNT(*) AS total
+             FROM jadwal_peserta_target t
+             JOIN peserta_kegiatan pk ON pk.id = t.peserta_kegiatan_id
+             LEFT JOIN peserta p ON p.id = pk.peserta_id
+             LEFT JOIN rombel rb ON rb.id = p.rombel_id
+             WHERE t.jadwal_id = ? AND t.status = 'TARGETED'
+               AND (
+                    pk.kegiatan_id <> ?
+                    OR pk.status <> 'ACTIVE'
+                    OR p.status <> 'ACTIVE'
+                    OR rb.tingkat <> ?
+                    OR EXISTS (
+                        SELECT 1 FROM attempt active_attempt
+                        WHERE active_attempt.peserta_id = pk.peserta_id
+                          AND active_attempt.status = 'ACTIVE'
+                    )
+                    OR (
+                        t.target_mode = 'FIRST_ATTEMPT'
+                        AND EXISTS (
+                            SELECT 1 FROM attempt history
+                            WHERE history.root_jadwal_id = ?
+                              AND history.peserta_kegiatan_id = t.peserta_kegiatan_id
+                        )
+                    )
+                    OR (
+                        t.target_mode = 'REPLACEMENT'
+                        AND NOT EXISTS (
+                            SELECT 1 FROM attempt replacement
+                            WHERE replacement.id = t.supersede_attempt_id
+                              AND replacement.root_jadwal_id = ?
+                              AND replacement.peserta_kegiatan_id = t.peserta_kegiatan_id
+                              AND replacement.status = 'FINISHED'
+                              AND NOT EXISTS (
+                                  SELECT 1 FROM attempt newer
+                                  WHERE newer.root_jadwal_id = replacement.root_jadwal_id
+                                    AND newer.peserta_kegiatan_id = replacement.peserta_kegiatan_id
+                                    AND newer.id > replacement.id
+                              )
+                        )
+                    )
+                    OR t.target_mode NOT IN ('FIRST_ATTEMPT', 'REPLACEMENT')
+               )",
+            [
+                (int) $context['id'],
+                (int) $context['kegiatan_id'],
+                (int) $context['tingkat'],
+                $mainId,
+                $mainId,
+            ]
+        )->getRowArray();
+
+        return (int) ($row['total'] ?? 0);
     }
 
     private function targets($db, array $context): array
