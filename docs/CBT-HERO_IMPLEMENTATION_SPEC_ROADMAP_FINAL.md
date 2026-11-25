@@ -823,9 +823,10 @@ Urutan implementasi operasional:
 - **Phase 5B:** Susulan N kali + target peserta + command perubahan waktu operasional — implemented;
 - **Phase 5C:** Preparation/Prepared Assignment + fingerprint + selective rebuild — implemented.
 
-Acceptance mulai Phase 4D2 berstatus **DEFERRED** sesuai keputusan proyek:
-selesaikan rangkaian Master Ujian Akademis dahulu, kemudian jalankan acceptance
-terpadu sebelum memulai Master Ujian Psikologi.
+Acceptance mulai Phase 4D2 berstatus **DEFERRED** sesuai keputusan pemilik proyek:
+selesaikan implementasi Master Ujian Akademik **dan** Master Ujian Psikologi terlebih dahulu.
+Setelah seluruh implementasi keduanya selesai, jalankan acceptance/regression terpadu
+sebelum menyatakan CBT-HERO siap digunakan.
 
 ## 9.2 Dependency
 
@@ -1802,7 +1803,11 @@ PHASE 10 PSYCH
    ↓
 PHASE 11 SYSTEM/BACKUP
    ↓
-PHASE 12 PERFORMANCE/FINAL POLISH
+PHASE 12 PERFORMANCE + PRE-TEST READINESS
+   ↓
+UJICOBA MENYELURUH AKADEMIK + PSIKOLOGI
+   ↓
+FIX FINDINGS + FINAL ACCEPTANCE
 ```
 
 Psych editor/instrument master dapat mulai lebih awal secara paralel setelah Phase 4 renderer/import stabil, tetapi **psych runtime tetap tidak boleh membuat engine Attempt kedua**.
