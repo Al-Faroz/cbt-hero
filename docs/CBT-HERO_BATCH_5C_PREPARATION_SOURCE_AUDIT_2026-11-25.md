@@ -237,3 +237,34 @@ Commit:
 - `3054f6428db50f84dc871274b8dd3fabb1c0e16e`
 - `400e43d5b2ccfcbd99fdbbb69d464f5da34ca0da`
 - `c234040784876067c068bcae271628b0fa83b545`
+
+
+## Pemetaan source terhadap acceptance P01–P22
+
+Pemetaan berikut adalah hasil audit source, bukan hasil menjalankan acceptance.
+
+| ID | Area source |
+|---|---|
+| P01 | `PreparationService::targets()` + `status()`; MAIN dan SUSULAN dibatasi ke membership aktif/tingkat Bank. |
+| P02 | `CHUNK_SIZE=100`, queue dan `has_more`, loop UI berurutan dengan Idempotency-Key unik per chunk. |
+| P03–P04 | `buildPlan()` membaca `jadwal_type_selection`; `buildAssignment()` memilih tepat selection per tipe. |
+| P05–P06 | sort_order Bank atau hash seed deterministik per peserta; tidak memakai `ORDER BY RAND()`. |
+| P07 | `option_order_json` menyimpan urutan key opsi. |
+| P08 | `mapping_json` menyimpan order dan alias acak; payload participant hanya menerima alias. |
+| P09 | lifecycle Bank/Jadwal mengunci edit Bank setelah dependency Jadwal. |
+| P10 | `scheduleFingerprint()` mencakup field struktur Jadwal, Bank, selection, config; assignment lama terbaca STALE. |
+| P11 | rebuild-only queue hanya STALE/FAILED; force rebuild hanya assignment belum terpakai. |
+| P12 | `prepared_assignment_item.soal_revision_id` menyimpan baseline revision. |
+| P13 | `prepared_assignment_media` dedupe asset, critical image, prefetch order; runtime memakai manifest. |
+| P14–P15 | `jadwal_operations` + payload hash + unique Idempotency-Key. |
+| P16 | queue menghitung ulang state assignment; READY yang masih valid dilewati pada run berikutnya. |
+| P17–P18 | `participantPreflight()` memeriksa Nomor Peserta, username, password hash, credential_status. |
+| P19–P20 | target SUSULAN TARGETED; fingerprint participant mencakup target_mode dan supersede Attempt. |
+| P21 | API dan UI detail Prepared Assignment; runtime participant tetap hanya menerima alias Matching, bukan mapping asli. |
+| P22 | AuditService mencatat PREPARE/REBUILD per chunk dan jumlah assignment. |
+
+## Gap yang masih perlu ditutup sebelum Batch 5C dinyatakan selesai
+
+1. Jika peserta yang sudah ditargetkan sebagai FIRST_ATTEMPT kemudian memulai Jadwal MAIN sebelum Preparation Susulan, assignment Susulan dapat tetap dibangun dari target lama. START Susulan tetap menolak melalui `FIRST_ATTEMPT_ALREADY_USED`, tetapi operator perlu membatalkan target secara manual. Perlu keputusan apakah target otomatis dibatalkan saat START MAIN atau Preparation menandainya sebagai invalid.
+2. Concurrency lock Create/Update Susulan sudah diselaraskan dengan urutan START (peserta → Jadwal → membership), tetapi harus diuji dengan transaksi paralel pada tahap acceptance.
+3. Seluruh J01–Jxx, S01–Sxx, P01–P22 tetap DEFERRED; PHP lint, PHPUnit, API/DB concurrency, dan browser belum dijalankan.
