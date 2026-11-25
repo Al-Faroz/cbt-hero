@@ -588,6 +588,7 @@ class PreparationService
                 ->join('peserta AS p', 'p.id = pk.peserta_id')
                 ->join('rombel AS rb', 'rb.id = p.rombel_id')
                 ->where('t.jadwal_id', (int) $context['id'])
+                ->where('pk.kegiatan_id', (int) $context['kegiatan_id'])
                 ->where('t.status', 'TARGETED')->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE')
                 ->where('rb.tingkat', (int) $context['tingkat'])
                 ->get()->getResultArray();
