@@ -83,3 +83,15 @@ Commit:
 - `f8deb51c3330cc094c855668e474319b462d9ab3`
 
 Belum diuji melalui browser/API.
+
+
+## Temuan ORDER-01 — Attempt Susulan FIRST_ATTEMPT tidak dihitung pada gate urutan
+
+`JadwalOrderService::blockerForStart()` sebelumnya mencari Attempt pada `jadwal_id` MAIN secara langsung. Peserta yang belum pernah START MAIN tetapi menyelesaikan Susulan FIRST_ATTEMPT tetap terlihat belum menyelesaikan jadwal urutan lebih kecil, sehingga urutan berikutnya dapat terus terblokir.
+
+Perbaikan: lookup Attempt menggunakan `root_jadwal_id` MAIN, sehingga histori MAIN dan seluruh Susulan pada root yang sama menjadi satu rangkaian untuk gate urutan. Status latest Attempt tetap harus FINISHED/SUPERSEDED agar gate lolos.
+
+File: `app/Services/JadwalOrderService.php`  
+Commit: `73567e37c9fa2e632a0bf5c506b71f57ed4adb9b`
+
+Belum diuji melalui acceptance J17–J20.
