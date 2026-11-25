@@ -253,22 +253,45 @@ class PreparationService
         return $assignment;
     }
 
-    public function assignments(int $jadwalId): array
+    public function assignments(int $jadwalId, array $query = []): array
     {
         $db = Database::connect();
         $context = $this->context($db, $jadwalId);
         if ($context === null) return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
 
-        $rows = $db->table('prepared_assignment AS pa')
-            ->select('pa.id, pa.peserta_kegiatan_id, pa.assignment_seq, pa.source_version, pa.fingerprint, pa.status, '
+        $page = min($this->positive($query['page'] ?? null, 1), 100000);
+        $perPage = $this->positive($query['per_page'] ?? null, 25);
+        $perPage = in_array($perPage, [25, 50, 100], true) ? $perPage : 25;
+        $search = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
+
+        $builder = $db->table('prepared_assignment AS pa')
+            ->join('peserta_kegiatan AS pk', 'pk.id = pa.peserta_kegiatan_id')
+            ->where('pa.generated_for_jadwal_id', $jadwalId);
+        $total = (int) $builder->countAllResults(false);
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('pk.nomor_peserta', $search)
+                ->orLike('pk.nama_snapshot', $search)
+                ->orLike('pk.rombel_snapshot', $search)
+                ->groupEnd();
+        }
+        $filtered = (int) $builder->countAllResults(false);
+        $pages = max(1, (int) ceil($filtered / $perPage));
+        $page = min($page, $pages);
+        $rows = $builder->select('pa.id, pa.peserta_kegiatan_id, pa.assignment_seq, pa.source_version, pa.fingerprint, pa.status, '
                 . 'pa.generated_at, pa.used_at, pk.nomor_peserta, pk.nama_snapshot AS nama, pk.rombel_snapshot AS rombel, '
                 . '(SELECT COUNT(*) FROM prepared_assignment_item pai WHERE pai.prepared_assignment_id = pa.id) AS item_count')
-            ->join('peserta_kegiatan AS pk', 'pk.id = pa.peserta_kegiatan_id')
-            ->where('pa.generated_for_jadwal_id', $jadwalId)
             ->orderBy('pk.rombel_snapshot', 'ASC')->orderBy('pk.nama_snapshot', 'ASC')
-            ->orderBy('pa.assignment_seq', 'DESC')->get()->getResultArray();
+            ->orderBy('pa.assignment_seq', 'DESC')->orderBy('pa.id', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
 
-        return ['ok' => true, 'status' => 200, 'data' => ['items' => $rows]];
+        return ['ok' => true, 'status' => 200, 'data' => [
+            'items' => $rows,
+            'pagination' => [
+                'page' => $page, 'per_page' => $perPage, 'pages' => $pages,
+                'total' => $total, 'filtered' => $filtered,
+            ],
+        ]];
     }
 
     public function detail(int $assignmentId): array
