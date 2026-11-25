@@ -283,3 +283,22 @@ Acceptance E52 ditambahkan; belum diuji dengan browser automation multi-tab.
 
 
 Tab lock juga menangani Back-Forward Cache: pagehide melepas heartbeat/lock tanpa menutup channel; pageshow persisted memeriksa lock terbaru lalu menyalakan heartbeat kembali. Commit: `1d393eacdcdb91f3728d65b39f429ae0e08bb972`. Acceptance E53 ditambahkan; belum diuji pada browser mobile/BFCache.
+
+
+### 5D-18 — replay Fullscreen Resume lama dapat menutupi pause baru
+Jika operasi Resume lama di-replay setelah Attempt masuk pause baru, service sebelumnya selalu mengembalikan `paused=false`. Client dapat membuka overlay padahal server masih paused.
+
+Perbaikan:
+- Replay Resume memeriksa pause event yang masih terbuka dan mengembalikan state pause terkini.
+- Client mempertahankan lock dan menampilkan tombol Resume hanya bila reason adalah FULLSCREEN_EXIT; pause operator tetap menunggu Manager.
+- Resume key lama di-reset ketika replay mendeteksi pause cycle baru.
+
+File:
+- `app/Services/AttemptFullscreenGuardService.php`
+- `assets/js/exam-fullscreen-guard.js`
+
+Commits:
+- `2c10a9e36f15dafdb710761abb4643669e5d3aeb`
+- `057a0e8c70cf4637b71f90e87b169c3c40caffba`
+
+Acceptance E54 ditambahkan; belum diuji dengan pause/resume race.
