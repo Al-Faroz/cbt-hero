@@ -267,3 +267,6 @@ Acceptance E48–E49 ditambahkan; belum diuji dengan IndexedDB quota/reload/offl
 Critical image prefetch kini dibatasi 8 detik per asset menggunakan AbortController agar koneksi media yang macet tidak menahan bootstrap tanpa batas.
 
 Commit: `8aec7317e22596e4d53fbba390cd19802e28c78b`. Acceptance E50 ditambahkan; belum diuji dengan network throttling.
+
+
+Prefetch gambar critical kini dibatasi maksimal empat fetch paralel per participant; object URL lama tidak dicabut saat live revision agar gambar pada item yang masih tampil tidak rusak. Commits: `6759fddeaa3a50d7dee9a9921214dba61d6f8735`, `755f26309e75daf948db36090ed227ed6f65a44d`. Acceptance E51 ditambahkan; belum diuji pada beban banyak participant.
