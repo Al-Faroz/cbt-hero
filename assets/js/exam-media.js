@@ -70,16 +70,18 @@
         }
     };
 
-    const prepare = async manifest => {
+    const prepare = async (manifest, options = {}) => {
         const images = (manifest || []).filter(item =>
             item && item.kind === 'IMAGE' && item.critical && item.url
         );
         const results = await Promise.allSettled(images.map(prepareOne));
         const cachedCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
-        runtime.emit('cbt:client-event', {
-            event_type: 'PACKAGE_READY',
-            metadata: {critical_images: images.length, cached_images: cachedCount}
-        });
+        if (options.emitReady !== false) {
+            runtime.emit('cbt:client-event', {
+                event_type: 'PACKAGE_READY',
+                metadata: {critical_images: images.length, cached_images: cachedCount}
+            });
+        }
         return {total: images.length, cached: cachedCount};
     };
 
