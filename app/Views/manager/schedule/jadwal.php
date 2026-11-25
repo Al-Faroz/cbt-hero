@@ -42,12 +42,10 @@
             <table class="table manager-table mb-0">
                 <thead>
                     <tr>
-                        <th>Kegiatan</th>
-                        <th>Bank / Mapel</th>
+                        <th>Kegiatan / Bank</th>
                         <th>Mulai</th>
-                        <th>Urutan</th>
                         <th>Batas Mulai</th>
-                        <th>Durasi</th>
+                        <th>Urutan / Durasi</th>
                         <th>Soal Diambil</th>
                         <th>Nilai</th>
                         <th>Preparation</th>
