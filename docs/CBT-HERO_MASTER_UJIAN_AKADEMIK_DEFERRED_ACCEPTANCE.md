@@ -27,6 +27,19 @@ Status yang ditunda mulai keputusan ini:
 Dokumen acceptance masing-masing tetap menjadi sumber langkah pengujian. Kata
 `DEFERRED` berarti **belum diuji**, bukan PASS.
 
+## Update kesiapan 2026-11-25
+
+Batch 1–4 static integration hardening sudah selesai pada checkpoint 2026-10-01.
+Batch 5A Pre-Regression Readiness juga selesai pada 2026-11-25:
+
+- inventaris SQL baseline vs legacy upgrade sudah dicatat;
+- read-only schema preflight tersedia di `tools/academic_schema_preflight.sql`;
+- polish source-level tabel Jadwal dan scroll modal Susulan sudah diimplementasikan;
+- parser Excel mendapat hardening edge case.
+
+Seluruh item di atas **tidak mengubah status DEFERRED** acceptance browser/database.
+Acceptance mulai Phase 4D2 tetap belum diuji dan harus dijalankan sebelum Phase 10.
+
 ## Checkpoint
 
 Urutan:
