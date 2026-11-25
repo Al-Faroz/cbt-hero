@@ -62,7 +62,65 @@
         return value % 60 === 0 ? (value / 60) + ' menit' : value + ' detik';
     };
 
-    const selectionLabel = items => (items || []).map(item => item.selection_count + ' ' + item.label).join(' · ') || '-';
+    const selectionCell = items => {
+        const rows = Array.isArray(items) ? items : [];
+        const cellNode = document.createElement('td');
+        cellNode.className = 'jadwal-selection-cell';
+        if (!rows.length) {
+            cellNode.textContent = '-';
+            return cellNode;
+        }
+
+        const total = rows.reduce((sum, item) => sum + Math.max(0, Number(item.selection_count) || 0), 0);
+        const details = document.createElement('details');
+        details.className = 'jadwal-selection-details';
+
+        const summary = document.createElement('summary');
+        summary.textContent = total + ' soal · ' + rows.length + ' tipe';
+        summary.title = rows.map(item => item.selection_count + ' ' + (item.label || item.question_type || '')).join(' · ');
+
+        const breakdown = document.createElement('div');
+        breakdown.className = 'jadwal-selection-breakdown';
+        for (const item of rows) {
+            const line = document.createElement('div');
+            line.textContent = (Number(item.selection_count) || 0) + ' ' + (item.label || item.question_type || 'Tipe soal');
+            breakdown.append(line);
+        }
+
+        details.append(summary, breakdown);
+        cellNode.append(details);
+        return cellNode;
+    };
+
+    const addDropdownButton = (menu, label, handler, disabled = false, danger = false) => {
+        const item = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'dropdown-item' + (danger ? ' text-danger' : '');
+        button.textContent = label;
+        button.disabled = disabled;
+        button.addEventListener('click', handler);
+        item.append(button);
+        menu.append(item);
+    };
+
+    const addDropdownLink = (menu, label, href) => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        link.className = 'dropdown-item';
+        link.href = href;
+        link.textContent = label;
+        item.append(link);
+        menu.append(item);
+    };
+
+    const addDropdownDivider = menu => {
+        const item = document.createElement('li');
+        const divider = document.createElement('hr');
+        divider.className = 'dropdown-divider';
+        item.append(divider);
+        menu.append(item);
+    };
 
     const windowLabel = value => ({
         AKAN_DATANG: 'Akan datang',
@@ -238,21 +296,34 @@
             for (const item of data.items) {
                 const row = document.createElement('tr');
 
-                const bankCell = document.createElement('td');
-                const bankName = document.createElement('div');
-                bankName.className = 'fw-semibold';
-                bankName.textContent = item.nama_bank || '-';
+                const contextCell = document.createElement('td');
+                contextCell.className = 'jadwal-context-cell';
+                const kegiatanName = document.createElement('div');
+                kegiatanName.className = 'fw-semibold';
+                kegiatanName.textContent = item.kegiatan_nama || '-';
                 const bankDetail = document.createElement('div');
                 bankDetail.className = 'small text-secondary';
-                bankDetail.textContent = (item.mapel_nama || '-') + ' · Tingkat ' + (item.tingkat || '-');
-                bankCell.append(bankName, bankDetail);
+                bankDetail.textContent = (item.nama_bank || '-') + ' · ' + (item.mapel_nama || '-')
+                    + ' · Tingkat ' + (item.tingkat || '-');
+                contextCell.append(kegiatanName, bankDetail);
 
                 const startCell = document.createElement('td');
+                startCell.className = 'jadwal-date-cell';
                 startCell.append(document.createTextNode(displayDate(item.mulai_at)));
                 const windowInfo = document.createElement('div');
                 windowInfo.className = 'small text-secondary';
                 windowInfo.textContent = windowLabel(item.window_state);
                 startCell.append(windowInfo);
+
+                const orderDurationCell = document.createElement('td');
+                orderDurationCell.className = 'jadwal-order-duration-cell';
+                const orderInfo = document.createElement('div');
+                orderInfo.className = 'fw-semibold text-nowrap';
+                orderInfo.textContent = 'Urutan ' + String(item.urutan_ujian || 1);
+                const durationInfo = document.createElement('div');
+                durationInfo.className = 'small text-secondary text-nowrap';
+                durationInfo.textContent = durationLabel(item.durasi_seconds);
+                orderDurationCell.append(orderInfo, durationInfo);
 
                 const preparationCell = document.createElement('td');
                 const preparationBadge = document.createElement('span');
@@ -264,7 +335,7 @@
                 const preparationInfo = document.createElement('div');
                 preparationInfo.className = 'small text-secondary mt-1';
                 preparationInfo.textContent = item.preparation_state === 'READY'
-                    ? (String(item.preparation_ready || 0) + '/' + String(item.preparation_total || 0) + ' assignment siap')
+                    ? (String(item.preparation_ready || 0) + '/' + String(item.preparation_total || 0) + ' siap')
                     : (String(item.preparation_progress || 0) + '% siap');
                 preparationCell.append(preparationInfo);
 
@@ -275,58 +346,23 @@
                 accessCell.append(badge);
 
                 const actions = document.createElement('td');
-                actions.className = 'text-nowrap';
-
-                const followUp = document.createElement('a');
-                followUp.className = 'btn btn-outline-primary btn-sm me-1';
-                followUp.href = uiBase + '/' + item.id + '/susulan';
-                followUp.textContent = 'Susulan';
-                actions.append(followUp);
+                actions.className = 'jadwal-action-cell';
+                const actionGroup = document.createElement('div');
+                actionGroup.className = 'd-inline-flex align-items-center gap-1 flex-nowrap';
 
                 const preparation = document.createElement('button');
                 preparation.type = 'button';
-                preparation.className = 'btn btn-outline-primary btn-sm me-1 js-preparation';
+                preparation.className = 'btn btn-outline-primary btn-sm js-preparation';
                 preparation.dataset.jadwalId = String(item.id);
                 preparation.dataset.title = (item.mapel_nama || item.nama_bank || ('Jadwal #' + item.id));
                 preparation.textContent = 'Preparation';
-                actions.append(preparation);
-
-                actions.append(actionButton(
-                    'Perpanjang',
-                    'btn btn-outline-secondary btn-sm me-1',
-                    () => openOperation(item.id, 'EXTEND', item.batas_mulai_at)
-                ));
-
-                actions.append(actionButton(
-                    'Tambah Waktu',
-                    'btn btn-outline-secondary btn-sm me-1',
-                    () => openOperation(item.id, 'ADD_TIME'),
-                    Number(item.active_attempt_count) < 1
-                ));
-
-                if (item.first_attempt_started_at === null) {
-                    const visible = Number(item.tampilkan_nilai_saat_selesai) === 1;
-                    actions.append(actionButton(
-                        visible ? 'Nilai: ON' : 'Nilai: OFF',
-                        'btn btn-outline-secondary btn-sm me-1',
-                        async () => {
-                            try {
-                                await api(base + '/' + item.id + '/result-visibility', 'PATCH', {
-                                    tampilkan_nilai_saat_selesai: !visible,
-                                });
-                                await load();
-                            } catch (error) {
-                                feedback('jadwalFeedback', error.message, true);
-                            }
-                        }
-                    ));
-                }
+                actionGroup.append(preparation);
 
                 if (item.access_editable) {
                     const target = item.access_state === 'BUKA' ? 'TAHAN' : 'BUKA';
-                    actions.append(actionButton(
+                    const accessButton = actionButton(
                         target === 'TAHAN' ? 'Tahan' : 'Buka',
-                        'btn btn-outline-secondary btn-sm me-1',
+                        'btn btn-outline-secondary btn-sm',
                         async () => {
                             if (target === 'TAHAN'
                                 && !window.confirm('Tahan akses Jadwal ini? Peserta yang belum masuk tidak dapat START/RESUME sampai akses dibuka kembali.'))
@@ -339,45 +375,77 @@
                                 feedback('jadwalFeedback', error.message, true);
                             }
                         }
-                    ));
+                    );
+                    accessButton.title = 'Ubah akses Jadwal';
+                    actionGroup.append(accessButton);
                 }
-                if (item.structural_editable) {
-                    actions.append(actionButton(
-                        'Edit',
-                        'btn btn-outline-primary btn-sm me-1',
-                        () => openEdit(item.id)
-                    ));
-                    actions.append(actionButton(
-                        'Hapus',
-                        'btn btn-outline-danger btn-sm',
+
+                const dropdown = document.createElement('div');
+                dropdown.className = 'dropdown';
+                const dropdownToggle = document.createElement('button');
+                dropdownToggle.type = 'button';
+                dropdownToggle.className = 'btn btn-outline-secondary btn-sm dropdown-toggle';
+                dropdownToggle.id = 'jadwalActionMenu' + String(item.id);
+                dropdownToggle.setAttribute('data-bs-toggle', 'dropdown');
+                dropdownToggle.setAttribute('aria-expanded', 'false');
+                dropdownToggle.setAttribute('aria-label', 'Aksi Jadwal ' + String(item.id));
+                dropdownToggle.textContent = 'Aksi';
+
+                const menu = document.createElement('ul');
+                menu.className = 'dropdown-menu dropdown-menu-end';
+                menu.setAttribute('aria-labelledby', dropdownToggle.id);
+                addDropdownLink(menu, 'Susulan', uiBase + '/' + item.id + '/susulan');
+                addDropdownButton(menu, 'Perpanjang Batas Mulai',
+                    () => openOperation(item.id, 'EXTEND', item.batas_mulai_at));
+                addDropdownButton(menu, 'Tambah Waktu',
+                    () => openOperation(item.id, 'ADD_TIME'), Number(item.active_attempt_count) < 1);
+
+                if (item.first_attempt_started_at === null) {
+                    addDropdownDivider(menu);
+                    const visible = Number(item.tampilkan_nilai_saat_selesai) === 1;
+                    addDropdownButton(menu, visible ? 'Nilai Selesai: ON' : 'Nilai Selesai: OFF',
                         async () => {
-                            if (!window.confirm('Hapus Jadwal untuk ' + (item.nama_mapel || item.nama_bank) + '?'))
-                                return;
                             try {
-                                await api(base + '/' + item.id, 'DELETE');
+                                await api(base + '/' + item.id + '/result-visibility', 'PATCH', {
+                                    tampilkan_nilai_saat_selesai: !visible,
+                                });
                                 await load();
-                                await loadOptions();
-                                feedback('jadwalFeedback', 'Jadwal berhasil dihapus.');
                             } catch (error) {
                                 feedback('jadwalFeedback', error.message, true);
                             }
-                        }
-                    ));
-                } else {
-                    const locked = document.createElement('span');
-                    locked.className = 'small text-secondary ms-1';
-                    locked.textContent = 'Struktur terkunci';
-                    actions.append(locked);
+                        });
                 }
 
+                if (item.structural_editable) {
+                    addDropdownDivider(menu);
+                    addDropdownButton(menu, 'Edit Jadwal', () => openEdit(item.id));
+                    addDropdownButton(menu, 'Hapus Jadwal', async () => {
+                        if (!window.confirm('Hapus Jadwal untuk ' + (item.nama_mapel || item.nama_bank) + '?'))
+                            return;
+                        try {
+                            await api(base + '/' + item.id, 'DELETE');
+                            await load();
+                            await loadOptions();
+                            feedback('jadwalFeedback', 'Jadwal berhasil dihapus.');
+                        } catch (error) {
+                            feedback('jadwalFeedback', error.message, true);
+                        }
+                    }, false, true);
+                } else {
+                    addDropdownDivider(menu);
+                    addDropdownButton(menu, 'Struktur terkunci', () => {}, true);
+                }
+
+                dropdown.append(dropdownToggle, menu);
+                actionGroup.append(dropdown);
+                actions.append(actionGroup);
+
                 row.append(
-                    cell(item.kegiatan_nama),
-                    bankCell,
+                    contextCell,
                     startCell,
-                    cell(item.urutan_ujian || 1, 'text-center fw-semibold'),
                     cell(displayDate(item.batas_mulai_at), 'text-nowrap'),
-                    cell(durationLabel(item.durasi_seconds), 'text-nowrap'),
-                    cell(selectionLabel(item.type_selection)),
+                    orderDurationCell,
+                    selectionCell(item.type_selection),
                     cell(Number(item.tampilkan_nilai_saat_selesai) === 1 ? 'Ditampilkan' : 'Disembunyikan'),
                     preparationCell,
                     accessCell,
@@ -389,7 +457,7 @@
             if (!data.items.length) {
                 const row = document.createElement('tr');
                 const td = cell('Belum ada Jadwal sesuai filter.');
-                td.colSpan = 11;
+                td.colSpan = 9;
                 td.className = 'text-center text-secondary py-4';
                 row.append(td);
                 body.append(row);
