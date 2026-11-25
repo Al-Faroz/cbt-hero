@@ -56,16 +56,31 @@ class AttemptFullscreenGuardService
                 $db->transRollback();
                 return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan.');
             }
+            $now = $ownership->now();
+            $deadline = new \DateTimeImmutable((string) $attempt['deadline_at'], $ownership->timezone());
+            if ($now >= $deadline) {
+                $db->transRollback();
+                return $this->error(409, 'ATTEMPT_DEADLINE_REACHED', 'Waktu ujian telah berakhir; fullscreen tidak dapat digunakan untuk memperpanjang waktu.');
+            }
             if ((int) $attempt['exam_browser_required'] === 1) {
                 $db->transRollback();
                 return $this->error(409, 'EXAM_BROWSER_MODE', 'Kegiatan ini menggunakan Exam Browser wajib.');
             }
             $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
                 ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
-            if (!empty($attempt['pause_started_at'])
-                && (string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
+            if (!empty($attempt['pause_started_at'])) {
+                if ((string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
+                    $db->transRollback();
+                    return $this->error(409, 'ATTEMPT_ALREADY_PAUSED', 'Attempt sedang dijeda oleh pengawas atau proses lain.');
+                }
                 $db->transRollback();
-                return $this->error(409, 'ATTEMPT_ALREADY_PAUSED', 'Attempt sedang dijeda oleh pengawas atau proses lain.');
+                return ['ok' => true, 'status' => 200, 'data' => [
+                    'attempt_id' => $attemptId,
+                    'status' => 'ACTIVE',
+                    'paused' => true,
+                    'pause_reason' => 'FULLSCREEN_EXIT',
+                    'already_paused' => true,
+                ]];
             }
 
             $operation = $ops->begin(
