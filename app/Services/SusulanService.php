@@ -307,6 +307,41 @@ class SusulanService
         }
     }
 
+    public function changeAccess(int $susulanId, string $target, array $actor): array
+    {
+        $target = strtoupper(trim($target));
+        if (!in_array($target, ['BUKA', 'TAHAN'], true)) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Status akses harus BUKA atau TAHAN.');
+        }
+
+        $db = Database::connect(); $db->transBegin();
+        try {
+            $old = $db->query('SELECT * FROM jadwal WHERE id = ? FOR UPDATE', [$susulanId])->getRowArray();
+            if ($old === null || $old['jenis_jadwal'] !== 'SUSULAN' || $old['parent_jadwal_id'] === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
+            }
+            if ($old['results_finalized_at'] !== null) {
+                $db->transRollback();
+                return $this->error(423, 'DATA_LOCKED', 'Akses Susulan yang hasilnya sudah difinalkan tidak dapat diubah.');
+            }
+
+            if ($old['access_state'] !== $target) {
+                $db->table('jadwal')->where('id', $susulanId)->update(['access_state' => $target]);
+            }
+            $after = $this->find($susulanId);
+            $this->audit($susulanId, 'ACCESS_' . $target, $old, $after, $actor);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit perubahan akses Susulan gagal.');
+            }
+            return ['ok' => true, 'status' => 200, 'item' => $after];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Ubah akses Susulan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Akses Susulan tidak dapat diubah.');
+        }
+    }
+
     public function cancelTarget(int $susulanId, int $targetId, array $actor): array
     {
         $db = Database::connect(); $db->transBegin();
