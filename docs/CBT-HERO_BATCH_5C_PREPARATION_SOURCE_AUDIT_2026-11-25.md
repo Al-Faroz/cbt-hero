@@ -315,3 +315,18 @@ Commits:
 - `252359e4687b61a53b8d41ae8084fbcd4d3e9aea`
 
 Belum diuji dengan fixture Attempt MAIN/Susulan atau UI browser. Acceptance P19–P20 dan skenario target invalid tetap DEFERRED.
+
+
+### Penyempurnaan PREP-SUSULAN-INVALID-01 — invalid target tidak ikut antrean
+
+Penyempurnaan setelah audit implementasi:
+- Daftar target valid untuk Preparation dipisahkan dari target invalid.
+- Summary Preparation menghitung assignment hanya terhadap target valid; jumlah invalid ditampilkan terpisah.
+- `prepare(scope=ALL)` tidak membuat assignment untuk target invalid.
+- `prepare(scope=SELECTED)` menolak request jika pilihan mencakup target invalid.
+- Jika semua target invalid, API mengembalikan `INVALID_SUSULAN_TARGET` dengan instruksi pembatalan/perbaikan; tidak ada assignment baru yang dibuat.
+- START tetap mempunyai validasi finalnya sendiri, jadi Preparation bukan pengganti pemeriksaan AttemptStartService.
+
+Commit: `4f0cb3f29c0cece62a84dc8be584bb249cba1c9c`
+
+Masih source-level; belum diuji dengan database fixture.
