@@ -73,3 +73,144 @@ File: `app/Services/QuestionDocumentService.php`
 Commit: `2685bee0e8912fcf076b2eb3c5f7e052dfe8a9bb`
 
 Catatan: validasi ini menjaga struktur workbook yang dikenali. Kecocokan tipe/opsi dengan Komposisi tetap diperiksa pada tahap validasi staging. Acceptance X01–X21 tetap DEFERRED.
+
+
+## Temuan lanjutan: media cleanup dan staging
+
+### EXCEL-MEDIA-04 — cleanup harus menghormati referensi aktif
+
+Audit menemukan `QuestionMediaService::discardImport()` sebelumnya langsung menghapus row `media_assets` dan file lokal berdasarkan ID, tanpa memeriksa apakah aset telah dipakai oleh revisi soal atau masih direferensikan staging lain.
+
+Perbaikan:
+- Cleanup sekarang hanya untuk aset lokal dengan path valid.
+- Pengecekan dilakukan terhadap `soal_revision_media` dan token media pada seluruh `import_staging_items.payload_json`.
+- Sebelum penghapusan dilakukan transaksi dan pemeriksaan ulang setelah row aset dikunci.
+- Jika masih ada referensi atau terjadi kegagalan, cleanup dilewati; file tidak dihapus.
+
+File: `app/Services/QuestionMediaService.php`  
+Commit: `824ec46cad8c97634a56d64f6b5fd1cc06bb66e0`
+
+**Batasan kepemilikan tetap ada:** skema belum membedakan aset yang dibuat oleh import job dari aset lokal yang diunggah operator. Karena itu cleanup saat operator mengubah/mengeluarkan staging row tidak boleh dilakukan hanya berdasarkan token lama; aset bisa merupakan upload manual atau dipakai ulang. Percobaan menambahkan cleanup otomatis saat FIX dibatalkan agar tidak menghapus aset tanpa bukti ownership. Relasi ownership job-media tetap menjadi pekerjaan desain terpisah.
+
+### EXCEL-IMPORT-01 — parameter Idempotency-Key pada commit
+
+`QuestionImportService::commit()` memvalidasi format `Idempotency-Key`, tetapi tidak menyimpan key tersebut. Duplikasi commit saat job sudah COMMITTED tetap tidak membuat soal ganda karena status job dikunci dan diperiksa, tetapi kontrak idempotensi per-key tidak diterapkan. Ini perlu diselaraskan dengan kontrak API: bila idempotensi memang berbasis job-state, dokumentasikan demikian dan jangan mengiklankan key sebagai deduplikasi; bila berbasis key, simpan key + hasil secara atomik pada schema upgrade. Belum diubah pada batch ini agar tidak menambah migrasi tanpa audit kontrak.
+
+## Status audit saat ini
+
+- Parser workbook: hardening struktur sheet dan pembatasan media sudah diterapkan.
+- Media cleanup pada jalur gagal: sekarang memeriksa referensi aktif sebelum menghapus.
+- Media ownership per import job: belum tersedia; cleanup otomatis untuk FIX/EXCLUDE/job retention ditahan.
+- Commit idempotency key: format diperiksa, key belum dipersistenkan.
+- X01–X21 tetap DEFERRED; tidak ada PHP lint, PHPUnit, fixture XLSX, atau browser test yang diklaim PASS.
+
+
+### EXCEL-MODE-01 — marker mode Menjodohkan tidak boleh fallback diam-diam
+
+Parser sebelumnya mengubah semua nilai marker selain `ALL_OR_NOTHING` menjadi `PARTIAL`. Marker rusak/tidak dikenal dapat lolos jika Komposisi Bank kebetulan menggunakan PARTIAL.
+
+Perbaikan: marker sekarang wajib tepat `PARTIAL` atau `ALL_OR_NOTHING`; nilai lain ditolak saat parsing.  
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `08c31ed2f9f5755b77d0b6e56f97cd427e8d49ec`
+
+Acceptance X01–X21 tetap DEFERRED.
+
+
+### EXCEL-MEDIA-05 — pembatasan path file saat cleanup
+
+Pembersihan media lokal sekarang hanya menerima path yang cocok dengan nama file acak yang dibuat aplikasi pada folder `question-media/` (40 karakter heksadesimal dengan ekstensi JPG/PNG/WebP). Ini mencegah nilai `file_path` yang rusak/diubah di database dipakai untuk menghapus file di luar folder media yang dikelola.
+
+Commit: `26cd4f14eee7595f240e62914d3b6733f75eb974`
+
+
+### EXCEL-DRAWING-01 — anchor gambar Excel yang tidak didukung tidak boleh diabaikan
+
+Parser sebelumnya hanya membaca `oneCellAnchor` dan `twoCellAnchor`, tetapi beberapa bentuk drawing/relasi gambar yang tidak dikenali dapat dilewati tanpa error. Hal ini berisiko membuat gambar pada workbook hilang dari staging tanpa pemberitahuan.
+
+Perbaikan:
+- Relasi drawing atau file drawing yang hilang sekarang ditolak.
+- Picture tanpa anchor/koordinat/blip yang lengkap ditolak.
+- Relasi media gambar yang tidak menunjuk ke file `xl/media/` ditolak.
+- Anchor gambar di luar batas area template tetap ditolak.
+- Jumlah picture yang diproses harus sama dengan jumlah picture pada drawing; tipe anchor gambar lain tidak lagi diabaikan diam-diam.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `8d8c4ea38145c96673d1419b4755c418ea85f014`
+
+Acceptance X20/X21 masih DEFERRED sampai fixture XLSX nyata diuji.
+
+
+### EXCEL-WORKBOOK-02 — relasi sheet workbook harus lengkap dan bertipe worksheet
+
+Parser sebelumnya melewati sheet yang relasinya tidak ditemukan atau targetnya bukan `xl/worksheets/`. Workbook dengan chart sheet/jenis sheet lain dapat diproses sebagian tanpa penolakan eksplisit.
+
+Perbaikan:
+- Nama sheet dan relationship ID wajib tersedia.
+- Relationship target wajib ditemukan dan menunjuk ke worksheet biasa.
+- File worksheet harus benar-benar ada di paket XLSX.
+- Nama sheet duplikat (case-insensitive) ditolak.
+- Jenis sheet non-worksheet ditolak, bukan dilewati.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `464ad592a183df170ddc4ddf91c49ec72840f8c4`
+
+Catatan: generator template CBT-HERO saat ini membuat worksheet biasa; pengujian kompatibilitas Excel/LibreOffice tetap bagian acceptance X01–X03.
+
+
+### EXCEL-COMMIT-01 — staging tervalidasi harus dicek ulang terhadap Komposisi saat Commit
+
+Audit menemukan bahwa job yang sudah berstatus VALIDATED dapat menunggu sementara operator mengubah Komposisi Bank. Validasi awal saja tidak menjamin payload masih cocok saat Commit. Hal ini terutama penting karena jalur simpan PG biasa tidak memeriksa ulang jumlah opsi terhadap `bank_type_config`.
+
+Perbaikan:
+- Validasi staging menghitung jumlah soal aktif per tipe dan menandai baris yang melampaui `question_count` pada Komposisi.
+- Commit mengunci row Bank, membaca Komposisi terkini, lalu memvalidasi ulang tipe aktif, batas jumlah soal per tipe, jumlah opsi/pasangan, mode Menjodohkan, payload domain, serta status seluruh media.
+- Jika Komposisi berubah dan staging tidak lagi sesuai, seluruh transaksi Commit dibatalkan; tidak ada subset soal yang boleh tertinggal.
+
+File: `app/Services/QuestionImportService.php`  
+Commit: `9cb3663c138e970993ff2228a3a126eb60b91096`  
+Cleanup kode tidak terpakai: `18576a929e9ad841581163f331c63dc4b65c4bc0`
+
+Kunci sinkronisasi: `BankTypeConfigService::save()` juga mengunci row Bank sebelum mengganti Komposisi, sehingga perubahan Komposisi dan Commit terserialisasi pada row yang sama.
+
+Acceptance fungsional tetap DEFERRED; belum ada klaim test PASS.
+
+
+### EXCEL-AREA-01 — posisi gambar dan baris soal harus berada pada area template
+
+Perbaikan lanjutan untuk X20:
+- Anchor gambar dibatasi pada baris data soal (bukan marker/header/petunjuk), maksimum 200 slot soal.
+- Kolom gambar dibatasi pada kolom konten yang sesuai tipe: pertanyaan, pilihan, pasangan, jawaban, atau rubrik. Kolom nomor, kunci, mode, toleransi, dan poin tidak menerima gambar.
+- Sel Excel di luar batas 200 slot ditolak bila berisi data.
+- Baris sumber Excel yang melewati jumlah slot `question_count` pada Komposisi ditandai INVALID saat validasi staging.
+
+File:
+- `app/Services/QuestionDocumentService.php`
+- `app/Services/QuestionImportService.php`
+
+Commit:
+- `36dc72fd68dbb89d6615db25e0598e7b5c997147`
+- `376336e2ed115089a96511a961888c1ba9a244e1`
+
+X20 tetap perlu fixture nyata untuk memastikan variasi anchor Excel/LibreOffice tertangani benar.
+
+
+### EXCEL-MARKER-01 — batas option_count harus diperiksa sebelum membentuk daftar kolom
+
+Marker sheet XLSX berasal dari isi file pengguna. Sebelumnya angka `option_count` langsung dipakai untuk membentuk `range()` kolom gambar. Marker yang dimanipulasi dengan angka sangat besar berpotensi memicu alokasi memori berlebihan sebelum validasi staging.
+
+Perbaikan: parser memeriksa rentang marker sebelum membentuk daftar kolom:
+- PG: 2–6
+- PG Kompleks / PG Bertingkat: 2–8
+- Menjodohkan: 2–12
+- Isian Singkat / Uraian: tepat 0
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `5b43d862ff6a13d4683556f05548c599bcf5d03b`
+
+
+### EXCEL-STRUCTURE-02 — nama sheet dan panjang marker template
+
+Parser sekarang membatasi marker hingga 256 byte, membatasi nama sheet sesuai batas workbook Excel (31 karakter), dan mewajibkan nama sheet cocok dengan tipe marker (PG, PG KOMPLEKS, PG BERTINGKAT, MENJODOHKAN, ISIAN SINGKAT, URAIAN). Ini mencegah sheet soal yang diganti nama tetap diproses sebagai template resmi.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `1ccd56e4350510ba84a9059189f422eab2b3dbcb`

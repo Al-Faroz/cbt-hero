@@ -88,6 +88,9 @@ class QuestionDocumentService
             if ($sheetXml === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
             $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, null, false);
             $marker = trim((string) ($values[0][0] ?? ''));
+            if (strlen($marker) > 256) {
+                throw new RuntimeException('Marker sheet Excel terlalu panjang.');
+            }
 
             if ($index === 0) {
                 if ($marker !== 'CBT-HERO-EXCEL-V2') {
@@ -104,15 +107,42 @@ class QuestionDocumentService
             }
 
             $type = $match[1];
+            $expectedSheetName = [
+                'PG' => 'PG', 'PG_KOMPLEKS' => 'PG KOMPLEKS',
+                'PG_BERTINGKAT' => 'PG BERTINGKAT', 'MATCHING' => 'MENJODOHKAN',
+                'ISIAN_SINGKAT' => 'ISIAN SINGKAT', 'URAIAN' => 'URAIAN',
+            ][$type];
+            if (mb_strtoupper((string) $sheet['name'], 'UTF-8') !== $expectedSheetName) {
+                throw new RuntimeException('Nama sheet tidak sesuai dengan tipe soal pada marker.');
+            }
             if (isset($seenTypes[$type])) {
                 throw new RuntimeException('Sheet tipe soal ' . $type . ' muncul lebih dari satu kali.');
             }
             $seenTypes[$type] = true;
 
-            // Only recognized question sheets may import embedded images.
-            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            // Only recognized question sheets may import embedded images, and only
+            // in columns that represent actual content fields (never numbering/keys/points).
             $optionCount = (int) $match[2];
             $mode = trim((string) $match[3]);
+            $maxOptions = match ($type) {
+                'PG' => 6,
+                'PG_KOMPLEKS', 'PG_BERTINGKAT' => 8,
+                'MATCHING' => 12,
+                default => 0,
+            };
+            if (($maxOptions === 0 && $optionCount !== 0)
+                || ($maxOptions > 0 && ($optionCount < 2 || $optionCount > $maxOptions))) {
+                throw new RuntimeException('Jumlah pilihan/pasangan pada marker sheet tidak valid.');
+            }
+            $allowedImageColumns = match ($type) {
+                'PG', 'PG_KOMPLEKS' => range(1, $optionCount + 1),
+                'PG_BERTINGKAT' => array_merge([1], range(2, $optionCount * 2, 2)),
+                'MATCHING' => range(1, ($optionCount * 2) + 1),
+                'ISIAN_SINGKAT' => [1, 3],
+                'URAIAN' => [1, 2],
+                default => [],
+            };
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport, true, $allowedImageColumns);
             foreach (array_slice($values, 5, null, true) as $zeroRow => $row) {
                 $excelRow = $zeroRow + 1;
                 $data = $this->excelQuestionRow($type, $row, $optionCount, $mode);
@@ -190,8 +220,11 @@ class QuestionDocumentService
             $maxPoint = $this->control($value($row, 2 + ($optionCount * 2)));
             $meaningful = $meaningful || $maxPoint !== '';
             if (!$meaningful) return null;
+            if (!in_array($mode, ['PARTIAL', 'ALL_OR_NOTHING'], true)) {
+                throw new RuntimeException('Mode Menjodohkan pada marker template tidak valid.');
+            }
             return ['question_type' => 'MATCHING', 'question_text' => $question, 'pairs' => $pairs,
-                'scoring_mode' => $mode === 'ALL_OR_NOTHING' ? 'ALL_OR_NOTHING' : 'PARTIAL',
+                'scoring_mode' => $mode,
                 'max_point' => $maxPoint];
         }
 
@@ -296,19 +329,33 @@ class QuestionDocumentService
         if ($source === false) throw new RuntimeException('Workbook Excel tidak ditemukan.');
         $xp = new DOMXPath($this->xml($source));
         $rels = $this->officeRelationships($zip, 'xl/workbook.xml');
-        $result = [];
+        $result = []; $seenNames = [];
         foreach ($xp->query('//*[local-name()="sheets"]/*[local-name()="sheet"]') as $sheet) {
             if (!$sheet instanceof DOMElement) continue;
+            $name = trim($sheet->getAttribute('name'));
             $id = $sheet->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
             $path = $rels[$id]['target'] ?? '';
-            if ($path === '' || !str_starts_with($path, 'xl/worksheets/')) continue;
-            $result[] = ['name' => $sheet->getAttribute('name'), 'path' => $path];
+            if ($name === '' || mb_strlen($name, 'UTF-8') > 31 || $id === '' || $path === '') {
+                throw new RuntimeException('Identitas atau relasi sheet Excel tidak valid.');
+            }
+            $nameKey = mb_strtolower($name, 'UTF-8');
+            if (isset($seenNames[$nameKey])) {
+                throw new RuntimeException('Nama sheet Excel tidak boleh duplikat.');
+            }
+            $seenNames[$nameKey] = true;
+            if (!str_starts_with($path, 'xl/worksheets/')) {
+                throw new RuntimeException('Jenis sheet Excel selain worksheet biasa tidak didukung.');
+            }
+            if ($zip->locateName($path) === false) {
+                throw new RuntimeException('File worksheet Excel tidak ditemukan.');
+            }
+            $result[] = ['name' => $name, 'path' => $path];
         }
         if (!$result) throw new RuntimeException('Sheet Excel tidak ditemukan.');
         return $result;
     }
 
-    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport, bool $includeDrawings = true): array
+    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport, bool $includeDrawings = true, ?array $allowedDrawingColumns = null): array
     {
         $source = $zip->getFromName($path);
         if ($source === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
@@ -322,7 +369,7 @@ class QuestionDocumentService
             $text = trim($this->xlsxCellValue($xp, $cell, $shared));
             if (mb_strlen($text) > 20000) throw new RuntimeException('Sel Excel terlalu panjang.');
             if ($row < 0 || $col < 0) continue;
-            if ($row > 260 || $col > 60) {
+            if ($row > 204 || $col > 60) {
                 if ($text !== '') {
                     throw new RuntimeException('Isi sel berada di luar area template Excel yang didukung.');
                 }
@@ -333,6 +380,10 @@ class QuestionDocumentService
 
         foreach (($includeDrawings ? $this->xlsxDrawingTokens($zip, $path, $source, $imageImport) : []) as $item) {
             $row = $item['row']; $col = $item['col'];
+            if ($row < 5 || $row > 204
+                || ($allowedDrawingColumns !== null && !in_array($col, $allowedDrawingColumns, true))) {
+                throw new RuntimeException('Gambar Excel harus berada pada sel konten di area baris soal template.');
+            }
             $current = trim((string) ($values[$row][$col] ?? ''));
             $values[$row][$col] = $current === '' ? $item['token'] : $current . "\n" . $item['token'];
         }
@@ -377,18 +428,28 @@ class QuestionDocumentService
             if (!$drawing instanceof DOMElement) continue;
             $id = $drawing->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
             $drawingPath = $rels[$id]['target'] ?? '';
-            if ($drawingPath === '') continue;
+            if ($drawingPath === '') {
+                throw new RuntimeException('Relasi gambar Excel tidak valid.');
+            }
             $drawingXml = $zip->getFromName($drawingPath);
-            if ($drawingXml === false) continue;
+            if ($drawingXml === false) {
+                throw new RuntimeException('Data drawing Excel tidak ditemukan.');
+            }
             $drawingXp = new DOMXPath($this->xml($drawingXml));
             $drawingRels = $this->officeRelationships($zip, $drawingPath);
+            $pictureCount = $drawingXp->query('//*[local-name()="pic"]')->length;
+            $processedPictures = 0;
+
             foreach ($drawingXp->query('//*[local-name()="oneCellAnchor" or local-name()="twoCellAnchor"]') as $anchor) {
+                $picture = $drawingXp->query('.//*[local-name()="pic"]', $anchor)->item(0);
+                if ($picture === null) continue;
                 $from = $drawingXp->query('./*[local-name()="from"]', $anchor)->item(0);
-                if ($from === null) continue;
-                $colNode = $drawingXp->query('./*[local-name()="col"]', $from)->item(0);
-                $rowNode = $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
-                $blip = $drawingXp->query('.//*[local-name()="blip"]', $anchor)->item(0);
-                if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) continue;
+                $colNode = $from === null ? null : $drawingXp->query('./*[local-name()="col"]', $from)->item(0);
+                $rowNode = $from === null ? null : $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
+                $blip = $drawingXp->query('.//*[local-name()="blip"]', $picture)->item(0);
+                if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) {
+                    throw new RuntimeException('Anchor gambar Excel tidak didukung atau tidak lengkap.');
+                }
 
                 $rowValue = trim((string) $rowNode->textContent);
                 $colValue = trim((string) $colNode->textContent);
@@ -397,13 +458,15 @@ class QuestionDocumentService
                 }
                 $rowIndex = (int) $rowValue;
                 $colIndex = (int) $colValue;
-                if ($rowIndex > 260 || $colIndex > 60) {
+                if ($rowIndex > 204 || $colIndex > 60) {
                     throw new RuntimeException('Posisi gambar berada di luar area template Excel yang didukung.');
                 }
 
                 $relId = $blip->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
                 $mediaPath = $drawingRels[$relId]['target'] ?? '';
-                if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) continue;
+                if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) {
+                    throw new RuntimeException('Referensi file gambar Excel tidak valid.');
+                }
                 if ($imageImport === null) throw new RuntimeException('Gambar Excel tidak dapat diproses.');
 
                 if (!isset($cache[$mediaPath])) {
@@ -416,6 +479,11 @@ class QuestionDocumentService
                     'col' => $colIndex,
                     'token' => '[[media:' . $cache[$mediaPath] . ']]',
                 ];
+                $processedPictures++;
+            }
+
+            if ($processedPictures !== $pictureCount) {
+                throw new RuntimeException('Jenis anchor gambar Excel tidak didukung oleh template CBT-HERO.');
             }
         }
         return $result;

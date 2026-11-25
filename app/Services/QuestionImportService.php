@@ -105,20 +105,28 @@ class QuestionImportService
             if ($bank === null || $bank['status'] !== 'DRAFT') {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Bank READY tidak dapat diubah melalui impor.');
             }
-            $configRows = $db->table('bank_type_config')->select('question_type, scoring_mode, option_count')->where('bank_soal_id', $bankId)
+            $configRows = $db->table('bank_type_config')->select('question_type, question_count, scoring_mode, option_count')->where('bank_soal_id', $bankId)
                 ->get()->getResultArray();
-            $configs = array_column($configRows, 'question_type');
             $configByType = array_column($configRows, null, 'question_type');
             $matchingMode = null;
             foreach ($configRows as $config) if ($config['question_type'] === 'MATCHING') $matchingMode = $config['scoring_mode'];
             $rows = $db->table('import_staging_items')->where('import_job_id', $id)->orderBy('item_no')->get()->getResultArray();
-            $valid = 0; $invalid = 0;
+            $valid = 0; $invalid = 0; $typeOccurrences = [];
             foreach ($rows as $row) {
                 if ($row['validation_status'] === 'EXCLUDED') continue;
                 $payload = json_decode((string) $row['payload_json'], true) ?: [];
+                $type = is_string($payload['question_type'] ?? null) ? $payload['question_type'] : '';
+                $typeOccurrences[$type] = ($typeOccurrences[$type] ?? 0) + 1;
                 $check = (new QuestionValidationService())->validate($payload);
                 $errors = [];
-                if (!in_array($payload['question_type'] ?? '', $configs, true)) $errors[] = 'Tipe belum aktif di Komposisi.';
+                if (!isset($configByType[$type])) {
+                    $errors[] = 'Tipe belum aktif di Komposisi.';
+                } elseif ($typeOccurrences[$type] > (int) $configByType[$type]['question_count']) {
+                    $errors[] = 'Jumlah soal melebihi jumlah pada Komposisi Bank.';
+                } elseif (preg_match('/^Excel .+ baris ([0-9]+)$/u', (string) ($row['source_ref'] ?? ''), $sourceMatch)
+                    && (int) $sourceMatch[1] > ((int) $configByType[$type]['question_count'] + 5)) {
+                    $errors[] = 'Isi berada di luar jumlah baris yang disediakan template sesuai Komposisi Bank.';
+                }
                 if (!$check['ok']) $errors[] = $check['message'];
                 if (($payload['question_type'] ?? '') === 'MATCHING' && ($payload['scoring_mode'] ?? '') !== $matchingMode)
                     $errors[] = 'Mode Menjodohkan harus sama dengan Komposisi Bank.';
@@ -204,11 +212,38 @@ class QuestionImportService
             $bank = $db->query('SELECT status FROM bank_soal WHERE id = ? FOR UPDATE', [$bankId])->getRowArray();
             if ($bank === null || $bank['status'] !== 'DRAFT')
                 throw new RuntimeException('Bank READY tidak dapat diubah melalui impor.');
+            $configRows = $db->table('bank_type_config')
+                ->select('question_type, question_count, scoring_mode, option_count')
+                ->where('bank_soal_id', $bankId)->get()->getResultArray();
+            $configByType = array_column($configRows, null, 'question_type');
             $rows = $db->table('import_staging_items')->where('import_job_id', $id)->where('validation_status', 'VALID')
                 ->orderBy('item_no')->get()->getResultArray();
             if (count($rows) !== (int) $job['valid_items']) throw new RuntimeException('Jumlah staging berubah.');
+            $typeCounts = [];
             foreach ($rows as $row) {
                 $payload = json_decode((string) $row['payload_json'], true) ?: [];
+                $type = is_string($payload['question_type'] ?? null) ? $payload['question_type'] : '';
+                $config = $configByType[$type] ?? null;
+                if ($config === null) throw new RuntimeException('Tipe soal tidak lagi aktif pada Komposisi Bank.');
+                $typeCounts[$type] = ($typeCounts[$type] ?? 0) + 1;
+                if ($typeCounts[$type] > (int) $config['question_count']) {
+                    throw new RuntimeException('Jumlah soal melebihi Komposisi Bank terkini.');
+                }
+                $check = (new QuestionValidationService())->validate($payload);
+                if (!$check['ok']) throw new RuntimeException($check['message']);
+                if (in_array($type, ['PG', 'PG_KOMPLEKS', 'PG_BERTINGKAT'], true)
+                    && count($payload['options'] ?? []) !== (int) $config['option_count']) {
+                    throw new RuntimeException('Jumlah pilihan berubah dari Komposisi Bank terkini.');
+                }
+                if ($type === 'MATCHING' && (count($payload['pairs'] ?? []) !== (int) $config['option_count']
+                    || ($payload['scoring_mode'] ?? '') !== $config['scoring_mode'])) {
+                    throw new RuntimeException('Jumlah pasangan atau mode Menjodohkan berubah dari Komposisi Bank terkini.');
+                }
+                $mediaIds = array_unique(array_column((new QuestionMediaService())->references($payload), 'media_asset_id'));
+                if ($mediaIds && $db->table('media_assets')->whereIn('id', $mediaIds)
+                    ->where('status', 'ACTIVE')->countAllResults() !== count($mediaIds)) {
+                    throw new RuntimeException('Referensi media tidak aktif atau tidak ditemukan saat commit.');
+                }
                 if (($payload['question_type'] ?? '') === 'PG') {
                     unset($payload['question_type'], $payload['stimulus_text'], $payload['pairs'], $payload['scoring_mode'],
                         $payload['short_answer_mode'], $payload['accepted_values'], $payload['expected_numeric'],

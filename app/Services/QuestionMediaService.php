@@ -35,11 +35,44 @@ class QuestionMediaService
 
     public function discardImport(int $id): void
     {
+        if ($id < 1) return;
         $db = Database::connect();
         $asset = $db->table('media_assets')->where('id', $id)->get()->getRowArray();
-        if ($asset === null || $asset['storage_type'] !== 'LOCAL') return;
-        $db->table('media_assets')->where('id', $id)->delete();
-        @unlink(WRITEPATH . 'uploads/' . $asset['file_path']);
+        if ($asset === null || $asset['storage_type'] !== 'LOCAL'
+            || !is_string($asset['file_path'] ?? null)
+            || !preg_match('~^question-media/[a-f0-9]{40}\\.(?:jpg|png|webp)$~D', $asset['file_path'])) return;
+
+        // Imported assets may be shared by multiple staging rows or already attached
+        // to a committed question revision. Never delete an asset while either
+        // reference exists; the FK on soal_revision_media is an additional guard.
+        $token = '[[media:' . $id . ']]';
+        $revisionRefs = $db->table('soal_revision_media')->where('media_asset_id', $id)->countAllResults();
+        $stagingRefs = $db->table('import_staging_items')->like('payload_json', $token, 'both')->countAllResults();
+        if ($revisionRefs > 0 || $stagingRefs > 0) return;
+
+        $db->transBegin();
+        try {
+            $locked = $db->query('SELECT id, storage_type, file_path FROM media_assets WHERE id = ? FOR UPDATE', [$id])->getRowArray();
+            if ($locked === null || $locked['storage_type'] !== 'LOCAL' || $locked['file_path'] !== $asset['file_path']) {
+                $db->transRollback();
+                return;
+            }
+            $revisionRefs = $db->table('soal_revision_media')->where('media_asset_id', $id)->countAllResults();
+            $stagingRefs = $db->table('import_staging_items')->like('payload_json', $token, 'both')->countAllResults();
+            if ($revisionRefs > 0 || $stagingRefs > 0) {
+                $db->transRollback();
+                return;
+            }
+            $db->table('media_assets')->where('id', $id)->delete();
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                $db->transRollback();
+                return;
+            }
+            @unlink(WRITEPATH . 'uploads/' . $asset['file_path']);
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('warning', 'Pembersihan media impor dilewati: {message}', ['message' => $e->getMessage()]);
+        }
     }
 
     public function upload(?UploadedFile $file, int $actor): array
