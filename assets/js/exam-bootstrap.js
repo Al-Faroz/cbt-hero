@@ -131,7 +131,7 @@
                     || {attempt_id: runtime.attemptId};
                 state.server_attempt_status = 'BLOCKED';
                 state.updated_at = Date.now();
-                await db.runtime_state.put(state);
+                await db.runtime_state.put(state).catch(() => undefined);
                 runtime.hardLock(
                     'Sesi ujian tidak dapat dilanjutkan',
                     error.message || 'Server menolak akses ke Attempt ini.'
