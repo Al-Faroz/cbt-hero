@@ -192,3 +192,10 @@ Audit silang terhadap `QuestionRuntimeItemService`:
 - Route detail berada di grup manager API dengan filter role manager.
 
 Tidak ada perubahan runtime peserta pada temuan ini. Ini merupakan hasil source audit, belum diuji melalui HTTP response fixture.
+
+
+### OP-ADD-TIME-02 — Attempt ACTIVE tanpa deadline tidak boleh menerima sukses semu
+
+Sebelum UPDATE, Tambah Waktu sekarang menolak Attempt ACTIVE yang `deadline_at`-nya kosong. Ini mencegah `added_seconds` berubah sementara `DATE_ADD(NULL,...)` tetap NULL dan API melaporkan sukses tanpa memperpanjang deadline.
+
+Commit: `37af008c5b39ee6d0804c5b1ae237115686c298a`
