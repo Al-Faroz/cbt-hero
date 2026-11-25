@@ -215,3 +215,13 @@ Perbaikan: bootstrap authoritative 4xx juga menyimpan `server_attempt_status=BLO
 File: `assets/js/exam-bootstrap.js`  
 Commit: `8f4a01e4e6b5ba20a70b45e1c8151802ac0bf5ad`.  
 Acceptance E46 ditambahkan; belum diuji melalui reload sequence.
+
+
+### 5D-14 — workspace bootstrap melewati gate TAHAN
+`AttemptResumeService` sudah memeriksa `access_state=BUKA`, tetapi reload workspace memanggil `AttemptBootstrapService` langsung tanpa memeriksa akses Jadwal. Peserta yang refresh setelah Manager menahan Jadwal dapat memuat ulang soal tanpa RESUME.
+
+Perbaikan: bootstrap menolak `access_state != BUKA` dengan `423 SCHEDULE_HELD`. Workspace yang sudah aktif dan tidak refresh tetap berjalan; status polling tidak mem-pause Attempt karena TAHAN bukan pause.
+
+File: `app/Services/AttemptBootstrapService.php`  
+Commit: `11d5493d41f785c1b13ca505008d29fdaaddb734`.  
+Acceptance E47 ditambahkan; belum diuji dengan perubahan access state saat sesi aktif.
