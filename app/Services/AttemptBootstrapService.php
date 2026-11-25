@@ -13,6 +13,8 @@ class AttemptBootstrapService
         $attempt = $ownership->owned($db, $participantId, $attemptId);
         if ($attempt === null) return $this->error(404, 'NOT_FOUND', 'Attempt tidak ditemukan.');
         if ($attempt['status'] !== 'ACTIVE') return $this->error(409, 'ATTEMPT_NOT_ACTIVE', 'Attempt sudah tidak aktif.');
+        if ($attempt['access_state'] !== 'BUKA')
+            return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan. RESUME belum diizinkan.');
 
         $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
         if ($clientError !== null)
