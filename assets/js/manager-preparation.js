@@ -74,6 +74,29 @@
         ].filter(Boolean).join(' ');
         $('prepPreflightText').className = 'small ' + (preflight.pass && invalidTargets === 0 ? 'text-success' : 'text-warning');
 
+        const invalidBox = $('prepInvalidTargets');
+        invalidBox.replaceChildren();
+        const invalidRows = Array.isArray(data.invalid_targets) ? data.invalid_targets : [];
+        invalidBox.hidden = invalidRows.length === 0;
+        if (invalidRows.length) {
+            const heading = document.createElement('div');
+            heading.className = 'fw-semibold';
+            heading.textContent = 'Target yang perlu dibatalkan/diperbaiki:';
+            const list = document.createElement('ul');
+            list.className = 'mb-0 mt-1 ps-3';
+            for (const target of invalidRows) {
+                const item = document.createElement('li');
+                item.textContent = [
+                    target.nomor_peserta,
+                    target.nama,
+                    target.rombel,
+                    target.target_mode,
+                ].filter(Boolean).join(' · ') + ' — ' + target.reason;
+                list.append(item);
+            }
+            invalidBox.append(heading, list);
+        }
+
         const pendingWork = Number(data.missing ?? 0) + Number(data.stale ?? 0) + Number(data.failed ?? 0);
         $('prepRun').disabled = state.running || Number(data.total_target ?? 0) < 1 || pendingWork < 1;
         $('prepRebuild').disabled = state.running
