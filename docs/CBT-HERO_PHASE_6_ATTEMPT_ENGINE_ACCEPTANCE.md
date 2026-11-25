@@ -106,6 +106,8 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E45 | Server pause/resume sudah terdeteksi status polling, lalu browser refresh saat offline. | Cache memulihkan server_paused, pause_reason, dan remaining_seconds terakhir; timer/input tetap mengikuti status pause/resume terakhir yang diketahui. |
 | E46 | Bootstrap menerima penolakan otoritatif (Attempt nonaktif/client mismatch), lalu browser refresh offline. | Status BLOCKED sudah dipersist sehingga cache lama tidak dapat menghidupkan kembali workspace. |
 | E47 | Manager mengubah akses Jadwal menjadi TAHAN setelah Attempt dibuat; peserta refresh workspace. | Bootstrap menolak re-entry dengan SCHEDULE_HELD; peserta yang sudah berada di workspace tanpa refresh tetap berjalan, sesuai policy TAHAN. |
+| E48 | Paket ujian berisi gambar lokal critical; peserta membuka paket online lalu reload offline. | Blob gambar tersimpan di IndexedDB dan dirender dari object URL; cache blob dibersihkan saat Attempt selesai. |
+| E49 | Live revision menambahkan/mengganti gambar critical. | Media baru ikut diprefetch/cache sebelum renderer menerapkan perubahan; tidak mengirim PACKAGE_READY duplikat. |
 
 ## Catatan Exam Browser
 
