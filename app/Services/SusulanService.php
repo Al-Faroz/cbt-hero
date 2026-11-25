@@ -165,10 +165,16 @@ class SusulanService
 
         $db = Database::connect(); $db->transBegin();
         try {
+            $preMain = $this->main($db, $mainId);
+            if ($preMain === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
+            }
+            $this->lockTargetParticipants($db, (int) $preMain['kegiatan_id'], $data['targets']);
             $main = $this->main($db, $mainId, true);
             if ($main === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
             }
+            $this->lockTargetMemberships($db, $data['targets']);
 
             $operation = $db->query('SELECT * FROM jadwal_operations WHERE idempotency_key = ? FOR UPDATE',
                 [$idempotencyKey])->getRowArray();
@@ -260,6 +266,16 @@ class SusulanService
 
         $db = Database::connect(); $db->transBegin();
         try {
+            $preOld = $this->find($susulanId);
+            if ($preOld === null || ($preOld['jenis_jadwal'] ?? '') !== 'SUSULAN' || empty($preOld['parent_jadwal_id'])) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
+            }
+            $preMain = $this->main($db, (int) $preOld['parent_jadwal_id']);
+            if ($preMain === null) {
+                $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Jadwal utama Susulan tidak tersedia.');
+            }
+            $this->lockTargetParticipants($db, (int) $preMain['kegiatan_id'], $data['targets']);
+
             $old = $db->query('SELECT * FROM jadwal WHERE id = ? FOR UPDATE', [$susulanId])->getRowArray();
             if ($old === null || $old['jenis_jadwal'] !== 'SUSULAN' || $old['parent_jadwal_id'] === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
@@ -272,6 +288,7 @@ class SusulanService
             if ($main === null) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Jadwal utama Susulan tidak tersedia.');
             }
+            $this->lockTargetMemberships($db, $data['targets']);
             $validated = $this->validateTargets($db, $main, $data['targets'], $susulanId);
             if (!($validated['ok'] ?? false)) {
                 $db->transRollback(); return $validated;
@@ -421,6 +438,44 @@ class SusulanService
             'access_state' => $access,
             'targets' => array_values($normalizedTargets),
         ]];
+    }
+
+    private function lockTargetParticipants($db, int $kegiatanId, array $targets): void
+    {
+        $membershipIds = array_values(array_unique(array_map(
+            static fn(array $target): int => (int) $target['peserta_kegiatan_id'],
+            $targets
+        )));
+        if (!$membershipIds) return;
+
+        $rows = $db->table('peserta_kegiatan AS pk')->select('pk.peserta_id')
+            ->where('pk.kegiatan_id', $kegiatanId)->whereIn('pk.id', $membershipIds)
+            ->orderBy('pk.peserta_id', 'ASC')->get()->getResultArray();
+        $participantIds = array_values(array_unique(array_map(
+            static fn(array $row): int => (int) $row['peserta_id'],
+            $rows
+        )));
+        if (!$participantIds) return;
+
+        $placeholders = implode(',', array_fill(0, count($participantIds), '?'));
+        $db->query(
+            'SELECT id FROM peserta WHERE id IN (' . $placeholders . ') ORDER BY id ASC FOR UPDATE',
+            $participantIds
+        )->getResultArray();
+    }
+
+    private function lockTargetMemberships($db, array $targets): void
+    {
+        $membershipIds = array_values(array_unique(array_map(
+            static fn(array $target): int => (int) $target['peserta_kegiatan_id'],
+            $targets
+        )));
+        if (!$membershipIds) return;
+        $placeholders = implode(',', array_fill(0, count($membershipIds), '?'));
+        $db->query(
+            'SELECT id FROM peserta_kegiatan WHERE id IN (' . $placeholders . ') ORDER BY id ASC FOR UPDATE',
+            $membershipIds
+        )->getResultArray();
     }
 
     private function validateTargets($db, array $main, array $targets, ?int $ignoreSusulanId = null): array
