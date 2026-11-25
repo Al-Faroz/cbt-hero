@@ -109,3 +109,19 @@ Perbaikan:
 
 File: `app/Services/PreparationService.php`  
 Commit: `75b1721425e11618e8d35dd1868b5f58d61962d6`
+
+
+## Temuan PREP-REBUILD-01 — force_rebuild tidak memaksa rebuild dan dapat menyentuh assignment terpakai
+
+Sebelumnya `prepare()` memasukkan semua target ke queue saat `force_rebuild=true`, tetapi `buildAssignment()` tetap return untuk assignment READY dengan fingerprint sama. Jadi flag force tidak bekerja. Sebaliknya, assignment yang sudah dipakai tidak boleh diganti karena Attempt aktif/selesai harus tetap menunjuk assignment yang digunakan.
+
+Perbaikan:
+- Assignment READY dengan `used_at` tidak pernah dibangun ulang dan tetap dihitung READY untuk histori peserta.
+- Assignment READY yang belum dipakai dapat dibangun ulang saat `force_rebuild=true`, sekalipun fingerprint masih sama.
+- Batas 100 berlaku pada jumlah assignment belum terpakai yang benar-benar masuk queue, bukan jumlah seluruh target.
+- Force rebuild tetap tidak mengubah assignment yang sudah digunakan.
+
+File: `app/Services/PreparationService.php`  
+Commit: `2098e5c4f831f89c90f4b342dc04362267a63a55`
+
+Belum diuji dengan DB fixture/Attempt aktual.
