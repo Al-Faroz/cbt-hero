@@ -1,8 +1,8 @@
 # CBT-HERO — UI STANDARD FINAL
 
-**Versi:** 1.2
+**Versi:** 1.3
 
-**Tanggal:** 27 September 2026
+**Tanggal:** 25 November 2026
 **Status:** FINAL IMPLEMENTATION STANDARD  
 **Fokus awal:** Manager / Admin / Operator  
 **Induk UI/UX:** `CBT-HERO_UIUX_ACUAN.md`
@@ -1409,6 +1409,11 @@ memiliki minimum width 720px dan wrapper menjadi pemilik scroll horizontal.
 Parent card/content wajib tetap `min-width: 0`/maksimal selebar viewport agar
 table tidak memperlebar halaman secara keseluruhan.
 
+Tabel di dalam modal juga wajib memakai scroll lokal. Bila wrapper berada di luar
+`.manager-section-card`, gunakan class wrapper khusus seperti
+`.manager-modal-table-responsive`, tetapkan minimum width sesuai kolom pada
+mobile, dan buat wrapper dapat difokuskan keyboard.
+
 Jangan menonaktifkan `overflow-x: auto`, `-webkit-overflow-scrolling: touch`,
 atau touch pan pada wrapper table. Jika suatu table sangat lebar, biarkan lebar
 natural kolom menambah area scroll; jangan mengecilkan font untuk memaksanya muat.
@@ -1676,20 +1681,19 @@ Print tidak membawa sidebar/topbar.
 | Clear Data | Dependency wizard | command flow |
 
 
-## Catatan polishing Jadwal Ujian — DEFERRED 2026-09-28
+## Catatan polishing Jadwal Ujian — IMPLEMENTED 2026-11-25 / VISUAL REGRESSION DEFERRED
 
-Tampilan tabel **Jadwal Ujian** perlu dirapikan pada tahap polishing tanpa mengubah
-fungsi backend. Temuan visual saat data nyata:
+Perapian source-level tabel Jadwal Ujian sudah dilakukan tanpa mengubah API/backend:
 
-- kolom **Soal Diambil** terlalu tinggi karena setiap tipe membungkus menjadi banyak baris;
-- kumpulan tombol pada kolom **Aksi** membuat lebar tabel berlebihan;
-- horizontal scroll muncul pada desktop walaupun ruang layar masih cukup;
-- hierarki aksi utama/sekunder perlu dipadatkan, misalnya melalui grouping/dropdown
-  atau action layout yang tetap mudah dijangkau;
-- isi tabel harus tetap terbaca pada desktop dan mobile tanpa mengecilkan font secara berlebihan.
+- Kegiatan dan identitas Bank/Mapel digabung menjadi satu kolom konteks;
+- Urutan dan Durasi digabung menjadi satu kolom;
+- **Soal Diambil** menampilkan ringkasan total + jumlah tipe; rincian per tipe dibuka melalui disclosure sehingga tidak menambah tinggi setiap row secara default;
+- Preparation tetap menjadi aksi langsung; Buka/Tahan tetap langsung tersedia bila editable;
+- Susulan, Perpanjang, Tambah Waktu, Nilai ON/OFF, Edit, dan Hapus dikelompokkan pada disclosure **Aksi**;
+- menu aksi berada di alur row (bukan overlay yang dapat terpotong oleh overflow table);
+- lebar kolom diatur untuk mengurangi horizontal scroll desktop; pada viewport lebih sempit scroll tetap lokal pada wrapper table.
 
-Perbaikan ini **bukan blocker fungsional Phase 5** dan sengaja ditunda sampai
-checkpoint polishing Master Ujian Akademis.
+Acceptance visual desktop/mobile tetap DEFERRED sampai browser regression Master Ujian Akademis.
 
 
 ## Monitoring Ujian Phase 7
