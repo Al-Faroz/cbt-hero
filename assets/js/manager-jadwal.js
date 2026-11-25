@@ -526,6 +526,7 @@
         const id = Number($('jadwalOperationId').value);
         const type = $('jadwalOperationType').value;
         const value = $('jadwalOperationValue').value;
+        let replayed = false;
         try {
             if (type === 'EXTEND') {
                 await api(base + '/' + id + '/extend-start-window', 'POST', {
@@ -537,15 +538,14 @@
                     scope: 'ALL_ACTIVE',
                 }, {'Idempotency-Key': state.operationKey || newOperationKey()});
                 state.operationKey = null;
-                if (result.item?.replayed) {
-                    feedback('jadwalFeedback', 'Permintaan Tambah Waktu ini sudah pernah diproses; tambahan tidak diterapkan ulang.');
-                }
+                replayed = Boolean(result.item?.replayed);
             }
             operationModal.hide();
             await load();
             if (type === 'EXTEND') feedback('jadwalFeedback', 'Batas Mulai berhasil diperpanjang.');
-            else if (!document.querySelector('#jadwalFeedback').textContent.includes('sudah pernah diproses'))
-                feedback('jadwalFeedback', 'Tambahan waktu berhasil diterapkan.');
+            else feedback('jadwalFeedback', replayed
+                ? 'Permintaan Tambah Waktu ini sudah pernah diproses; tambahan tidak diterapkan ulang.'
+                : 'Tambahan waktu berhasil diterapkan.');
         } catch (error) {
             feedback('jadwalOperationFeedback', error.message, true);
         }
