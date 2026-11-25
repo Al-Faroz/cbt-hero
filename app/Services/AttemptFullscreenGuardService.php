@@ -67,6 +67,14 @@ class AttemptFullscreenGuardService
                 return $this->error(409, 'EXAM_BROWSER_CLIENT', 'Fullscreen Guard browser biasa tidak diterapkan pada client Exam Browser.');
             }
 
+            $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
+            if (!empty($attempt['pause_started_at'])
+                && (string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
+                $db->transRollback();
+                return $this->error(409, 'ATTEMPT_ALREADY_PAUSED', 'Attempt sedang dijeda oleh pengawas atau proses lain.');
+            }
+
             $operation = $ops->begin(
                 $db,
                 $idempotencyKey,
@@ -78,6 +86,13 @@ class AttemptFullscreenGuardService
             if (!($operation['ok'] ?? false)) {
                 $db->transRollback();
                 return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah digunakan untuk permintaan berbeda.');
+            }
+            if (!empty($operation['existing']['attempt_id'])) {
+                $db->transCommit();
+                return ['ok' => true, 'status' => 200, 'data' => [
+                    'attempt_id' => $attemptId, 'status' => 'ACTIVE', 'paused' => true,
+                    'pause_reason' => 'FULLSCREEN_EXIT', 'replayed' => true,
+                ]];
             }
 
             if (empty($attempt['pause_started_at'])) {
