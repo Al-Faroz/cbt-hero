@@ -302,3 +302,13 @@ Commits:
 - `057a0e8c70cf4637b71f90e87b169c3c40caffba`
 
 Acceptance E54 ditambahkan; belum diuji dengan pause/resume race.
+
+
+### 5D-19 — numeric option_key dapat hilang dari payload participant
+Schema mengizinkan `option_key VARCHAR(64)`, tetapi PHP associative array mengubah key numerik menjadi integer. Runtime sebelumnya hanya menerima string pada loop option order sehingga opsi bernilai numerik dapat terbuang.
+
+Perbaikan: option order dan keys dinormalisasi menjadi string sebelum de-duplication dan payload dibangun.
+
+File: `app/Services/QuestionRuntimeItemService.php`  
+Commit: `c7d7a48c3e08cba4d9b8f7c287d75c74d0f3343b`.  
+Acceptance E55 ditambahkan; belum diuji dengan fixture numeric keys.
