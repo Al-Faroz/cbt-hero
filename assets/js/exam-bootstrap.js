@@ -65,6 +65,7 @@
         );
 
         runtime.setBootstrap(data, serverTime);
+        await window.CbtExamMedia?.prepare(data.media_manifest || []);
         if (offlineBanner) offlineBanner.hidden = true;
         runtime.emit('cbt:bootstrap-ready', {source: 'network', data});
     };
@@ -97,6 +98,7 @@
         };
         runtime.setBootstrap(data, null);
         runtime.serverOffsetMs = Number(meta.server_offset_ms || 0);
+        await window.CbtExamMedia?.prepare(media);
         if (offlineBanner) offlineBanner.hidden = false;
         runtime.setSyncState('Offline · tersimpan lokal', 'offline');
         runtime.emit('cbt:bootstrap-ready', {source: 'cache', data});
