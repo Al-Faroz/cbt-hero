@@ -1018,7 +1018,9 @@ Yang diperbolehkan sebagai tindakan operasional terkontrol:
 
 Perpanjang Batas Mulai hanya boleh bergerak ke waktu yang lebih akhir.
 Tambah Waktu diterapkan pada Attempt ACTIVE dengan menambah `added_seconds` dan
-`deadline_at`; Attempt yang telah selesai tidak ditulis ulang.
+`deadline_at`; Attempt yang telah selesai tidak ditulis ulang. Command Tambah Waktu
+wajib memakai Idempotency-Key yang mengikat Jadwal, durasi tambahan, scope, dan daftar
+Attempt agar retry setelah response hilang tidak menggandakan tambahan waktu.
 
 Semua diaudit.
 
