@@ -16,13 +16,16 @@ Dokumen ini mencatat revisi eksplisit pemilik proyek atas Dokumen Acuan Utama v1
 
 ## 2. Kebijakan client
 
+Keputusan pemilik proyek: **Exambro adalah APK CBT-HERO yang dikembangkan sendiri dan khusus Android.** Exambro bukan aplikasi vendor pihak ketiga. Desktop/laptop tidak memakai APK; desktop tetap menggunakan browser dan Fullscreen Guard.
+
 | Exam Browser pada Kegiatan | Client | Kebijakan |
 |---|---|---|
-| ON | Exambro tervalidasi | Wajib; START/RESUME ditolak tanpa proof valid |
-| OFF | Exambro | Diizinkan |
-| OFF | Browser biasa | Diizinkan dengan Fullscreen Guard |
+| ON | APK Exambro Android yang lolos verifikasi server | Wajib; START/RESUME ditolak jika device proof/challenge tidak valid |
+| ON | Browser desktop biasa | Ditolak |
+| OFF | APK Exambro Android | Diizinkan sesuai kebijakan kegiatan |
+| OFF | Browser desktop biasa | Diizinkan dengan Fullscreen Guard |
 
-Exambro tetap menjadi jalur pengamanan perangkat yang lebih kuat. Browser biasa tidak pernah diklaim setara kiosk/Exam Browser.
+Kedua klien memakai shared Attempt core dan backend yang sama. APK Android menggunakan device key Android Keystore + server challenge-response sebagai baseline; attestation Android dan Lock Task Mode merupakan tingkat penguatan tambahan, bukan klaim default. Desktop Fullscreen API adalah kontrol operasional, bukan kiosk/attestation. Proof string non-empty tidak dianggap bukti Exambro yang valid. Detail normatif ada di `CBT-HERO_EXAMBRO_ANDROID_ARCHITECTURE_2026-11-25.md`.
 
 ## 3. Fullscreen Guard — browser biasa
 
