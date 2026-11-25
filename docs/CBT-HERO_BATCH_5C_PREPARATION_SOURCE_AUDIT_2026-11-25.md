@@ -412,3 +412,19 @@ Perbaikan: `invalidSusulanTargetIds()` mengecualikan target yang sudah mempunyai
 Commit: `167ed3bb61282cac1b2b8b474c6961562a8c3eed`
 
 Belum diuji dengan fixture Attempt ACTIVE/FINISHED pada Susulan.
+
+
+## Temuan PREP-MEDIA-ORDER-02 — deduplikasi media dapat memilih posisi prefetch yang bukan item paling awal
+
+Manifest sebelumnya mempertahankan referensi media pertama menurut `soal_revision_media.sort_order`. Jika asset yang sama dipakai oleh beberapa soal dan relasi pada soal yang lebih akhir mempunyai sort_order lebih kecil, deduplikasi bisa memberi `prefetch_order` berdasarkan soal yang bukan paling awal.
+
+Perbaikan:
+- Agregasi manifest menghitung nilai minimum sequence item untuk setiap media asset.
+- Asset tetap dideduplikasi satu kali; status ACTIVE diperiksa untuk setiap relasi.
+- Flag critical tetap ON jika asset merupakan gambar.
+- Hasil akhir diurutkan deterministik berdasarkan `prefetch_order`, lalu `media_asset_id`.
+
+File: `app/Services/PreparationService.php`  
+Commit: `a88944b2b6b9da8e5a90f2a6747431ab9717722c`
+
+Belum diuji dengan fixture media yang dipakai lintas soal; acceptance P13 tetap DEFERRED.
