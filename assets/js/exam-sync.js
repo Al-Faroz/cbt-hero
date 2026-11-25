@@ -24,6 +24,9 @@
         let changed = false;
         let rerender = false;
 
+        // Persist any debounced text input before applying REANSWER/VOID policy.
+        await window.CbtExamRenderer?.flushPending?.();
+
         await db.transaction('rw', db.question_cache, db.answer_store, db.sync_queue, db.media_manifest, async () => {
             for (const change of changes) {
                 const itemId = Number(change.item_id || 0);
@@ -59,8 +62,8 @@
                         kind: asset.kind,
                         provider: asset.provider,
                         url: asset.url,
-                        critical: false,
-                        prefetch_order: 999999
+                        critical: Boolean(asset.critical),
+                        prefetch_order: Number(asset.prefetch_order || 999999)
                     });
                 }
 
@@ -80,11 +83,49 @@
         });
 
         if (changed) {
+            const revisionMedia = changes.flatMap(change =>
+                Array.isArray(change.media_manifest) ? change.media_manifest : []
+            );
+            await window.CbtExamMedia?.prepare(revisionMedia, {emitReady: false});
             runtime.setSyncState('Pembaruan soal diterapkan', 'synced');
             runtime.emit('cbt:revision-applied', {changes});
             if (rerender) window.CbtExamRenderer?.renderIndex(runtime.currentIndex || 0);
         }
         return changed;
+    };
+
+    const lockForStatusError = async (response, result) => {
+        const authoritative = response.status >= 400
+            && response.status < 500
+            && ![408, 429].includes(response.status);
+        if (!authoritative) return;
+
+        const code = String(result?.error?.code || '');
+        const messages = {
+            CLIENT_MISMATCH: 'Attempt sudah aktif pada client lain. Hubungi pengawas untuk pemeriksaan atau Reset Akses.',
+            CLIENT_GENERATION_MISMATCH: 'Akses ujian telah diubah oleh pengawas. Kembali ke daftar ujian dan buka kembali melalui Konfirmasi.',
+            CLIENT_ID_INVALID: 'Identitas client tidak valid. Kembali ke daftar ujian dan buka kembali melalui Konfirmasi.',
+            ATTEMPT_NOT_ACTIVE: 'Attempt ini sudah tidak aktif.',
+            NOT_FOUND: 'Attempt tidak ditemukan atau aksesnya telah berakhir.'
+        };
+        const message = messages[code] || result?.error?.message || 'Server menolak akses ke Attempt ini.';
+
+        const terminal = ['ATTEMPT_NOT_ACTIVE', 'NOT_FOUND'].includes(code);
+        runtime.paused = terminal;
+        runtime.pauseReason = terminal ? 'TERMINAL' : null;
+        if (runtime.bootstrap?.attempt) runtime.bootstrap.attempt.status = 'BLOCKED';
+        runtime.lockInputs('Sesi ujian tidak dapat dilanjutkan');
+        runtime.hardLock('Sesi ujian tidak dapat dilanjutkan', message);
+
+        const resumeButton = document.getElementById('examFullscreenResumeButton');
+        const exitLink = document.getElementById('examLockExitLink');
+        if (resumeButton) resumeButton.hidden = true;
+        if (exitLink) exitLink.hidden = false;
+
+        const state = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
+        state.server_attempt_status = 'BLOCKED';
+        state.updated_at = Date.now();
+        await db.runtime_state.put(state);
     };
 
     const checkStatus = async () => {
@@ -97,7 +138,10 @@
                 headers: {'Accept': 'application/json', ...runtime.clientHeaders()}
             });
             const result = await response.json().catch(() => null);
-            if (!response.ok || result?.ok !== true) return;
+            if (!response.ok || result?.ok !== true) {
+                await lockForStatusError(response, result);
+                return;
+            }
 
             const data = result.data || {};
             const nextServerRevision = Math.max(
@@ -106,13 +150,76 @@
             );
             if (data.deadline_at && runtime.bootstrap?.attempt) {
                 runtime.bootstrap.attempt.deadline_at = data.deadline_at;
-                runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
+                if (!data.paused) runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
             }
             await applyRevisionChanges(data.revision_changes || []);
             runtime.serverSyncRevision = nextServerRevision;
-            if (String(data.status || '') !== 'ACTIVE') {
+            const persistedState = await db.runtime_state.get(runtime.attemptId) || {attempt_id: runtime.attemptId};
+            persistedState.server_attempt_status = String(data.status || 'ACTIVE');
+            persistedState.server_sync_revision = nextServerRevision;
+            persistedState.server_paused = Boolean(data.paused);
+            persistedState.server_pause_reason = data.pause_reason || null;
+            persistedState.server_remaining_seconds = Number.isFinite(Number(data.remaining_seconds))
+                ? Number(data.remaining_seconds) : persistedState.server_remaining_seconds;
+            persistedState.deadline_at = data.deadline_at || persistedState.deadline_at || null;
+            persistedState.updated_at = Date.now();
+            await db.runtime_state.put(persistedState);
+
+            const attemptStatus = String(data.status || 'ACTIVE');
+            const serverPaused = Boolean(data.paused);
+            if (runtime.bootstrap?.attempt) {
+                runtime.bootstrap.attempt.status = attemptStatus;
+                runtime.bootstrap.attempt.paused = serverPaused;
+                runtime.bootstrap.attempt.pause_reason = data.pause_reason || null;
+            }
+
+            const overlay = document.getElementById('examLockOverlay');
+            const title = document.getElementById('examLockTitle');
+            const message = document.getElementById('examLockMessage');
+            const resumeButton = document.getElementById('examFullscreenResumeButton');
+            const exitLink = document.getElementById('examLockExitLink');
+
+            if (attemptStatus !== 'ACTIVE') {
+                runtime.paused = true;
+                runtime.pauseReason = 'TERMINAL';
                 runtime.lockInputs('Ujian sudah selesai');
-                runtime.emit('cbt:attempt-status-changed', {status: data.status});
+                if (overlay) overlay.hidden = false;
+                if (title) title.textContent = 'Ujian sudah selesai';
+                if (message) message.textContent = 'Attempt telah diakhiri oleh server. Kembali ke daftar ujian.';
+                if (resumeButton) resumeButton.hidden = true;
+                if (exitLink) exitLink.hidden = false;
+                runtime.emit('cbt:attempt-status-changed', {status: attemptStatus});
+            } else if (serverPaused) {
+                const reason = String(data.pause_reason || runtime.pauseReason || 'OPERATOR');
+                runtime.pauseReason = reason === 'FULLSCREEN_EXIT' ? 'FULLSCREEN_EXIT' : 'OPERATOR';
+                runtime.paused = true;
+                runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Ujian dijeda · layar penuh diperlukan'
+                    : 'Ujian dijeda oleh pengawas');
+                runtime.emit('cbt:attempt-paused', {
+                    reason: runtime.pauseReason,
+                    remaining_seconds: data.remaining_seconds
+                });
+                if (overlay) overlay.hidden = false;
+                if (title) title.textContent = 'Ujian dijeda';
+                if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.'
+                    : 'Pengawas sedang menjeda ujian. Tunggu sampai pengawas melanjutkan sesi.';
+                if (resumeButton) {
+                    resumeButton.hidden = runtime.pauseReason !== 'FULLSCREEN_EXIT';
+                    resumeButton.disabled = false;
+                }
+                if (exitLink) exitLink.hidden = true;
+            } else if (runtime.pauseReason === 'OPERATOR' || runtime.pauseReason === 'FULLSCREEN_EXIT') {
+                runtime.paused = false;
+                runtime.pauseReason = null;
+                runtime.unlockInputs();
+                if (overlay) overlay.hidden = true;
+                if (resumeButton) resumeButton.hidden = true;
+                if (exitLink) exitLink.hidden = false;
+                if (data.deadline_at) runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
+                runtime.emit('cbt:server-resumed');
+                runtime.emit('cbt:sync-needed');
             }
         } catch (_) {
         } finally {
@@ -121,7 +228,7 @@
     };
 
     const syncOnce = async () => {
-        if (syncing || !navigator.onLine || runtime.inputLocked && runtime.bootstrap?.attempt?.status !== 'ACTIVE') return false;
+        if (syncing || retryTimer || !navigator.onLine || runtime.inputLocked && runtime.bootstrap?.attempt?.status !== 'ACTIVE') return false;
         const queue = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).sortBy('queued_at');
         if (!queue.length) {
             runtime.setSyncState('Tersinkron', 'synced');
@@ -129,7 +236,6 @@
         }
 
         syncing = true;
-        clearTimeout(retryTimer);
         runtime.setSyncState('Menyinkronkan...', 'syncing');
 
         const batch = queue.slice(0, 20);
@@ -201,11 +307,27 @@
             runtimeState.updated_at = Date.now();
             await db.runtime_state.put(runtimeState);
 
-            retryDelay = 1000;
             const remaining = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).count();
             runtime.setSyncState(remaining ? 'Belum sinkron' : 'Tersinkron', remaining ? 'pending' : 'synced');
+            const ackByMutation = new Map((data.acks || []).map(ack => [String(ack.mutation_id), ack]));
+            const retryableBatch = batch.some(row => {
+                const ack = ackByMutation.get(String(row.mutation_id));
+                return !ack || (!ack.accepted && !permanentReject.has(String(ack.reason || '')));
+            });
             syncing = false;
-            if (remaining) queueMicrotask(syncOnce);
+            if (!remaining) {
+                retryDelay = 1000;
+            } else if (retryableBatch) {
+                const jitter = Math.floor(Math.random() * 350);
+                retryTimer = setTimeout(() => {
+                    retryTimer = null;
+                    void syncOnce();
+                }, retryDelay + jitter);
+                retryDelay = Math.min(30000, retryDelay * 2);
+            } else {
+                retryDelay = 1000;
+                queueMicrotask(syncOnce);
+            }
             return remaining === 0;
         } catch (error) {
             syncing = false;
@@ -247,6 +369,34 @@
             });
         } catch (_) {}
     };
+
+    document.addEventListener('cbt:bootstrap-ready', event => {
+        const attempt = event.detail?.data?.attempt || {};
+        if (!attempt.paused) return;
+
+        const reason = String(attempt.pause_reason || runtime.pauseReason || 'OPERATOR');
+        runtime.pauseReason = reason === 'FULLSCREEN_EXIT' ? 'FULLSCREEN_EXIT' : 'OPERATOR';
+        runtime.paused = true;
+        runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
+            ? 'Ujian dijeda · layar penuh diperlukan'
+            : 'Ujian dijeda oleh pengawas');
+
+        const overlay = document.getElementById('examLockOverlay');
+        const title = document.getElementById('examLockTitle');
+        const message = document.getElementById('examLockMessage');
+        const resumeButton = document.getElementById('examFullscreenResumeButton');
+        const exitLink = document.getElementById('examLockExitLink');
+        if (overlay) overlay.hidden = false;
+        if (title) title.textContent = 'Ujian dijeda';
+        if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
+            ? 'Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.'
+            : 'Pengawas sedang menjeda ujian. Tunggu sampai pengawas melanjutkan sesi.';
+        if (resumeButton) {
+            resumeButton.hidden = runtime.pauseReason !== 'FULLSCREEN_EXIT';
+            resumeButton.disabled = false;
+        }
+        if (exitLink) exitLink.hidden = true;
+    });
 
     document.addEventListener('cbt:sync-needed', syncOnce);
     document.addEventListener('cbt:client-event', event => {

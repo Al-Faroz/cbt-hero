@@ -49,10 +49,15 @@ class AcademicAnswerService
     {
         if (array_diff(array_keys($payload), ['selected']) !== [] || !is_array($payload['selected'] ?? null))
             return $this->error('Format PG Kompleks tidak valid.');
-        $selected = array_values(array_unique(array_filter(array_map(
-            static fn($v): string => is_string($v) ? trim($v) : '',
-            $payload['selected']
-        ), static fn(string $v): bool => $v !== '')));
+        $selected = [];
+        foreach ($payload['selected'] as $value) {
+            if (!is_string($value)) return $this->error('Pilihan jawaban harus berupa key opsi.');
+            $value = trim($value);
+            if ($value === '') continue;
+            if (mb_strlen($value) > 64) return $this->error('Key pilihan jawaban terlalu panjang.');
+            $selected[] = $value;
+        }
+        $selected = array_values(array_unique($selected));
         if (count($selected) > 20) return $this->error('Pilihan terlalu banyak.');
 
         $known = $this->options($db, (int) $item['soal_revision_id']);
@@ -96,9 +101,16 @@ class AcademicAnswerService
 
         $answer = [];
         foreach ($payload['pairs'] as $left => $right) {
-            if (!is_string($left) || !array_key_exists($left, $correct)) return $this->error('Sisi kiri Menjodohkan tidak valid.');
+            if (!is_string($left) && !is_int($left))
+                return $this->error('Sisi kiri Menjodohkan tidak valid.');
+            $left = (string) $left;
+            if (!array_key_exists($left, $correct))
+                return $this->error('Sisi kiri Menjodohkan tidak valid.');
             if ($right === null || $right === '') { $answer[$left] = null; continue; }
-            if (!is_string($right) || !isset($rightKeys[$right])) return $this->error('Pasangan kanan tidak valid.');
+            if (!is_string($right) && !is_int($right))
+                return $this->error('Pasangan kanan tidak valid.');
+            $right = (string) $right;
+            if (!isset($rightKeys[$right])) return $this->error('Pasangan kanan tidak valid.');
             $answer[$left] = $right;
         }
 
@@ -112,7 +124,7 @@ class AcademicAnswerService
         $ratio = $mode === 'ALL_OR_NOTHING'
             ? ($correctCount === count($correct) ? 1.0 : 0.0)
             : (count($correct) > 0 ? $correctCount / count($correct) : 0.0);
-        return ['ok' => true, 'payload' => ['pairs' => $answer], 'auto_score' => $ratio * (float) $item['max_point'], 'scoring_state' => 'AUTO'];
+        return ['ok' => true, 'payload' => ['pairs' => (object) $answer], 'auto_score' => $ratio * (float) $item['max_point'], 'scoring_state' => 'AUTO'];
     }
 
     private function shortAnswer($db, array $item, array $payload): array

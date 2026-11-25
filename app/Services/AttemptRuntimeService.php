@@ -19,6 +19,11 @@ class AttemptRuntimeService
                 return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
         }
 
+        $pauseEvent = !empty($attempt['pause_started_at'])
+            ? $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray()
+            : null;
+
         return ['ok' => true, 'status' => 200, 'data' => [
             'attempt_id' => $attemptId,
             'status' => (string) $attempt['status'],
@@ -26,6 +31,7 @@ class AttemptRuntimeService
             'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
             'remaining_seconds' => $ownership->remainingSeconds($attempt),
             'paused' => $attempt['pause_started_at'] !== null,
+            'pause_reason' => $pauseEvent['reason'] ?? null,
             'client_generation' => (int) $attempt['client_generation'],
             'server_sync_revision' => (int) $attempt['server_sync_revision'],
             'last_sync_at' => $attempt['last_sync_at'] === null

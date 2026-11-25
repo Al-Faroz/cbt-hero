@@ -96,10 +96,16 @@ class AttemptFullscreenGuardService
                 return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah digunakan untuk permintaan berbeda.');
             }
             if (!empty($operation['existing']['attempt_id'])) {
-                $db->transCommit();
+                if ($db->transCommit() === false)
+                    throw new RuntimeException('Commit replay Fullscreen Pause gagal.');
+                $stillPaused = !empty($attempt['pause_started_at']);
                 return ['ok' => true, 'status' => 200, 'data' => [
-                    'attempt_id' => $attemptId, 'status' => 'ACTIVE', 'paused' => true,
-                    'pause_reason' => 'FULLSCREEN_EXIT', 'replayed' => true,
+                    'attempt_id' => $attemptId,
+                    'status' => 'ACTIVE',
+                    'paused' => $stillPaused,
+                    'pause_reason' => $stillPaused ? 'FULLSCREEN_EXIT' : null,
+                    'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
+                    'replayed' => true,
                 ]];
             }
 
@@ -197,10 +203,19 @@ class AttemptFullscreenGuardService
                 return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah digunakan untuk permintaan berbeda.');
             }
             if (!empty($operation['existing']['attempt_id'])) {
-                $db->transCommit();
+                $activePause = !empty($attempt['pause_started_at'])
+                    ? $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                        ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray()
+                    : null;
+                if ($db->transCommit() === false)
+                    throw new RuntimeException('Commit replay Fullscreen Resume gagal.');
                 return ['ok' => true, 'status' => 200, 'data' => [
-                    'attempt_id' => $attemptId, 'paused' => false, 'resumed' => true,
+                    'attempt_id' => $attemptId,
+                    'paused' => $activePause !== null,
+                    'pause_reason' => $activePause['reason'] ?? null,
+                    'resumed' => $activePause === null,
                     'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
+                    'replayed' => true,
                 ]];
             }
 

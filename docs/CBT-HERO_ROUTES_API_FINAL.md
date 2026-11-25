@@ -636,7 +636,7 @@ GET /api/attempt/{attemptId}/status
 
 Auth + ownership + client validation.
 
-Digunakan saat recovery/reload, bukan polling cepat.
+Digunakan saat recovery/reload, bukan polling cepat. Status polling workspace juga memakai response ini untuk mendeteksi pause/resume server dan status terminal. `pause_reason` berasal dari event pause yang masih terbuka; `remaining_seconds` dibekukan pada waktu mulai pause.
 
 Response minimum:
 
@@ -644,7 +644,9 @@ Response minimum:
 status
 start_at
 deadline_at
+remaining_seconds
 paused
+pause_reason
 client_generation
 server_sync_revision
 last_sync_at
@@ -667,6 +669,11 @@ Header client:
 X-CBT-Client-Id
 X-CBT-Client-Generation
 ```
+
+Bootstrap re-entry memeriksa `jadwal.access_state`. Jika TAHAN, server mengembalikan
+`423 SCHEDULE_HELD`; participant harus menunggu akses dibuka sebelum reload/RESUME.
+Attempt yang sudah berada di workspace tetap berjalan saat Jadwal ditahan karena
+status polling aktif tidak mengubah TAHAN menjadi pause.
 
 Mengembalikan:
 

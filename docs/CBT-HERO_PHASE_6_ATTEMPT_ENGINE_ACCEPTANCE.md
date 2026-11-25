@@ -91,6 +91,31 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E30 | Coba memakai client_uuid lain tanpa Reset Akses. | Ditolak CLIENT_MISMATCH. |
 | E31 | Setelah Reset Akses (Phase 7) generation berubah dan pause server dibuat. | Client lama invalid; resume generation baru melanjutkan Attempt yang sama dan deadline bergeser sebesar pause. |
 | E32 | Pindah device/cache hilang tetapi server ACK sudah ada. | Bootstrap membangun ulang jawaban yang sudah ACK; jawaban local-only device lama tidak dapat dipulihkan. |
+| E33 | Server mengembalikan ACK retryable (misalnya Attempt sedang dijeda) atau tidak mengembalikan ACK untuk mutation dalam batch. | Client memakai exponential backoff dan tidak mengulang request rapat, termasuk ketika drain dipanggil saat submit. Setelah kondisi pulih, queue dapat disinkronkan. |
+| E34 | Server sudah mengembalikan status Attempt non-ACTIVE, lalu browser di-refresh ketika jaringan putus. | Cache lokal tidak menghidupkan kembali workspace; participant dikunci karena status server terakhir sudah non-ACTIVE. |
+| E35 | Ada input teks pending debounce, lalu server menerapkan revision REANSWER/VOID pada item itu. | Client flush snapshot input lebih dulu, baru menerapkan policy revision; jawaban lama tidak muncul kembali setelah dihapus. |
+| E36 | Pengawas pause Attempt saat workspace peserta terbuka, lalu resume dari Manager. | Status poll mengunci input dan membekukan timer saat pause; setelah server resume, client membuka kembali sesi dan sinkronisasi berlanjut. |
+| E37 | Pause Fullscreen Guard gagal tersimpan karena jaringan putus, lalu koneksi kembali. | Pesan error tidak memutus retry; pause dikirim ulang dengan Idempotency-Key yang sama sampai terkonfirmasi. |
+| E38 | Attempt sudah paused sebelum workspace dibuka (termasuk Exambro-required). | Timer langsung menampilkan remaining_seconds yang dibekukan; input tetap terkunci sampai server resume atau Fullscreen Guard memvalidasi resume. |
+| E39 | Client menerima 401/403/404/409 otoritatif dari status API (misalnya CLIENT_MISMATCH atau CLIENT_GENERATION_MISMATCH). | Workspace hard-lock, tombol resume fullscreen tidak ditawarkan, cache ditandai BLOCKED, dan answer sync berhenti. |
+| E40 | Attempt diakhiri Manager saat workspace peserta masih terbuka. | Poll status mengunci input dan menampilkan overlay selesai dengan tautan kembali ke daftar ujian. |
+| E41 | Server berhasil memproses Fullscreen Resume tetapi response hilang; peserta mencoba lagi. | Client mengirim Idempotency-Key resume yang sama dan menerima replay sukses tanpa menambah paused_seconds/deadline dua kali. |
+| E42 | Fullscreen Pause berhasil, lalu Manager sudah resume sebelum retry pause dengan key lama tiba. | Replay pause melaporkan state server terkini (paused=false); client tidak menampilkan tombol resume palsu dan mengunci ulang jika browser masih keluar fullscreen. |
+| E43 | Server menyatakan Attempt FINISHED/SUPERSEDED atau status API mengembalikan ATTEMPT_NOT_ACTIVE. | Timer berhenti, input tetap terkunci, dan workspace menampilkan status terminal tanpa mengirim TIMEOUT kedua. |
+| E44 | Timeout finalization gagal sementara ketika koneksi sudah online (misalnya 5xx setelah sync drain). | State TIMEOUT_PENDING tetap tersimpan dan client mencoba ulang finalisasi dengan exponential backoff; Idempotency-Key tetap sama sampai sukses. |
+| E45 | Server pause/resume sudah terdeteksi status polling, lalu browser refresh saat offline. | Cache memulihkan server_paused, pause_reason, dan remaining_seconds terakhir; timer/input tetap mengikuti status pause/resume terakhir yang diketahui. |
+| E46 | Bootstrap menerima penolakan otoritatif (Attempt nonaktif/client mismatch), lalu browser refresh offline. | Status BLOCKED sudah dipersist sehingga cache lama tidak dapat menghidupkan kembali workspace. |
+| E47 | Manager mengubah akses Jadwal menjadi TAHAN setelah Attempt dibuat; peserta refresh workspace. | Bootstrap menolak re-entry dengan SCHEDULE_HELD; peserta yang sudah berada di workspace tanpa refresh tetap berjalan, sesuai policy TAHAN. |
+| E48 | Paket ujian berisi gambar lokal critical; peserta membuka paket online lalu reload offline. | Blob gambar tersimpan di IndexedDB dan dirender dari object URL; cache blob dibersihkan saat Attempt selesai. |
+| E49 | Live revision menambahkan/mengganti gambar critical. | Media baru ikut diprefetch/cache sebelum renderer menerapkan perubahan; tidak mengirim PACKAGE_READY duplikat. |
+| E50 | Endpoint image lambat/tidak merespons saat bootstrap. | Prefetch berhenti maksimal 8 detik per asset; bootstrap tetap dapat menampilkan soal dan tidak menunggu request media tanpa batas. |
+| E51 | Paket memiliki banyak gambar critical pada banyak participant bersamaan. | Tiap client membatasi maksimal empat fetch gambar bersamaan agar prefetch tidak membuat burst request tak terbatas. |
+| E52 | Dua tab membuka Attempt hampir bersamaan sebelum localStorage lock sempat terlihat oleh tab lain. | BroadcastChannel ALIVE mendeteksi race; paling banyak satu tab melanjutkan, tab lain hard-lock. |
+| E53 | Tab masuk Back-Forward Cache lalu dipulihkan dengan pageshow persisted. | Tab memeriksa lock terbaru dan mengaktifkan heartbeat kembali; tab lain tidak dapat membuka Attempt bersamaan. |
+| E54 | Resume operation lama di-replay setelah Attempt mengalami pause baru. | Server mengembalikan pause state terkini; client tetap terkunci dan tidak menampilkan resume sukses palsu. |
+| E55 | Bank memakai option_key numerik (misalnya "1", "2", "3"). | Runtime mempertahankan semua opsi dalam urutan Prepared Assignment; tidak ada opsi yang hilang karena key berubah menjadi integer saat decode JSON/PHP. |
+| E56 | Bank Matching memakai left_key/right_key numerik dan peserta menyimpan pasangan. | Sync, storage JSON, scoring, dan bootstrap alias mempertahankan key numerik; pasangan tidak hilang saat PHP mengubah key menjadi integer. |
+| E57 | PG Kompleks menerima payload selected yang berisi tipe non-string atau key melebihi 64 karakter. | Payload ditolak sebagai ANSWER_INVALID; nilai invalid tidak dibuang diam-diam menjadi jawaban parsial. |
 
 ## Catatan Exam Browser
 

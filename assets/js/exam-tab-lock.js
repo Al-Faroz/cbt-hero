@@ -27,24 +27,57 @@
         } catch (_) {}
     };
     write();
-    const heartbeat = window.setInterval(write, 2000);
+    let heartbeat = window.setInterval(write, 2000);
 
     const channel = 'BroadcastChannel' in window
         ? new BroadcastChannel('cbt-hero-attempt-' + runtime.attemptId)
         : null;
-    channel?.addEventListener('message', event => {
-        if (event.data?.type === 'PROBE' && event.data?.tab_id !== tabId) {
-            channel.postMessage({type: 'ALIVE', tab_id: tabId});
-        }
-    });
-    channel?.postMessage({type: 'PROBE', tab_id: tabId});
-
-    window.addEventListener('beforeunload', () => {
+    const blockDuplicateTab = () => {
+        if (runtime.tabBlocked) return;
+        runtime.tabBlocked = true;
         clearInterval(heartbeat);
         try {
             const latest = JSON.parse(localStorage.getItem(key) || 'null');
             if (latest?.tab_id === tabId) localStorage.removeItem(key);
         } catch (_) {}
         channel?.close();
+        runtime.hardLock(
+            'Ujian sudah terbuka di tab lain',
+            'Tutup tab ujian yang lain terlebih dahulu. Satu Attempt hanya boleh aktif pada satu tab.'
+        );
+    };
+
+    channel?.addEventListener('message', event => {
+        if (event.data?.tab_id === tabId) return;
+        if (event.data?.type === 'PROBE') {
+            channel.postMessage({type: 'ALIVE', tab_id: tabId});
+        } else if (event.data?.type === 'ALIVE') {
+            blockDuplicateTab();
+        }
+    });
+    channel?.postMessage({type: 'PROBE', tab_id: tabId});
+
+    const release = (closeChannel = false) => {
+        if (heartbeat) clearInterval(heartbeat);
+        heartbeat = null;
+        try {
+            const latest = JSON.parse(localStorage.getItem(key) || 'null');
+            if (latest?.tab_id === tabId) localStorage.removeItem(key);
+        } catch (_) {}
+        if (closeChannel) channel?.close();
+    };
+    window.addEventListener('beforeunload', () => release(true), {once: true});
+    window.addEventListener('pagehide', () => release(false));
+    window.addEventListener('pageshow', event => {
+        if (!event.persisted || runtime.tabBlocked) return;
+        let latest = null;
+        try { latest = JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) {}
+        if (latest && latest.tab_id !== tabId
+            && Date.now() - Number(latest.updated_at || 0) < 5000) {
+            blockDuplicateTab();
+            return;
+        }
+        write();
+        if (!heartbeat) heartbeat = window.setInterval(write, 2000);
     });
 })();

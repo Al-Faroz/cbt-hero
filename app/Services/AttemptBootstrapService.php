@@ -13,6 +13,8 @@ class AttemptBootstrapService
         $attempt = $ownership->owned($db, $participantId, $attemptId);
         if ($attempt === null) return $this->error(404, 'NOT_FOUND', 'Attempt tidak ditemukan.');
         if ($attempt['status'] !== 'ACTIVE') return $this->error(409, 'ATTEMPT_NOT_ACTIVE', 'Attempt sudah tidak aktif.');
+        if ($attempt['access_state'] !== 'BUKA')
+            return $this->error(423, 'SCHEDULE_HELD', 'Akses ujian sedang ditahan. RESUME belum diizinkan.');
 
         $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
         if ($clientError !== null)
@@ -137,9 +139,12 @@ class AttemptBootstrapService
         $rightAlias = is_array($mapping['right_alias'] ?? null) ? $mapping['right_alias'] : [];
         $pairs = [];
         foreach ($payload['pairs'] as $left => $right) {
-            if (!is_string($left) || !isset($leftAlias[$left])) continue;
+            if (!is_string($left) && !is_int($left)) continue;
+            $left = (string) $left;
+            if (!isset($leftAlias[$left])) continue;
             $publicLeft = (string) $leftAlias[$left];
-            $pairs[$publicLeft] = is_string($right) && isset($rightAlias[$right])
+            $right = is_string($right) || is_int($right) ? (string) $right : null;
+            $pairs[$publicLeft] = $right !== null && isset($rightAlias[$right])
                 ? (string) $rightAlias[$right]
                 : null;
         }

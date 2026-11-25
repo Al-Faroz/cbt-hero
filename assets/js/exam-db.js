@@ -12,5 +12,9 @@
         runtime_state: 'attempt_id'
     });
 
+    db.version(2).stores({
+        media_cache: '[attempt_id+media_id], attempt_id, media_id, updated_at'
+    });
+
     window.CbtExamDb = db;
 })();

@@ -79,13 +79,18 @@ class QuestionRuntimeItemService
                 ->get()->getResultArray();
             $byKey = array_column($options, null, 'option_key');
             $order = json_decode((string) ($row['option_order_json'] ?? ''), true);
-            if (!is_array($order)) $order = array_keys($byKey);
+            $order = is_array($order)
+                ? array_values(array_map('strval', array_filter($order, 'is_scalar')))
+                : array_map('strval', array_keys($byKey));
             foreach (array_keys($byKey) as $key) {
+                $key = (string) $key;
                 if (!in_array($key, $order, true)) $order[] = $key;
             }
             $item['options'] = [];
             foreach ($order as $key) {
-                if (!is_string($key) || !isset($byKey[$key])) continue;
+                if (!is_scalar($key)) continue;
+                $key = (string) $key;
+                if (!isset($byKey[$key])) continue;
                 $item['options'][] = [
                     'option_key' => $key,
                     'content_text' => (string) $byKey[$key]['content_html'],
@@ -144,7 +149,7 @@ class QuestionRuntimeItemService
     private function media($db, int $attemptId, int $revisionId): array
     {
         $rows = $db->table('soal_revision_media AS srm')
-            ->select('ma.id, ma.storage_type, ma.media_kind, ma.provider, ma.external_url, ma.status')
+            ->select('ma.id, ma.storage_type, ma.media_kind, ma.provider, ma.external_url, ma.status, srm.sort_order AS prefetch_order')
             ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
             ->where('srm.soal_revision_id', $revisionId)
             ->orderBy('srm.sort_order', 'ASC')->orderBy('srm.id', 'ASC')
@@ -160,6 +165,8 @@ class QuestionRuntimeItemService
                 'url' => $row['storage_type'] === 'LOCAL'
                     ? base_url('api/attempt/' . $attemptId . '/media/' . $id)
                     : (string) $row['external_url'],
+                'critical' => (string) $row['media_kind'] === 'IMAGE',
+                'prefetch_order' => (int) $row['prefetch_order'],
             ];
         }
         return $result;

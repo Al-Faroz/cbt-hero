@@ -44,13 +44,31 @@
     };
 
     document.addEventListener('cbt:bootstrap-ready', event => {
-        setDeadline(event.detail?.data?.attempt?.deadline_at);
+        const attempt = event.detail?.data?.attempt || {};
+        if (attempt.paused) {
+            runtime.paused = true;
+            const remaining = Number(attempt.remaining_seconds);
+            if (node && Number.isFinite(remaining)) {
+                lastText = format(remaining);
+                node.textContent = lastText;
+            }
+            deadlineMs = Date.parse(attempt.deadline_at || '');
+            return;
+        }
+        setDeadline(attempt.deadline_at);
     });
     document.addEventListener('cbt:deadline-updated', event => {
         runtime.paused = false;
         setDeadline(event.detail?.deadline_at);
     });
-    document.addEventListener('cbt:attempt-paused', () => { runtime.paused = true; });
+    document.addEventListener('cbt:attempt-paused', event => {
+        runtime.paused = true;
+        const remaining = Number(event.detail?.remaining_seconds);
+        if (node && Number.isFinite(remaining)) {
+            lastText = format(remaining);
+            node.textContent = lastText;
+        }
+    });
     document.addEventListener('cbt:timeout-authority', () => {
         if (!timeoutSent) {
             timeoutSent = true;
