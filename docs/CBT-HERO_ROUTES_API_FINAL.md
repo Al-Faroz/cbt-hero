@@ -1811,8 +1811,9 @@ preflight.missing_number
 preflight.credential_not_ready
 ```
 
-`can_start=true` hanya bila seluruh assignment READY dan preflight identitas/login
-target juga lulus.
+`can_start=true` hanya bila seluruh assignment READY, tidak ada target Susulan
+invalid, dan preflight identitas/login target juga lulus. Target invalid tidak
+dibatalkan otomatis; Operator harus membatalkan/memperbaikinya melalui halaman Susulan.
 
 ## 34.2 Status
 
@@ -1828,6 +1829,8 @@ ready
 stale
 failed
 progress
+invalid_target_count
+invalid_targets[] // Susulan: peserta, mode target, alasan invalid
 last_error
 can_start
 ```
@@ -1849,7 +1852,10 @@ GET /manager/api/jadwal/{jadwalId}/prepared-assignments
 GET /manager/api/prepared-assignments/{assignmentId}
 ```
 
-Tidak memperlihatkan answer key kepada participant.
+Detail manager menampilkan item/revisi, konten stimulus/soal, urutan opsi,
+sisi/pasangan Menjodohkan, dan media manifest untuk troubleshooting. Endpoint ini
+hanya untuk Manager; API participant tidak menerima answer key atau pasangan
+acuan Menjodohkan.
 
 ---
 
