@@ -204,11 +204,24 @@
             runtimeState.updated_at = Date.now();
             await db.runtime_state.put(runtimeState);
 
-            retryDelay = 1000;
             const remaining = await db.sync_queue.where('attempt_id').equals(runtime.attemptId).count();
             runtime.setSyncState(remaining ? 'Belum sinkron' : 'Tersinkron', remaining ? 'pending' : 'synced');
+            const ackByMutation = new Map((data.acks || []).map(ack => [String(ack.mutation_id), ack]));
+            const retryableBatch = batch.some(row => {
+                const ack = ackByMutation.get(String(row.mutation_id));
+                return !ack || (!ack.accepted && !permanentReject.has(String(ack.reason || '')));
+            });
             syncing = false;
-            if (remaining) queueMicrotask(syncOnce);
+            if (!remaining) {
+                retryDelay = 1000;
+            } else if (retryableBatch) {
+                const jitter = Math.floor(Math.random() * 350);
+                retryTimer = setTimeout(syncOnce, retryDelay + jitter);
+                retryDelay = Math.min(30000, retryDelay * 2);
+            } else {
+                retryDelay = 1000;
+                queueMicrotask(syncOnce);
+            }
             return remaining === 0;
         } catch (error) {
             syncing = false;
