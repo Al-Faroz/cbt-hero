@@ -644,24 +644,24 @@ class PreparationService
                     OR (
                         t.target_mode = 'FIRST_ATTEMPT'
                         AND EXISTS (
-                            SELECT 1 FROM attempt history
-                            WHERE history.root_jadwal_id = ?
-                              AND history.peserta_kegiatan_id = t.peserta_kegiatan_id
+                            SELECT 1 FROM attempt history_attempt
+                            WHERE history_attempt.root_jadwal_id = ?
+                              AND history_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
                         )
                     )
                     OR (
                         t.target_mode = 'REPLACEMENT'
                         AND NOT EXISTS (
-                            SELECT 1 FROM attempt replacement
-                            WHERE replacement.id = t.supersede_attempt_id
-                              AND replacement.root_jadwal_id = ?
-                              AND replacement.peserta_kegiatan_id = t.peserta_kegiatan_id
-                              AND replacement.status = 'FINISHED'
+                            SELECT 1 FROM attempt replacement_attempt
+                            WHERE replacement_attempt.id = t.supersede_attempt_id
+                              AND replacement_attempt.root_jadwal_id = ?
+                              AND replacement_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+                              AND replacement_attempt.status = 'FINISHED'
                               AND NOT EXISTS (
-                                  SELECT 1 FROM attempt newer
-                                  WHERE newer.root_jadwal_id = replacement.root_jadwal_id
-                                    AND newer.peserta_kegiatan_id = replacement.peserta_kegiatan_id
-                                    AND newer.id > replacement.id
+                                  SELECT 1 FROM attempt newer_attempt
+                                  WHERE newer_attempt.root_jadwal_id = replacement_attempt.root_jadwal_id
+                                    AND newer_attempt.peserta_kegiatan_id = replacement_attempt.peserta_kegiatan_id
+                                    AND newer_attempt.id > replacement_attempt.id
                               )
                         )
                     )
