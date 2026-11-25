@@ -1,4 +1,7 @@
 <?= $this->extend('manager/layouts/main') ?>
+<?= $this->section('pageStyles') ?>
+<link rel="stylesheet" href="<?= base_url('assets/vendor/katex/katex.min.css') ?>">
+<?= $this->endSection() ?>
 <?= $this->section('content') ?>
 <section class="manager-page-header">
     <div>
@@ -172,7 +175,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScripts') ?>
-<link rel="stylesheet" href="<?= base_url('assets/vendor/katex/katex.min.css') ?>">
 <script src="<?= base_url('assets/vendor/katex/katex.min.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/question-renderer.js') ?>" defer></script>
 <script src="<?= base_url('assets/js/manager-susulan.js') ?>" defer></script>
