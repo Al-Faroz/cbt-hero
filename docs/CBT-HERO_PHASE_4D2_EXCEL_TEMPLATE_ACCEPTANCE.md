@@ -48,6 +48,10 @@ dibuat otomatis dari Komposisi Bank dan hasil impor masuk ke staging yang sama d
 | X15 | Isi formula Excel `=SUM(...)`. | Upload ditolak; formula Excel tidak dieksekusi sebagai isi soal. |
 | X16 | Biarkan beberapa baris template kosong. | Baris kosong dilewati dan tidak menghasilkan soal invalid. |
 | X17 | Commit staging valid. | Soal muncul pada Daftar Soal dan dapat Edit/Tinjau. |
+| X18 | Pada PG Kompleks dengan 4 opsi, isi Pilihan Benar `A,Z`. | Upload ditolak; huruf di luar jumlah opsi tidak boleh diabaikan diam-diam. |
+| X19 | Pada Isian Singkat, isi Mode dengan nilai selain TEKS/ANGKA. | Baris menjadi invalid/unggah ditolak; mode tidak otomatis dianggap TEKS. |
+| X20 | Uji workbook dengan isi sel atau gambar di luar area template yang didukung. | Upload ditolak dengan pesan validasi; parser tidak mengabaikan data atau memproses indeks gambar di luar batas. |
+| X21 | Tempel beberapa gambar dan teks pada satu sel konten yang sama. | Semua referensi gambar dan teks muncul bersama pada Pratinjau. |
 
 ## PASS
 
