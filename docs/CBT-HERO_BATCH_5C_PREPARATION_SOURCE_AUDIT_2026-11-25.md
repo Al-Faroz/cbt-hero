@@ -503,3 +503,14 @@ Belum diuji dengan fixture database/browser.
 Routes/API contract juga disinkronkan untuk response `invalid_target_count` + `invalid_targets[]`, aturan `can_start`, dan detail manager yang menampilkan urutan opsi serta pasangan Menjodohkan tanpa mengubah payload participant.
 
 Commit: `437d193cb3d487341c34078ee153a96a9d053e52`
+
+
+### Hardening replay transaction — commit harus diverifikasi
+
+Replay pada Add Time, Extend Batas Mulai, dan Preparation kini memeriksa hasil `transCommit()` sebelum mengembalikan response sukses. Kegagalan commit tidak lagi dilaporkan sebagai replay sukses semu.
+
+Commits:
+- `064c2893174707c758c056038eeee427e0d94c98`
+- `b02bf155d5244b17f16bbd89c651cf0d92a29b8b`
+
+Belum diuji melalui fault injection database.
