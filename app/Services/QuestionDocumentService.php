@@ -109,10 +109,19 @@ class QuestionDocumentService
             }
             $seenTypes[$type] = true;
 
-            // Only recognized question sheets may import embedded images.
-            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport);
+            // Only recognized question sheets may import embedded images, and only
+            // in columns that represent actual content fields (never numbering/keys/points).
             $optionCount = (int) $match[2];
             $mode = trim((string) $match[3]);
+            $allowedImageColumns = match ($type) {
+                'PG', 'PG_KOMPLEKS' => range(1, $optionCount + 1),
+                'PG_BERTINGKAT' => array_merge([1], range(2, $optionCount * 2, 2)),
+                'MATCHING' => range(1, ($optionCount * 2) + 1),
+                'ISIAN_SINGKAT' => [1, 3],
+                'URAIAN' => [1, 2],
+                default => [],
+            };
+            $values = $this->xlsxSheetValues($zip, $sheet['path'], $shared, $imageImport, true, $allowedImageColumns);
             foreach (array_slice($values, 5, null, true) as $zeroRow => $row) {
                 $excelRow = $zeroRow + 1;
                 $data = $this->excelQuestionRow($type, $row, $optionCount, $mode);
@@ -325,7 +334,7 @@ class QuestionDocumentService
         return $result;
     }
 
-    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport, bool $includeDrawings = true): array
+    private function xlsxSheetValues(ZipArchive $zip, string $path, array $shared, ?callable $imageImport, bool $includeDrawings = true, ?array $allowedDrawingColumns = null): array
     {
         $source = $zip->getFromName($path);
         if ($source === false) throw new RuntimeException('Sheet Excel tidak dapat dibaca.');
@@ -339,7 +348,7 @@ class QuestionDocumentService
             $text = trim($this->xlsxCellValue($xp, $cell, $shared));
             if (mb_strlen($text) > 20000) throw new RuntimeException('Sel Excel terlalu panjang.');
             if ($row < 0 || $col < 0) continue;
-            if ($row > 260 || $col > 60) {
+            if ($row > 204 || $col > 60) {
                 if ($text !== '') {
                     throw new RuntimeException('Isi sel berada di luar area template Excel yang didukung.');
                 }
@@ -350,6 +359,10 @@ class QuestionDocumentService
 
         foreach (($includeDrawings ? $this->xlsxDrawingTokens($zip, $path, $source, $imageImport) : []) as $item) {
             $row = $item['row']; $col = $item['col'];
+            if ($row < 5 || $row > 204
+                || ($allowedDrawingColumns !== null && !in_array($col, $allowedDrawingColumns, true))) {
+                throw new RuntimeException('Gambar Excel harus berada pada sel konten di area baris soal template.');
+            }
             $current = trim((string) ($values[$row][$col] ?? ''));
             $values[$row][$col] = $current === '' ? $item['token'] : $current . "\n" . $item['token'];
         }
@@ -424,7 +437,7 @@ class QuestionDocumentService
                 }
                 $rowIndex = (int) $rowValue;
                 $colIndex = (int) $colValue;
-                if ($rowIndex > 260 || $colIndex > 60) {
+                if ($rowIndex > 204 || $colIndex > 60) {
                     throw new RuntimeException('Posisi gambar berada di luar area template Excel yang didukung.');
                 }
 
