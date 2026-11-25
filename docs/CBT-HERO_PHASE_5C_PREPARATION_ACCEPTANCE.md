@@ -125,7 +125,7 @@ nya masih sesuai tidak dibuat ulang.
 | P20 | Replacement Susulan. | Fingerprint menyertakan mode replacement dan assignment baru terpisah dari histori lama. |
 | P21 | Buka detail Prepared Assignment. | Manager melihat item/revisi, konten stimulus/soal, urutan opsi, sisi dan pasangan Menjodohkan, serta media untuk troubleshooting; API participant tidak membuka answer key. |
 | P22 | Audit Log. | Prepare/Rebuild tercatat dengan jumlah target yang diproses. |
-| P23 | Target FIRST_ATTEMPT dibuat, lalu peserta START pada MAIN sebelum Preparation Susulan. | Target terdeteksi invalid, tidak dibuatkan assignment, jumlah invalid tampil, dan Jadwal tidak READY/can_start. |
+| P23 | Target FIRST_ATTEMPT dibuat, lalu peserta START pada MAIN sebelum Preparation Susulan. | Target terdeteksi invalid, tidak dibuatkan assignment, jumlah dan identitas/alasan invalid tampil, dan Jadwal tidak READY/can_start. |
 | P24 | Target REPLACEMENT dibuat, lalu Attempt yang ditunjuk tidak lagi menjadi Attempt FINISHED terbaru. | Target terdeteksi invalid dan tidak dibuatkan assignment; START tetap menolak bila operator belum membatalkan/memperbaiki target. |
 | P25 | Preparation dijalankan saat ada target valid dan invalid. | Assignment hanya dibuat untuk target valid; progress memperhitungkan target invalid dan can_start tetap false sampai target invalid ditangani. |
 | P26 | Semua target Susulan sudah invalid, lalu operator mencoba Siapkan Semua. | API menolak dengan INVALID_SUSULAN_TARGET; tidak membuat assignment untuk target invalid. |
