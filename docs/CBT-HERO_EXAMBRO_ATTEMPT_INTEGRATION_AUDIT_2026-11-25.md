@@ -105,3 +105,72 @@ Kandidat minimum yang masih perlu diverifikasi terhadap seluruh migration aktual
 3. Reuse `attempt_client_event` untuk event Exambro yang terkait Attempt, dengan metadata yang tervalidasi dan dibatasi ukuran/jenisnya.
 
 Tabel ketiga tidak perlu dibuat bila `attempt_client_event` sudah memenuhi kebutuhan audit. Tidak ada private key atau shared secret di database server.
+
+
+## 7. Audit lanjutan — route, bootstrap, sync, preparation, dan model response
+
+### 7.1 Participant routes yang benar-benar terdaftar
+Pemeriksaan `app/Config/Routes.php` menunjukkan:
+- `POST /api/ujian/{jadwalId}/start` menuju `Api\\Participant\\AttemptController::start`.
+- `POST /api/attempt/{attemptId}/resume` menuju controller Attempt yang sama.
+- Bootstrap, status, revisions, sync, event, finalize, dan Fullscreen Guard berada pada shared `/api/attempt`.
+- Tidak ditemukan route participant khusus Psikologi pada file Routes yang diperiksa.
+- Tidak ditemukan route manager Psych Instrument pada file Routes yang diperiksa, meskipun kontrak API master mendokumentasikan endpoint manager Psych Instrument.
+
+Ini berarti kontrak dokumen psikologi sudah lebih maju daripada route/source yang tersedia di branch. Jangan menyimpulkan endpoint dokumentasi telah terimplementasi.
+
+### 7.2 START / RESUME yang tersedia
+- Controller participant hanya memanggil `AttemptStartService` dan `AttemptResumeService`.
+- `AttemptStartService` query jadwal dengan join bank soal, lalu menolak jika `kegiatan_jenis !== AKADEMIK`, `bank_soal_id IS NULL`, atau `psych_instrument_id IS NOT NULL`.
+- `AttemptResumeService` memakai ownership Attempt generik, tetapi belum melakukan pemilihan adapter/proof verifier berdasarkan jenis konten. Proof required masih string non-empty.
+- Maka jalur START Psikologi belum tersedia; RESUME generik tidak dengan sendirinya berarti runtime Psikologi sudah didukung.
+
+### 7.3 Bootstrap masih akademik
+`AttemptBootstrapService` saat ini:
+- memanggil `QuestionRuntimeItemService` dengan `prepared_assignment_id`;
+- membaca response dengan join `attempt_response → prepared_assignment_item → soal → soal_revision`;
+- membentuk payload jawaban memakai `question_type` akademik;
+- mengambil media dari `prepared_assignment_media`.
+
+Tidak ada cabang pembacaan `psych_item`, `psych_item_revision`, `psych_option`, atau `psych_scoring_matrix` pada implementasi yang diperiksa. Dengan demikian, prepared item generik pada ERD belum berarti bootstrap psikologi sudah tersedia.
+
+### 7.4 Answer Sync masih akademik
+`AnswerSyncService`:
+- mengambil assigned items melalui `prepared_assignment_item`;
+- join ke `soal` dan `soal_revision`;
+- join konfigurasi `bank_type_config`;
+- menggunakan `AcademicAnswerService` untuk validasi/memproses mutation.
+
+Tidak ditemukan adapter validasi jawaban psikologi pada service yang diperiksa. Jangan mengirim item psikologi ke jalur sync akademik.
+
+### 7.5 Preparation dan response model
+- `PreparationService` yang diperiksa membangun konteks jadwal akademik dan mensyaratkan `bank_status = READY` serta fingerprint bank.
+- ERD master sudah mendesain `prepared_assignment_item` sebagai pasangan sumber polimorfik: Akademik memakai `soal_id + soal_revision_id`, Psikologi memakai `psych_item_id + psych_item_revision_id`.
+- ERD `attempt_response` menyimpan FK `prepared_assignment_item_id`, sehingga response dapat tetap memakai satu tabel selama validasi, renderer, scoring, dan snapshot memahami jenis sumber item.
+- ERD `result_item_snapshot` saat ini menyebut kolom item/score akademik (`question_type`, `raw_score`, `max_point`, bobot), sedangkan hasil psikologi memerlukan `psych_dimension_result`. Implementasi perlu memastikan snapshot payload dan item snapshot tidak memaksakan skor akademik pada psikologi.
+
+### 7.6 Kesimpulan runtime Psikologi
+Pada source route/service yang diperiksa, runtime Psikologi belum terimplementasi. Yang tersedia adalah desain database/kontrak dokumen untuk instrumen dan model prepared assignment generik, bukan alur peserta end-to-end. Temuan ini konsisten dengan roadmap bahwa Master Ujian Psikologi masih menjadi fase implementasi tersendiri.
+
+## 8. Arsitektur integrasi yang harus dipakai saat fase implementasi
+
+Agar Exambro tidak membuat engine kedua dan tidak menimbulkan bypass:
+
+1. **Satu Attempt lifecycle:** START, RESUME, status, pause, sync, finalize, dan ownership tetap berada di satu domain Attempt. Jenis konten menentukan adapter, bukan controller Attempt terpisah.
+2. **Client policy terpusat:** buat satu service kebijakan klien (nama final mengikuti konvensi source) yang menerima konteks jadwal/Attempt, memutuskan browser desktop vs APK Android, dan memanggil verifier device proof hanya ketika kegiatan mewajibkan Exambro.
+3. **Enforcement di titik kritis:** verifikasi dilakukan sebelum START membuat Attempt; RESUME memverifikasi binding yang sama; bootstrap/sync/event/finalize memeriksa device/session binding yang telah terikat pada Attempt. Jangan hanya memeriksa START.
+4. **Adapter konten:** pisahkan penyedia item/renderer dan validator jawaban Academic vs Psychology di dalam shared Attempt runtime. Jangan membuat Attempt engine baru untuk psikologi.
+5. **Prepared assignment generik:** gunakan pasangan source item sesuai ERD dan pertahankan response pada `prepared_assignment_item_id`; seluruh query join harus memilih tabel sumber berdasarkan tepat satu pasangan sumber yang valid.
+6. **Scoring terpisah sesuai domain:** Akademik memakai scoring akademik; Psikologi menghitung scoring matrix per dimensi dan menghasilkan `psych_dimension_result`. Keduanya membuat `result_snapshot` dengan `result_type` yang benar.
+7. **Desktop tidak berubah menjadi Exambro:** browser desktop memakai Fullscreen Guard; APK Android memakai device key/challenge. Kedua jalur melewati policy server yang sama dan berbagi Attempt core.
+
+## 9. Gerbang sebelum kode Exambro server
+
+Belum aman membuat migration/device endpoints pada batch ini sebelum:
+- [ ] Runtime Psikologi selesai dirancang pada level service/route/renderer/sync/scoring.
+- [ ] Migration aktual dibandingkan dengan ERD (daftar migration source belum berhasil diverifikasi dari directory listing dalam audit ini).
+- [ ] Kontrak START/RESUME/Bootstrap/Sync/Finalize direvisi serempak untuk policy platform.
+- [ ] Dipastikan client binding Attempt dapat menyimpan referensi device/key tanpa melemahkan browser desktop.
+- [ ] Strategi transisi field `exam_browser_proof` ditetapkan agar kegiatan existing tidak terkunci oleh proof palsu dan browser desktop tetap berfungsi saat mode OFF.
+
+Status tetap **source audit parsial, belum tested**. Tidak ada migration, API Exambro, ataupun APK yang ditambahkan pada batch audit ini.
