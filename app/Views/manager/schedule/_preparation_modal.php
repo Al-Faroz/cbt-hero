@@ -12,7 +12,7 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6 col-md">
                         <div class="border rounded p-3 h-100">
-                            <div class="small text-secondary">Target</div>
+                            <div class="small text-secondary">Target Valid</div>
                             <div class="fs-5 fw-semibold" id="prepTotal">0</div>
                         </div>
                     </div>
