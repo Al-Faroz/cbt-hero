@@ -23,6 +23,7 @@
         currentIndex: 0,
         inputLocked: false,
         tabBlocked: false,
+        paused: false,
 
         clientHeaders() {
             return {
