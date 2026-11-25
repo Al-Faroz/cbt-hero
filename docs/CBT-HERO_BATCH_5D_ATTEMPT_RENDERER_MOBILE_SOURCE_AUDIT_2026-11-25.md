@@ -95,3 +95,39 @@ Acceptance E33–E38 ditambahkan pada `CBT-HERO_PHASE_6_ATTEMPT_ENGINE_ACCEPTANC
 2. Audit Answer Sync server-side terhadap ACK transient/permanent, pause, deadline, and revision policy.
 3. Audit offline re-entry, timeout pending, and finalize idempotency end-to-end.
 4. Sinkronkan master docs dan acceptance sebelum Batch 5D ditutup.
+
+
+### 5D-06 — pause/resume server tidak tersinkron ke workspace dan timer
+Attempt status API sudah menyertakan `paused`, tetapi client sebelumnya hanya memeriksa `status=ACTIVE/FINISHED`. Operator pause dapat tidak mengunci input dan timer dapat terus berjalan. Timer bootstrap juga menghitung `deadline_at` mentah pada Attempt paused.
+
+Perbaikan:
+- Status API menambahkan `pause_reason` dari event pause terbuka.
+- Runtime menyimpan alasan pause; sync status mengunci workspace dan menampilkan overlay sesuai OPERATOR/FULLSCREEN_EXIT.
+- Server resume membuka kembali sesi, memperbarui deadline, memicu Fullscreen Guard untuk memeriksa fullscreen, dan meminta sync queue dilanjutkan.
+- Timer paused menggunakan `remaining_seconds` dari server; status poll paused tidak mengirim event deadline yang membatalkan pause.
+- Pause yang sudah ada sebelum workspace dibuka juga dikunci, termasuk client dengan Exambro-required ON.
+
+File: `AttemptRuntimeService.php`, `exam-runtime-state.js`, `exam-sync.js`, `exam-timer.js`, `exam-fullscreen-guard.js`.
+
+Commits:
+- `f59867076c62df8f10d8b8aa96047677ceeb2e78`
+- `1a0a1574cc6c3daec8bec5d1eecd4fd852b2d169`
+- `a07c6a734f4249f9931de114cd9bbd1379152d8e`
+- `2631efa3d3c906fbb3da6cdd9516a56bba6dea42`
+- `3d82e60544d92bbd63d475c9e638550468c2c067`
+- `9486f830d2ce8fbfc568db46d03141a2b9ea1732`
+- `f92b7b23f3c172ed8d97ed39b4975a49a18286f4`
+
+### 5D-07 — status polling mengabaikan penolakan otoritatif client/session
+Status polling sebelumnya mengabaikan seluruh HTTP error. Jika server mengembalikan CLIENT_MISMATCH/CLIENT_GENERATION_MISMATCH/ATTEMPT_NOT_ACTIVE, workspace masih dapat menerima input lokal dan sync queue akan mencoba ulang.
+
+Perbaikan:
+- HTTP 4xx otoritatif selain 408/429 mem-hard-lock workspace.
+- Cache status ditandai BLOCKED sehingga tidak dapat dipulihkan sebagai sesi ACTIVE offline.
+- Attempt runtime ditandai BLOCKED agar Answer Sync tidak meneruskan request.
+- Attempt non-ACTIVE dari Manager menampilkan overlay selesai dan tautan kembali ke daftar ujian.
+
+File: `assets/js/exam-sync.js`  
+Commits: `3dd57f0bccbe6516d127e1b564f34f9709a94448`, `89d2253f9eb39ed53d6b0dcab89ebc63d048e252`.
+
+Acceptance E36–E40 ditambahkan pada Phase 6; masih DEFERRED.
