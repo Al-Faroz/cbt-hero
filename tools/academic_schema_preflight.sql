@@ -6,7 +6,7 @@
 
 SELECT DATABASE() AS selected_database;
 
-SELECT
+SELECT DISTINCT
     expected.object_type,
     expected.table_name,
     expected.object_name,
