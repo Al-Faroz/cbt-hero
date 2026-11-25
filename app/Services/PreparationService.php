@@ -314,7 +314,7 @@ class PreparationService
             ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.external_url, ma.status')
             ->join('media_assets AS ma', 'ma.id = pam.media_asset_id')
             ->where('pam.prepared_assignment_id', $assignmentId)
-            ->orderBy('pam.prefetch_order', 'ASC')->get()->getResultArray();
+            ->orderBy('pam.is_critical', 'DESC')->orderBy('pam.prefetch_order', 'ASC')->orderBy('pam.media_asset_id', 'ASC')->get()->getResultArray();
         $media = [];
         foreach ($mediaRows as $row) {
             $media[] = [
@@ -500,7 +500,7 @@ class PreparationService
                 ->select('srm.soal_revision_id, srm.media_asset_id, ma.media_kind, ma.status')
                 ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
                 ->whereIn('srm.soal_revision_id', array_keys($revisionOrder))
-                ->orderBy('srm.sort_order', 'ASC')->get()->getResultArray();
+                ->orderBy('srm.sort_order', 'ASC')->orderBy('srm.id', 'ASC')->get()->getResultArray();
             $seen = [];
             foreach ($media as $row) {
                 $mediaId = (int) $row['media_asset_id'];
