@@ -192,3 +192,17 @@ Commit:
 - `376336e2ed115089a96511a961888c1ba9a244e1`
 
 X20 tetap perlu fixture nyata untuk memastikan variasi anchor Excel/LibreOffice tertangani benar.
+
+
+### EXCEL-MARKER-01 — batas option_count harus diperiksa sebelum membentuk daftar kolom
+
+Marker sheet XLSX berasal dari isi file pengguna. Sebelumnya angka `option_count` langsung dipakai untuk membentuk `range()` kolom gambar. Marker yang dimanipulasi dengan angka sangat besar berpotensi memicu alokasi memori berlebihan sebelum validasi staging.
+
+Perbaikan: parser memeriksa rentang marker sebelum membentuk daftar kolom:
+- PG: 2–6
+- PG Kompleks / PG Bertingkat: 2–8
+- Menjodohkan: 2–12
+- Isian Singkat / Uraian: tepat 0
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `5b43d862ff6a13d4683556f05548c599bcf5d03b`
