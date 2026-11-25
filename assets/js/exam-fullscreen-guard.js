@@ -131,7 +131,15 @@
     document.addEventListener('cbt:bootstrap-ready', event => {
         const paused = event.detail?.data?.attempt?.paused === true;
         if (paused) {
-            lock('Attempt sedang dijeda. Kembali ke layar penuh untuk melanjutkan ujian.');
+            if (event.detail?.data?.attempt?.pause_reason === 'FULLSCREEN_EXIT') {
+                lock('Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.');
+            } else {
+                runtime.hardLock(
+                    'Ujian dijeda oleh pengawas',
+                    'Ikuti arahan pengawas ujian. Jangan mencoba melanjutkan sendiri.'
+                );
+                if (resumeButton) resumeButton.hidden = true;
+            }
             return;
         }
         if (!document.fullscreenElement) beginPause();
@@ -139,6 +147,5 @@
 
     if (!document.fullscreenElement) {
         lock('Ujian memerlukan mode layar penuh. Tekan tombol di bawah untuk mengaktifkannya.');
-        if (runtime.bootstrap?.attempt?.paused !== true) beginPause();
     }
 })();
