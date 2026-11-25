@@ -516,22 +516,46 @@ class PreparationService
         if ($sequence < 1) throw new RuntimeException('Assignment tidak mempunyai soal.');
 
         if ($revisionOrder) {
-            $media = $db->table('soal_revision_media AS srm')
+            $mediaRows = $db->table('soal_revision_media AS srm')
                 ->select('srm.soal_revision_id, srm.media_asset_id, ma.media_kind, ma.status')
                 ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
                 ->whereIn('srm.soal_revision_id', array_keys($revisionOrder))
-                ->orderBy('srm.sort_order', 'ASC')->orderBy('srm.id', 'ASC')->get()->getResultArray();
-            $seen = [];
-            foreach ($media as $row) {
+                ->orderBy('srm.media_asset_id', 'ASC')->orderBy('srm.id', 'ASC')
+                ->get()->getResultArray();
+
+            $manifest = [];
+            foreach ($mediaRows as $row) {
+                if ($row['status'] !== 'ACTIVE') {
+                    throw new RuntimeException('Media assignment tidak aktif.');
+                }
                 $mediaId = (int) $row['media_asset_id'];
-                if (isset($seen[$mediaId])) continue;
-                if ($row['status'] !== 'ACTIVE') throw new RuntimeException('Media assignment tidak aktif.');
-                $seen[$mediaId] = true;
+                $prefetchOrder = (int) ($revisionOrder[(int) $row['soal_revision_id']] ?? 999999);
+                if (!isset($manifest[$mediaId])) {
+                    $manifest[$mediaId] = [
+                        'media_asset_id' => $mediaId,
+                        'is_critical' => $row['media_kind'] === 'IMAGE' ? 1 : 0,
+                        'prefetch_order' => $prefetchOrder,
+                    ];
+                    continue;
+                }
+                $manifest[$mediaId]['prefetch_order'] = min(
+                    $manifest[$mediaId]['prefetch_order'],
+                    $prefetchOrder
+                );
+                if ($row['media_kind'] === 'IMAGE') $manifest[$mediaId]['is_critical'] = 1;
+            }
+
+            $manifest = array_values($manifest);
+            usort($manifest, static fn(array $a, array $b): int =>
+                [$a['prefetch_order'], $a['media_asset_id']]
+                <=> [$b['prefetch_order'], $b['media_asset_id']]
+            );
+            foreach ($manifest as $media) {
                 $db->table('prepared_assignment_media')->insert([
                     'prepared_assignment_id' => $assignmentId,
-                    'media_asset_id' => $mediaId,
-                    'is_critical' => $row['media_kind'] === 'IMAGE' ? 1 : 0,
-                    'prefetch_order' => (int) ($revisionOrder[(int) $row['soal_revision_id']] ?? 999999),
+                    'media_asset_id' => $media['media_asset_id'],
+                    'is_critical' => $media['is_critical'],
+                    'prefetch_order' => $media['prefetch_order'],
                 ]);
             }
         }
