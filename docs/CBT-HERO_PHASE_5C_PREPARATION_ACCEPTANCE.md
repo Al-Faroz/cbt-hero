@@ -130,6 +130,7 @@ nya masih sesuai tidak dibuat ulang.
 | P25 | Preparation dijalankan saat ada target valid dan invalid. | Assignment hanya dibuat untuk target valid; progress memperhitungkan target invalid dan can_start tetap false sampai target invalid ditangani. |
 | P26 | Semua target Susulan sudah invalid, lalu operator mencoba Siapkan Semua. | API menolak dengan INVALID_SUSULAN_TARGET; tidak membuat assignment untuk target invalid. |
 | P27 | Scope SELECTED memuat satu target invalid. | Seluruh request ditolak INVALID_SUSULAN_TARGET; tidak ada assignment parsial yang dibuat. |
+| P28 | Peserta sudah START pada Susulan itu sendiri; Attempt masih ACTIVE atau sudah FINISHED. | Target tidak dihitung invalid hanya karena Attempt pada Susulan tersebut sudah ada; assignment terpakai tetap dipertahankan dan status target tidak menghambat peserta lain. |
 
 ## Status
 
