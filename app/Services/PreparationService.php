@@ -39,8 +39,8 @@ class PreparationService
             'failed' => $summary['failed'],
             'missing' => $summary['missing'],
             'invalid_target_count' => $invalidTargetCount,
-            'progress' => $summary['total'] > 0
-                ? (int) floor(($summary['ready'] / $summary['total']) * 100)
+            'progress' => ($summary['total'] + $invalidTargetCount) > 0
+                ? (int) floor(($summary['ready'] / ($summary['total'] + $invalidTargetCount)) * 100)
                 : 0,
             'assignments_ready' => $assignmentsReady,
             'can_start' => $assignmentsReady
