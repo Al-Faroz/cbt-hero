@@ -314,3 +314,24 @@ Perbaikan: option order dan keys dinormalisasi menjadi string sebelum de-duplica
 File: `app/Services/QuestionRuntimeItemService.php`  
 Commit: `c7d7a48c3e08cba4d9b8f7c287d75c74d0f3343b`.  
 Acceptance E55 ditambahkan; belum diuji dengan fixture numeric keys.
+
+
+### 5D-20 — numeric Matching keys hilang pada validasi/scoring/bootstrap
+Schema mengizinkan left_key/right_key VARCHAR numerik. PHP mengubah key object JSON menjadi integer ketika decode associative; `AcademicAnswerService::matching()` dan bootstrap alias sebelumnya hanya menerima string. Jawaban Matching dapat ditolak atau hilang ketika dipulihkan.
+
+Perbaikan:
+- Matching validator menerima key string/int lalu menormalisasi string.
+- Pasangan disimpan sebagai JSON object agar numeric keys tidak berubah menjadi array.
+- Bootstrap memetakan raw numeric keys kembali ke alias publik.
+- PG Kompleks kini menolak nilai non-string/terlalu panjang, bukan membuangnya diam-diam.
+
+File:
+- `app/Services/AcademicAnswerService.php`
+- `app/Services/AttemptBootstrapService.php`
+
+Commits:
+- `e42358295d7900aa5ec5fffdebde22441af818f5`
+- `6c7c3a3663ed6966dcac61835e1067b0f34b0505`
+- `c76440d499064d1dee3e0c5c1e924c8def377c75`
+
+Acceptance E56–E57 ditambahkan; belum diuji dengan numeric key fixtures dan round-trip DB.
