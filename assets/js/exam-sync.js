@@ -109,7 +109,7 @@
             );
             if (data.deadline_at && runtime.bootstrap?.attempt) {
                 runtime.bootstrap.attempt.deadline_at = data.deadline_at;
-                runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
+                if (!data.paused) runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
             }
             await applyRevisionChanges(data.revision_changes || []);
             runtime.serverSyncRevision = nextServerRevision;
@@ -147,6 +147,10 @@
                 runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
                     ? 'Ujian dijeda · layar penuh diperlukan'
                     : 'Ujian dijeda oleh pengawas');
+                runtime.emit('cbt:attempt-paused', {
+                    reason: runtime.pauseReason,
+                    remaining_seconds: data.remaining_seconds
+                });
                 if (overlay) overlay.hidden = false;
                 if (title) title.textContent = 'Ujian dijeda';
                 if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
