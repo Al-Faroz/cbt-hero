@@ -109,7 +109,8 @@
             connection.className = 'small mt-1 '
                 + (row.connection_state === 'ONLINE' ? 'text-success'
                     : row.connection_state === 'RESET_AKSES' ? 'text-warning' : 'text-danger');
-            connection.textContent = row.connection_state === 'ONLINE' ? 'Online'
+            connection.textContent = row.paused ? 'Sesi dijeda'
+                : row.connection_state === 'ONLINE' ? 'Online'
                 : row.connection_state === 'RESET_AKSES' ? 'Reset Akses'
                 : 'Tidak terdeteksi';
             wrapper.append(connection);
