@@ -498,3 +498,8 @@ Commits:
 - Acceptance P23 updated at `a1428a5d4383875c74c2eaddd30bd5bce2c11434`.
 
 Belum diuji dengan fixture database/browser.
+
+
+Routes/API contract juga disinkronkan untuk response `invalid_target_count` + `invalid_targets[]`, aturan `can_start`, dan detail manager yang menampilkan urutan opsi serta pasangan Menjodohkan tanpa mengubah payload participant.
+
+Commit: `437d193cb3d487341c34078ee153a96a9d053e52`
