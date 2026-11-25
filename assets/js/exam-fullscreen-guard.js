@@ -6,10 +6,7 @@
     if (!runtime || !root) return;
 
     const required = root.dataset.examBrowserRequired === '1';
-    const proof = typeof window.CBT_EXAM_BROWSER_PROOF === 'string'
-        ? window.CBT_EXAM_BROWSER_PROOF
-        : '';
-    const enabled = !required && proof === '';
+    const enabled = !required;
     if (!enabled) return;
 
     const overlay = document.getElementById('examLockOverlay');
