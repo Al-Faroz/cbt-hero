@@ -181,3 +181,14 @@ Commit: `ed56499ab211e00340a2ed99be8c98db4ff3a3cd`
 Query target Susulan pada Preparation sekarang memastikan membership peserta masih terhubung ke Kegiatan sumber MAIN, selain status aktif dan tingkat Bank. Ini merupakan defensive check terhadap perubahan relasi membership setelah target dibuat.
 
 Commit: `d8bb41113c0b6c31d9ac0a82bd83aa703642b070`
+
+
+## Pemeriksaan keamanan PREP-DETAIL-02 — detail manager terpisah dari payload peserta
+
+Audit silang terhadap `QuestionRuntimeItemService`:
+- API peserta menerima alias acak untuk sisi Matching, bukan `mapping_json` asli atau pasangan jawaban.
+- `QuestionRuntimeItemService::build()` hanya mengirim key alias dan konten sisi kiri/kanan.
+- `PreparationService::detail()` adalah endpoint manager; ia dapat menampilkan mapping internal untuk troubleshooting, tetapi tidak menambahkan `is_correct`, correct_key, accepted answers, atau rubric answer key ke payload peserta.
+- Route detail berada di grup manager API dengan filter role manager.
+
+Tidak ada perubahan runtime peserta pada temuan ini. Ini merupakan hasil source audit, belum diuji melalui HTTP response fixture.
