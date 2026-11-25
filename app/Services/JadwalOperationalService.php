@@ -25,9 +25,15 @@ class JadwalOperationalService
             if ($old['results_finalized_at'] !== null) {
                 $db->transRollback(); return $this->error(423, 'DATA_LOCKED', 'Jadwal yang hasilnya sudah difinalkan tidak dapat diubah.');
             }
-            if ($this->timestamp($newLimit) <= $this->timestamp((string) $old['batas_mulai_at'])) {
+            $newTimestamp = $this->timestamp($newLimit);
+            $oldTimestamp = $this->timestamp((string) $old['batas_mulai_at']);
+            if ($newTimestamp < $oldTimestamp) {
                 $db->transRollback();
                 return $this->error(422, 'VALIDATION_FAILED', 'Batas Mulai hanya boleh diperpanjang.');
+            }
+            if ($newTimestamp === $oldTimestamp) {
+                $db->transCommit();
+                return ['ok' => true, 'status' => 200, 'item' => $old + ['replayed' => true]];
             }
             $db->table('jadwal')->where('id', $jadwalId)->update(['batas_mulai_at' => $newLimit]);
             $after = $db->table('jadwal')->where('id', $jadwalId)->get()->getRowArray();
