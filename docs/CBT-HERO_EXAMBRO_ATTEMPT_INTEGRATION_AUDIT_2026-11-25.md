@@ -83,3 +83,25 @@ Implikasi: API Exambro harus menggunakan pola auth peserta dan ownership yang su
 ## 5. Status
 
 Source audit membuktikan bahwa method `now()`/`timezone()` yang dipakai Fullscreen Guard tersedia, dan memperlihatkan bahwa proof lama hanya string non-empty pada jalur Akademik yang diperiksa. Jalur Psikologi dan audit schema/lifecycle penuh masih terbuka. Tidak ada klaim PASS.
+
+
+## 6. Cross-check dokumen ERD dan kontrak API normatif
+
+Pemeriksaan dokumen turunan menghasilkan temuan tambahan:
+
+- ERD sudah memiliki `kegiatan.exam_browser_required` sebagai sakelar kebijakan kegiatan.
+- Tabel `attempt` sudah memiliki `client_uuid` dan `client_generation`; keduanya dapat menjadi bagian binding sesi, tetapi bukan pengganti device registration.
+- ERD sudah mendefinisikan `attempt_pause_event` dan `attempt_client_event`. Event lifecycle Attempt dapat menggunakan tabel yang ada jika kolom/retensi/index mencukupi.
+- ERD belum mendefinisikan entitas khusus device registration atau challenge nonce. Sebelum migration, pastikan belum ada implementasi tambahan di source/migration aktual.
+- Kontrak API normatif saat ini masih memakai field `exam_browser_proof` pada START/RESUME. Kontrak tersebut harus direvisi saat protokol Android final diimplementasikan; jangan mengubah request client lebih dulu sebelum service server dan migration tersedia.
+- ERD menyatakan START wajib atomic dan Attempt memakai satu active lock per peserta. Enrollment dan challenge tidak boleh mengubah aturan satu peserta/maksimum satu Attempt ACTIVE.
+- ERD menyatakan network putus/browser ditutup tidak otomatis membuat pause. Fullscreen Guard adalah keputusan tambahan yang spesifik untuk event keluar fullscreen yang diterima server; offline lifecycle tidak boleh diberi kompensasi dari timestamp client.
+
+### Dampak pada rancangan data
+
+Kandidat minimum yang masih perlu diverifikasi terhadap seluruh migration aktual:
+1. `exambro_device` untuk public key dan status perangkat.
+2. `exambro_challenge` untuk nonce hash, binding, expiry, dan consumed state.
+3. Reuse `attempt_client_event` untuk event Exambro yang terkait Attempt, dengan metadata yang tervalidasi dan dibatasi ukuran/jenisnya.
+
+Tabel ketiga tidak perlu dibuat bila `attempt_client_event` sudah memenuhi kebutuhan audit. Tidak ada private key atau shared secret di database server.
