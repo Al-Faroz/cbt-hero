@@ -91,6 +91,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E30 | Coba memakai client_uuid lain tanpa Reset Akses. | Ditolak CLIENT_MISMATCH. |
 | E31 | Setelah Reset Akses (Phase 7) generation berubah dan pause server dibuat. | Client lama invalid; resume generation baru melanjutkan Attempt yang sama dan deadline bergeser sebesar pause. |
 | E32 | Pindah device/cache hilang tetapi server ACK sudah ada. | Bootstrap membangun ulang jawaban yang sudah ACK; jawaban local-only device lama tidak dapat dipulihkan. |
+| E33 | Server mengembalikan ACK retryable (misalnya Attempt sedang dijeda) atau tidak mengembalikan ACK untuk mutation dalam batch. | Client memakai exponential backoff dan tidak mengulang request rapat, termasuk ketika drain dipanggil saat submit. Setelah kondisi pulih, queue dapat disinkronkan. |
 
 ## Catatan Exam Browser
 
