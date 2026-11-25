@@ -66,7 +66,7 @@ class JadwalOrderService
 
             $attempt = $db->table('attempt')
                 ->select('id, status')
-                ->where('jadwal_id', (int) $row['id'])
+                ->where('root_jadwal_id', (int) $row['id'])
                 ->where('peserta_id', $participantId)
                 ->orderBy('id', 'DESC')
                 ->get()

@@ -951,6 +951,23 @@ Preparation juga membuat manifest media dan mem-pin `soal_revision_id`. START
 participant pada Phase Attempt Engine wajib menolak dengan `NOT_PREPARED` bila
 assignment READY yang sesuai tidak tersedia.
 
+### 17.4 Validasi Ulang Target Susulan sebelum Preparation
+
+Eligibility target Susulan tidak dianggap permanen hanya karena valid saat target dibuat.
+Sebelum Prepared Assignment dibangun dan sebelum START, sistem wajib memeriksa ulang:
+
+- membership masih aktif pada Kegiatan yang sama;
+- peserta masih aktif dan tingkatnya sesuai Bank/Jadwal MAIN;
+- peserta tidak sedang mempunyai Attempt ACTIVE pada Jadwal lain;
+- FIRST_ATTEMPT belum mempunyai histori Attempt pada root Jadwal MAIN;
+- REPLACEMENT masih menunjuk Attempt FINISHED terbaru pada root Jadwal MAIN.
+
+Target yang tidak lagi memenuhi syarat tidak boleh memperoleh Prepared Assignment baru
+dan tidak boleh membuat status Preparation Jadwal menjadi READY. Sistem menampilkan
+jumlah target invalid kepada Operator. Target tidak dibatalkan otomatis; Operator
+harus membatalkan atau memperbaikinya secara eksplisit melalui halaman Susulan agar
+perubahan tetap dapat diaudit. START tetap menjalankan validasi otoritatifnya sendiri.
+
 ---
 
 # 18. JADWAL UJIAN
@@ -1001,7 +1018,9 @@ Yang diperbolehkan sebagai tindakan operasional terkontrol:
 
 Perpanjang Batas Mulai hanya boleh bergerak ke waktu yang lebih akhir.
 Tambah Waktu diterapkan pada Attempt ACTIVE dengan menambah `added_seconds` dan
-`deadline_at`; Attempt yang telah selesai tidak ditulis ulang.
+`deadline_at`; Attempt yang telah selesai tidak ditulis ulang. Command Tambah Waktu
+wajib memakai Idempotency-Key yang mengikat Jadwal, durasi tambahan, scope, dan daftar
+Attempt agar retry setelah response hilang tidak menggandakan tambahan waktu.
 
 Semua diaudit.
 

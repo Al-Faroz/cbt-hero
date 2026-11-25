@@ -81,8 +81,10 @@ class SusulanService
 
         $builder = $db->table('peserta_kegiatan AS pk')
             ->join('peserta AS p', 'p.id = pk.peserta_id')
+            ->join('rombel AS rb', 'rb.id = p.rombel_id')
             ->join('ruang AS r', 'r.id = pk.ruang_id', 'left')
             ->where('pk.kegiatan_id', (int) $main['kegiatan_id'])
+            ->where('rb.tingkat', (int) $main['tingkat'])
             ->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE');
         $total = (int) $builder->countAllResults(false);
         if ($q !== '') {
@@ -100,6 +102,17 @@ class SusulanService
         $ids = array_map(static fn(array $item): int => (int) $item['peserta_kegiatan_id'], $items);
         $attemptMap = $this->latestAttempts($db, $mainId, $ids);
         $pendingMap = $this->pendingTargets($db, $mainId, $ids, $ignoreSusulanId > 0 ? $ignoreSusulanId : null);
+        $activeMap = [];
+        $participantIds = array_values(array_unique(array_map('intval', array_column($items, 'peserta_id'))));
+        if ($participantIds) {
+            $activeRows = $db->table('attempt')->select('id, peserta_id, jadwal_id')
+                ->where('status', 'ACTIVE')->whereIn('peserta_id', $participantIds)
+                ->orderBy('id', 'DESC')->get()->getResultArray();
+            foreach ($activeRows as $activeRow) {
+                $participantId = (int) $activeRow['peserta_id'];
+                if (!isset($activeMap[$participantId])) $activeMap[$participantId] = $activeRow;
+            }
+        }
 
         foreach ($items as &$item) {
             $pkId = (int) $item['peserta_kegiatan_id'];
@@ -110,6 +123,8 @@ class SusulanService
             $item['supersede_attempt_id'] = null;
             if ($pending !== null) {
                 $item['reason'] = 'Sudah dipilih pada Susulan #' . $pending['jadwal_id'] . ' yang belum dimulai.';
+            } elseif (isset($activeMap[(int) $item['peserta_id']])) {
+                $item['reason'] = 'Peserta masih mempunyai Attempt aktif pada Jadwal #' . (int) $activeMap[(int) $item['peserta_id']]['jadwal_id'] . '.';
             } elseif ($attempt === null) {
                 $item['eligible'] = true;
                 $item['target_mode'] = 'FIRST_ATTEMPT';
@@ -150,10 +165,16 @@ class SusulanService
 
         $db = Database::connect(); $db->transBegin();
         try {
+            $preMain = $this->main($db, $mainId);
+            if ($preMain === null) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
+            }
+            $this->lockTargetParticipants($db, (int) $preMain['kegiatan_id'], $data['targets']);
             $main = $this->main($db, $mainId, true);
             if ($main === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal utama tidak ditemukan.');
             }
+            $this->lockTargetMemberships($db, $data['targets']);
 
             $operation = $db->query('SELECT * FROM jadwal_operations WHERE idempotency_key = ? FOR UPDATE',
                 [$idempotencyKey])->getRowArray();
@@ -245,6 +266,16 @@ class SusulanService
 
         $db = Database::connect(); $db->transBegin();
         try {
+            $preOld = $this->find($susulanId);
+            if ($preOld === null || ($preOld['jenis_jadwal'] ?? '') !== 'SUSULAN' || empty($preOld['parent_jadwal_id'])) {
+                $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
+            }
+            $preMain = $this->main($db, (int) $preOld['parent_jadwal_id']);
+            if ($preMain === null) {
+                $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Jadwal utama Susulan tidak tersedia.');
+            }
+            $this->lockTargetParticipants($db, (int) $preMain['kegiatan_id'], $data['targets']);
+
             $old = $db->query('SELECT * FROM jadwal WHERE id = ? FOR UPDATE', [$susulanId])->getRowArray();
             if ($old === null || $old['jenis_jadwal'] !== 'SUSULAN' || $old['parent_jadwal_id'] === null) {
                 $db->transRollback(); return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
@@ -257,6 +288,7 @@ class SusulanService
             if ($main === null) {
                 $db->transRollback(); return $this->error(409, 'STATE_CONFLICT', 'Jadwal utama Susulan tidak tersedia.');
             }
+            $this->lockTargetMemberships($db, $data['targets']);
             $validated = $this->validateTargets($db, $main, $data['targets'], $susulanId);
             if (!($validated['ok'] ?? false)) {
                 $db->transRollback(); return $validated;
@@ -289,6 +321,41 @@ class SusulanService
             $db->transRollback();
             log_message('error', 'Update Susulan gagal: {message}', ['message' => $e->getMessage()]);
             return $this->error(409, 'STATE_CONFLICT', 'Susulan tidak dapat diperbarui.');
+        }
+    }
+
+    public function changeAccess(int $susulanId, string $target, array $actor): array
+    {
+        $target = strtoupper(trim($target));
+        if (!in_array($target, ['BUKA', 'TAHAN'], true)) {
+            return $this->error(422, 'VALIDATION_FAILED', 'Status akses harus BUKA atau TAHAN.');
+        }
+
+        $db = Database::connect(); $db->transBegin();
+        try {
+            $old = $db->query('SELECT * FROM jadwal WHERE id = ? FOR UPDATE', [$susulanId])->getRowArray();
+            if ($old === null || $old['jenis_jadwal'] !== 'SUSULAN' || $old['parent_jadwal_id'] === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Jadwal Susulan tidak ditemukan.');
+            }
+            if ($old['results_finalized_at'] !== null) {
+                $db->transRollback();
+                return $this->error(423, 'DATA_LOCKED', 'Akses Susulan yang hasilnya sudah difinalkan tidak dapat diubah.');
+            }
+
+            if ($old['access_state'] !== $target) {
+                $db->table('jadwal')->where('id', $susulanId)->update(['access_state' => $target]);
+            }
+            $after = $this->find($susulanId);
+            $this->audit($susulanId, 'ACCESS_' . $target, $old, $after, $actor);
+            if ($db->transStatus() === false || $db->transCommit() === false) {
+                throw new RuntimeException('Commit perubahan akses Susulan gagal.');
+            }
+            return ['ok' => true, 'status' => 200, 'item' => $after];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Ubah akses Susulan gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'STATE_CONFLICT', 'Akses Susulan tidak dapat diubah.');
         }
     }
 
@@ -373,22 +440,73 @@ class SusulanService
         ]];
     }
 
+    private function lockTargetParticipants($db, int $kegiatanId, array $targets): void
+    {
+        $membershipIds = array_values(array_unique(array_map(
+            static fn(array $target): int => (int) $target['peserta_kegiatan_id'],
+            $targets
+        )));
+        if (!$membershipIds) return;
+
+        $rows = $db->table('peserta_kegiatan AS pk')->select('pk.peserta_id')
+            ->where('pk.kegiatan_id', $kegiatanId)->whereIn('pk.id', $membershipIds)
+            ->orderBy('pk.peserta_id', 'ASC')->get()->getResultArray();
+        $participantIds = array_values(array_unique(array_map(
+            static fn(array $row): int => (int) $row['peserta_id'],
+            $rows
+        )));
+        if (!$participantIds) return;
+
+        $placeholders = implode(',', array_fill(0, count($participantIds), '?'));
+        $db->query(
+            'SELECT id FROM peserta WHERE id IN (' . $placeholders . ') ORDER BY id ASC FOR UPDATE',
+            $participantIds
+        )->getResultArray();
+    }
+
+    private function lockTargetMemberships($db, array $targets): void
+    {
+        $membershipIds = array_values(array_unique(array_map(
+            static fn(array $target): int => (int) $target['peserta_kegiatan_id'],
+            $targets
+        )));
+        if (!$membershipIds) return;
+        $placeholders = implode(',', array_fill(0, count($membershipIds), '?'));
+        $db->query(
+            'SELECT id FROM peserta_kegiatan WHERE id IN (' . $placeholders . ') ORDER BY id ASC FOR UPDATE',
+            $membershipIds
+        )->getResultArray();
+    }
+
     private function validateTargets($db, array $main, array $targets, ?int $ignoreSusulanId = null): array
     {
         $ids = array_column($targets, 'peserta_kegiatan_id');
-        $members = $db->table('peserta_kegiatan AS pk')->select('pk.id, pk.peserta_id, pk.status, p.status AS peserta_status')
+        $members = $db->table('peserta_kegiatan AS pk')->select('pk.id, pk.peserta_id, pk.status, p.status AS peserta_status, rb.tingkat')
             ->join('peserta AS p', 'p.id = pk.peserta_id')
+            ->join('rombel AS rb', 'rb.id = p.rombel_id')
             ->where('pk.kegiatan_id', (int) $main['kegiatan_id'])->whereIn('pk.id', $ids)
             ->get()->getResultArray();
         $memberMap = array_column($members, null, 'id');
         $latest = $this->latestAttempts($db, (int) $main['id'], $ids);
         $pending = $this->pendingTargets($db, (int) $main['id'], $ids, $ignoreSusulanId);
+        $participantIds = array_values(array_unique(array_map('intval', array_column($members, 'peserta_id'))));
+        $activeMap = [];
+        if ($participantIds) {
+            $activeRows = $db->table('attempt')->select('id, peserta_id')
+                ->where('status', 'ACTIVE')->whereIn('peserta_id', $participantIds)
+                ->get()->getResultArray();
+            foreach ($activeRows as $activeRow) $activeMap[(int) $activeRow['peserta_id']] = $activeRow;
+        }
 
         foreach ($targets as $target) {
             $pkId = (int) $target['peserta_kegiatan_id'];
             $member = $memberMap[$pkId] ?? null;
             if ($member === null || $member['status'] !== 'ACTIVE' || $member['peserta_status'] !== 'ACTIVE')
                 return $this->error(422, 'VALIDATION_FAILED', 'Peserta target tidak aktif pada Kegiatan ini.');
+            if ((int) $member['tingkat'] !== (int) $main['tingkat'])
+                return $this->error(422, 'VALIDATION_FAILED', 'Peserta target tidak sesuai tingkat Bank/Jadwal utama.');
+            if (isset($activeMap[(int) $member['peserta_id']]))
+                return $this->error(409, 'ACTIVE_ATTEMPT_EXISTS', 'Peserta masih mempunyai Attempt aktif pada Jadwal lain.');
             if (isset($pending[$pkId]))
                 return $this->error(409, 'TARGET_ALREADY_PENDING', 'Peserta sudah mempunyai target Susulan lain yang belum dimulai.');
 

@@ -20,6 +20,7 @@
         candidatePage: 1,
         candidatePages: 1,
         candidateSeq: 0,
+        operationKey: null,
     };
     let searchTimer;
 
@@ -48,6 +49,9 @@
         }
         return result.data;
     };
+
+    const newOperationKey = () => 'add-time:' + (window.crypto?.randomUUID?.()
+        ?? (Date.now() + '-' + Math.random().toString(36).slice(2)));
 
     const cell = (value, className = '') => {
         const td = document.createElement('td');
@@ -415,6 +419,7 @@
     };
 
     const openOperation = (id, type, currentValue = '') => {
+        state.operationKey = type === 'ADD_TIME' ? newOperationKey() : null;
         $('jadwalOperationId').value = String(id);
         $('jadwalOperationType').value = type;
         $('jadwalOperationFields').replaceChildren();
@@ -453,6 +458,7 @@
             const help = document.createElement('div');
             help.className = 'form-text';
             help.textContent = 'Hanya Attempt yang masih aktif pada Susulan ini yang mendapat tambahan waktu.';
+            input.addEventListener('input', () => { state.operationKey = newOperationKey(); });
             $('jadwalOperationFields').append(label, input, help);
         }
         operationModal.show();
@@ -531,21 +537,28 @@
         const id = Number($('jadwalOperationId').value);
         const type = $('jadwalOperationType').value;
         const value = $('jadwalOperationValue').value;
+        let replayed = false;
         try {
             if (type === 'EXTEND') {
-                await api(jadwalBase + '/' + id + '/extend-start-window', 'POST', {
+                const result = await api(jadwalBase + '/' + id + '/extend-start-window', 'POST', {
                     batas_mulai_at: value,
                 });
+                replayed = Boolean(result.item?.replayed);
             } else {
-                await api(jadwalBase + '/' + id + '/add-time', 'POST', {
+                const result = await api(jadwalBase + '/' + id + '/add-time', 'POST', {
                     seconds: Math.round(Number(value) * 60),
                     scope: 'ALL_ACTIVE',
-                });
+                }, {'Idempotency-Key': state.operationKey || newOperationKey()});
+                state.operationKey = null;
+                replayed = Boolean(result.item?.replayed);
             }
             operationModal.hide();
             await load();
-            feedback('susulanFeedback', type === 'EXTEND'
-                ? 'Batas Mulai berhasil diperpanjang.'
+            if (type === 'EXTEND') feedback('susulanFeedback', replayed
+                ? 'Perpanjangan Batas Mulai ini sudah diterapkan; tidak diubah ulang.'
+                : 'Batas Mulai berhasil diperpanjang.');
+            else feedback('susulanFeedback', replayed
+                ? 'Permintaan Tambah Waktu ini sudah pernah diproses; tambahan tidak diterapkan ulang.'
                 : 'Tambahan waktu berhasil diterapkan.');
         } catch (error) {
             feedback('jadwalOperationFeedback', error.message, true);

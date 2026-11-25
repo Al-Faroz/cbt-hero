@@ -147,7 +147,7 @@ class QuestionRuntimeItemService
             ->select('ma.id, ma.storage_type, ma.media_kind, ma.provider, ma.external_url, ma.status')
             ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
             ->where('srm.soal_revision_id', $revisionId)
-            ->orderBy('srm.sort_order', 'ASC')
+            ->orderBy('srm.sort_order', 'ASC')->orderBy('srm.id', 'ASC')
             ->get()->getResultArray();
         $result = [];
         foreach ($rows as $row) {

@@ -17,7 +17,11 @@ class PreparationService
         $context = $this->context($db, $jadwalId);
         if ($context === null) return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
 
-        $targets = $this->targets($db, $context);
+        $allTargets = $this->targets($db, $context);
+        $invalidTargets = $this->invalidSusulanTargets($db, $context);
+        $invalidTargetIds = array_column($invalidTargets, 'peserta_kegiatan_id');
+        $invalidTargetCount = count($invalidTargets);
+        $targets = array_diff_key($allTargets, array_flip($invalidTargetIds));
         $fingerprint = $this->scheduleFingerprint($db, $context);
         $summary = $this->summarize($db, $context, $targets, $fingerprint);
         $preflight = $this->participantPreflight($db, $context, array_keys($targets));
@@ -25,7 +29,8 @@ class PreparationService
             && $summary['ready'] === $summary['total']
             && $summary['stale'] === 0
             && $summary['failed'] === 0
-            && $summary['missing'] === 0;
+            && $summary['missing'] === 0
+            && $invalidTargetCount === 0;
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'jadwal' => $this->publicContext($context),
@@ -34,8 +39,10 @@ class PreparationService
             'stale' => $summary['stale'],
             'failed' => $summary['failed'],
             'missing' => $summary['missing'],
-            'progress' => $summary['total'] > 0
-                ? (int) floor(($summary['ready'] / $summary['total']) * 100)
+            'invalid_target_count' => $invalidTargetCount,
+            'invalid_targets' => $invalidTargets,
+            'progress' => ($summary['total'] + $invalidTargetCount) > 0
+                ? (int) floor(($summary['ready'] / ($summary['total'] + $invalidTargetCount)) * 100)
                 : 0,
             'assignments_ready' => $assignmentsReady,
             'can_start' => $assignmentsReady
@@ -60,17 +67,24 @@ class PreparationService
 
         $scope = strtoupper(trim($this->scalar($payload['scope'] ?? 'ALL')));
         $selectedIds = $payload['peserta_kegiatan_ids'] ?? [];
-        $force = (bool) ($payload['force_rebuild'] ?? false);
-        if (!in_array($scope, ['ALL', 'SELECTED'], true))
-            return $this->error(422, 'VALIDATION_FAILED', 'Scope Preparation tidak valid.');
+        $forceValue = $payload['force_rebuild'] ?? false;
+        if (!in_array($scope, ['ALL', 'SELECTED'], true) || !is_bool($forceValue))
+            return $this->error(422, 'VALIDATION_FAILED', 'Scope atau opsi force rebuild Preparation tidak valid.');
+        $force = $forceValue;
 
         if ($scope === 'SELECTED') {
             if (!is_array($selectedIds) || !$selectedIds)
                 return $this->error(422, 'VALIDATION_FAILED', 'Pilih peserta untuk Preparation terpilih.');
-            $selectedIds = array_values(array_unique(array_filter(array_map(
-                static fn($value): int => is_scalar($value) ? (int) $value : 0,
-                $selectedIds
-            ), static fn(int $value): bool => $value > 0)));
+            $normalizedIds = [];
+            foreach ($selectedIds as $value) {
+                $id = is_scalar($value)
+                    ? filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])
+                    : false;
+                if (!is_int($id))
+                    return $this->error(422, 'VALIDATION_FAILED', 'Daftar peserta berisi ID yang tidak valid.');
+                $normalizedIds[$id] = $id;
+            }
+            $selectedIds = array_values($normalizedIds);
             if (!$selectedIds)
                 return $this->error(422, 'VALIDATION_FAILED', 'Pilih peserta yang valid.');
             sort($selectedIds);
@@ -111,11 +125,16 @@ class PreparationService
                     return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah dipakai untuk request yang berbeda.');
                 }
                 if ($operation['status'] === 'COMPLETED') {
-                    $db->transCommit();
+                    if ($db->transCommit() === false) {
+                        throw new RuntimeException('Commit replay Preparation gagal.');
+                    }
                     $status = $this->status($jadwalId);
                     if (!($status['ok'] ?? false)) return $status;
                     $status['data']['processed_count'] = 0;
-                    $status['data']['has_more'] = !$status['data']['can_start'];
+                    $status['data']['has_more'] =
+                        (int) ($status['data']['missing'] ?? 0)
+                        + (int) ($status['data']['stale'] ?? 0)
+                        + (int) ($status['data']['failed'] ?? 0) > 0;
                     $status['data']['replayed'] = true;
                     return $status;
                 }
@@ -132,6 +151,13 @@ class PreparationService
             }
 
             $targets = $this->targets($db, $context);
+            $invalidTargets = $this->invalidSusulanTargets($db, $context);
+            $invalidTargetIds = array_column($invalidTargets, 'peserta_kegiatan_id');
+            if ($scope === 'SELECTED' && array_intersect($selectedIds, $invalidTargetIds)) {
+                $db->transRollback();
+                return $this->error(409, 'INVALID_SUSULAN_TARGET', 'Sebagian target Susulan sudah tidak memenuhi syarat. Batalkan atau perbaiki target pada halaman Susulan.');
+            }
+            $targets = array_diff_key($targets, array_flip($invalidTargetIds));
             if ($scope === 'SELECTED') {
                 $unknown = array_diff($selectedIds, array_keys($targets));
                 if ($unknown) {
@@ -142,23 +168,24 @@ class PreparationService
             }
             if (!$targets) {
                 $db->transRollback();
-                return $this->error(409, 'NO_TARGET', 'Belum ada peserta target untuk Preparation.');
-            }
-            if ($force && count($targets) > self::CHUNK_SIZE) {
-                $db->transRollback();
                 return $this->error(
-                    422,
-                    'FORCE_REBUILD_SCOPE_TOO_LARGE',
-                    'Force rebuild dibatasi maksimal ' . self::CHUNK_SIZE . ' peserta per request. Gunakan scope SELECTED atau Bangun Ulang Terdampak.'
+                    409,
+                    $invalidTargetIds ? 'INVALID_SUSULAN_TARGET' : 'NO_TARGET',
+                    $invalidTargetIds
+                        ? 'Semua target Susulan sudah tidak memenuhi syarat. Batalkan atau perbaiki target pada halaman Susulan.'
+                        : 'Belum ada peserta target untuk Preparation.'
                 );
             }
-
             $fingerprint = $this->scheduleFingerprint($db, $context);
             $states = $this->assignmentStates($db, $context, $targets, $fingerprint);
 
             $queue = [];
             foreach ($targets as $pkId => $target) {
                 $state = $states[$pkId]['state'] ?? 'MISSING';
+                $assignment = $states[$pkId]['assignment'] ?? null;
+                $used = $assignment !== null && $assignment['used_at'] !== null;
+                if ($used) continue;
+
                 if ($rebuildOnly) {
                     if (in_array($state, ['STALE', 'FAILED'], true)) $queue[$pkId] = $target;
                 } elseif ($force || in_array($state, ['MISSING', 'STALE', 'FAILED'], true)) {
@@ -166,12 +193,20 @@ class PreparationService
                 }
             }
             ksort($queue);
+            if ($force && count($queue) > self::CHUNK_SIZE) {
+                $db->transRollback();
+                return $this->error(
+                    422,
+                    'FORCE_REBUILD_SCOPE_TOO_LARGE',
+                    'Force rebuild dibatasi maksimal ' . self::CHUNK_SIZE . ' assignment belum terpakai per request. Gunakan scope SELECTED atau Bangun Ulang Terdampak.'
+                );
+            }
             $chunk = array_slice($queue, 0, self::CHUNK_SIZE, true);
 
             $plan = $this->buildPlan($db, $context);
             $processed = 0;
             foreach ($chunk as $pkId => $target) {
-                $this->buildAssignment($db, $context, $target, $fingerprint, $plan, $actor);
+                $this->buildAssignment($db, $context, $target, $fingerprint, $plan, $actor, $force);
                 $processed++;
             }
 
@@ -224,6 +259,7 @@ class PreparationService
         $expected = hash('sha256', implode('|', [
             $fingerprint,
             $pesertaKegiatanId,
+            (int) ($target['peserta_id'] ?? 0),
             (string) ($target['target_mode'] ?? 'MAIN'),
             (string) ($target['supersede_attempt_id'] ?? ''),
         ]));
@@ -242,22 +278,45 @@ class PreparationService
         return $assignment;
     }
 
-    public function assignments(int $jadwalId): array
+    public function assignments(int $jadwalId, array $query = []): array
     {
         $db = Database::connect();
         $context = $this->context($db, $jadwalId);
         if ($context === null) return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
 
-        $rows = $db->table('prepared_assignment AS pa')
-            ->select('pa.id, pa.peserta_kegiatan_id, pa.assignment_seq, pa.source_version, pa.fingerprint, pa.status, '
+        $page = min($this->positive($query['page'] ?? null, 1), 100000);
+        $perPage = $this->positive($query['per_page'] ?? null, 25);
+        $perPage = in_array($perPage, [25, 50, 100], true) ? $perPage : 25;
+        $search = mb_substr(trim($this->scalar($query['q'] ?? null)), 0, 100);
+
+        $builder = $db->table('prepared_assignment AS pa')
+            ->join('peserta_kegiatan AS pk', 'pk.id = pa.peserta_kegiatan_id')
+            ->where('pa.generated_for_jadwal_id', $jadwalId);
+        $total = (int) $builder->countAllResults(false);
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('pk.nomor_peserta', $search)
+                ->orLike('pk.nama_snapshot', $search)
+                ->orLike('pk.rombel_snapshot', $search)
+                ->groupEnd();
+        }
+        $filtered = (int) $builder->countAllResults(false);
+        $pages = max(1, (int) ceil($filtered / $perPage));
+        $page = min($page, $pages);
+        $rows = $builder->select('pa.id, pa.peserta_kegiatan_id, pa.assignment_seq, pa.source_version, pa.fingerprint, pa.status, '
                 . 'pa.generated_at, pa.used_at, pk.nomor_peserta, pk.nama_snapshot AS nama, pk.rombel_snapshot AS rombel, '
                 . '(SELECT COUNT(*) FROM prepared_assignment_item pai WHERE pai.prepared_assignment_id = pa.id) AS item_count')
-            ->join('peserta_kegiatan AS pk', 'pk.id = pa.peserta_kegiatan_id')
-            ->where('pa.generated_for_jadwal_id', $jadwalId)
             ->orderBy('pk.rombel_snapshot', 'ASC')->orderBy('pk.nama_snapshot', 'ASC')
-            ->orderBy('pa.assignment_seq', 'DESC')->get()->getResultArray();
+            ->orderBy('pa.assignment_seq', 'DESC')->orderBy('pa.id', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)->get()->getResultArray();
 
-        return ['ok' => true, 'status' => 200, 'data' => ['items' => $rows]];
+        return ['ok' => true, 'status' => 200, 'data' => [
+            'items' => $rows,
+            'pagination' => [
+                'page' => $page, 'per_page' => $perPage, 'pages' => $pages,
+                'total' => $total, 'filtered' => $filtered,
+            ],
+        ]];
     }
 
     public function detail(int $assignmentId): array
@@ -271,16 +330,132 @@ class PreparationService
 
         $items = $db->table('prepared_assignment_item AS pai')
             ->select('pai.id, pai.sequence_no, pai.soal_id, pai.soal_revision_id, pai.option_order_json, '
-                . 'pai.mapping_json, pai.metadata_json, sr.question_type, sr.max_point')
+                . 'pai.mapping_json, pai.metadata_json, sr.question_type, sr.question_html, sr.stimulus_html, sr.max_point')
             ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id', 'left')
             ->where('pai.prepared_assignment_id', $assignmentId)
             ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
 
-        $media = $db->table('prepared_assignment_media AS pam')
-            ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.status')
+        $revisionIds = array_values(array_unique(array_filter(array_map(
+            static fn(array $item): int => (int) ($item['soal_revision_id'] ?? 0),
+            $items
+        ))));
+        $optionsByRevision = [];
+        $pairsByRevision = [];
+        if ($revisionIds) {
+            $optionRows = $db->table('soal_opsi')
+                ->select('soal_revision_id, option_key, content_html, sort_order, metadata_json')
+                ->whereIn('soal_revision_id', $revisionIds)
+                ->orderBy('soal_revision_id', 'ASC')->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')
+                ->get()->getResultArray();
+            foreach ($optionRows as $option) {
+                $optionsByRevision[(int) $option['soal_revision_id']][(string) $option['option_key']] = $option;
+            }
+
+            $pairRows = $db->table('soal_matching_pair')
+                ->select('soal_revision_id, left_key, left_html, right_key, right_html, sort_order')
+                ->whereIn('soal_revision_id', $revisionIds)
+                ->orderBy('soal_revision_id', 'ASC')->orderBy('sort_order', 'ASC')->orderBy('id', 'ASC')
+                ->get()->getResultArray();
+            foreach ($pairRows as $pair) {
+                $pairsByRevision[(int) $pair['soal_revision_id']][] = $pair;
+            }
+        }
+
+        foreach ($items as &$item) {
+            $revisionId = (int) ($item['soal_revision_id'] ?? 0);
+            $options = $optionsByRevision[$revisionId] ?? [];
+            $optionOrder = json_decode((string) ($item['option_order_json'] ?? ''), true);
+            $optionOrder = is_array($optionOrder)
+                ? array_values(array_map('strval', array_filter($optionOrder, 'is_scalar')))
+                : array_map('strval', array_keys($options));
+            foreach (array_keys($options) as $key) {
+                $key = (string) $key;
+                if (!in_array($key, $optionOrder, true)) $optionOrder[] = $key;
+            }
+            $item['options'] = [];
+            foreach ($optionOrder as $key) {
+                if (!is_scalar($key)) continue;
+                $key = (string) $key;
+                if (!isset($options[$key])) continue;
+                $item['options'][] = [
+                    'option_key' => $key,
+                    'content_html' => (string) $options[$key]['content_html'],
+                    'metadata_json' => $options[$key]['metadata_json'],
+                ];
+            }
+
+            $pairs = $pairsByRevision[$revisionId] ?? [];
+            $pairMap = [];
+            $leftMap = [];
+            $rightMap = [];
+            foreach ($pairs as $pair) {
+                $leftKey = (string) $pair['left_key'];
+                $rightKey = (string) $pair['right_key'];
+                $pairMap[$leftKey] = $rightKey;
+                $leftMap[$leftKey] = (string) $pair['left_html'];
+                $rightMap[$rightKey] = (string) $pair['right_html'];
+            }
+            $mapping = json_decode((string) ($item['mapping_json'] ?? ''), true);
+            $mapping = is_array($mapping) ? $mapping : [];
+            $leftOrder = is_array($mapping['left_order'] ?? null)
+                ? array_values(array_map('strval', array_filter($mapping['left_order'], 'is_scalar')))
+                : array_map('strval', array_keys($leftMap));
+            $rightOrder = is_array($mapping['right_order'] ?? null)
+                ? array_values(array_map('strval', array_filter($mapping['right_order'], 'is_scalar')))
+                : array_map('strval', array_keys($rightMap));
+            foreach (array_keys($leftMap) as $key) {
+                $key = (string) $key;
+                if (!in_array($key, $leftOrder, true)) $leftOrder[] = $key;
+            }
+            foreach (array_keys($rightMap) as $key) {
+                $key = (string) $key;
+                if (!in_array($key, $rightOrder, true)) $rightOrder[] = $key;
+            }
+
+            $item['matching_left'] = [];
+            foreach ($leftOrder as $key) {
+                if (is_scalar($key) && isset($leftMap[(string) $key])) {
+                    $key = (string) $key;
+                    $item['matching_left'][] = ['key' => $key, 'content_html' => $leftMap[$key]];
+                }
+            }
+            $item['matching_right'] = [];
+            foreach ($rightOrder as $key) {
+                if (is_scalar($key) && isset($rightMap[(string) $key])) {
+                    $key = (string) $key;
+                    $item['matching_right'][] = ['key' => $key, 'content_html' => $rightMap[$key]];
+                }
+            }
+            $item['matching_pairs'] = [];
+            foreach ($pairMap as $leftKey => $rightKey) {
+                $item['matching_pairs'][] = [
+                    'left_key' => (string) $leftKey,
+                    'right_key' => (string) $rightKey,
+                ];
+            }
+        }
+        unset($item);
+
+        $mediaRows = $db->table('prepared_assignment_media AS pam')
+            ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.external_url, ma.status')
             ->join('media_assets AS ma', 'ma.id = pam.media_asset_id')
             ->where('pam.prepared_assignment_id', $assignmentId)
-            ->orderBy('pam.prefetch_order', 'ASC')->get()->getResultArray();
+            ->orderBy('pam.is_critical', 'DESC')->orderBy('pam.prefetch_order', 'ASC')->orderBy('pam.media_asset_id', 'ASC')->get()->getResultArray();
+        $media = [];
+        foreach ($mediaRows as $row) {
+            $media[] = [
+                'media_asset_id' => (int) $row['media_asset_id'],
+                'media_kind' => (string) $row['media_kind'],
+                'storage_type' => (string) $row['storage_type'],
+                'provider' => $row['provider'],
+                'status' => (string) $row['status'],
+                'is_critical' => (bool) $row['is_critical'],
+                'prefetch_order' => (int) $row['prefetch_order'],
+                'url' => $row['storage_type'] === 'LOCAL'
+                    ? base_url('manager/api/question-media/' . (int) $row['media_asset_id'])
+                    : (string) ($row['external_url'] ?? ''),
+            ];
+        }
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'assignment' => $assignment,
@@ -289,23 +464,48 @@ class PreparationService
         ]];
     }
 
-    private function buildAssignment($db, array $context, array $target, string $scheduleFingerprint, array $plan, array $actor): void
+    private function buildAssignment($db, array $context, array $target, string $scheduleFingerprint, array $plan, array $actor, bool $forceRebuild = false): void
     {
         $pkId = (int) $target['peserta_kegiatan_id'];
         $participantFingerprint = hash('sha256', implode('|', [
             $scheduleFingerprint,
             $pkId,
+            (int) ($target['peserta_id'] ?? 0),
             (string) ($target['target_mode'] ?? 'MAIN'),
             (string) ($target['supersede_attempt_id'] ?? ''),
         ]));
+        // Staleness follows the full schedule fingerprint, while deterministic
+        // question/option selection follows only content-affecting sources. A
+        // time/access/visibility edit therefore requires rebuild without silently
+        // changing the exam selection.
+        $seedConfig = $plan['config'];
+        $seedSelection = $plan['selection'];
+        ksort($seedConfig);
+        ksort($seedSelection);
+        $selectionSeed = hash('sha256', json_encode([
+            'jadwal_id' => (int) $context['id'],
+            'parent_jadwal_id' => $context['parent_jadwal_id'] === null ? null : (int) $context['parent_jadwal_id'],
+            'jenis_jadwal' => (string) $context['jenis_jadwal'],
+            'bank_version' => (int) $context['bank_version'],
+            'bank_fingerprint' => (string) $context['bank_fingerprint'],
+            'selection' => $seedSelection,
+            'config' => $seedConfig,
+            'peserta_kegiatan_id' => $pkId,
+            'peserta_id' => (int) ($target['peserta_id'] ?? 0),
+            'target_mode' => (string) ($target['target_mode'] ?? 'MAIN'),
+            'supersede_attempt_id' => $target['supersede_attempt_id'] ?? null,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         $existing = $db->table('prepared_assignment')
             ->where('generated_for_jadwal_id', (int) $context['id'])
             ->where('peserta_kegiatan_id', $pkId)
             ->orderBy('assignment_seq', 'DESC')->get()->getRowArray();
 
+        if ($existing !== null && $existing['status'] === 'READY' && $existing['used_at'] !== null) {
+            return;
+        }
         if ($existing !== null && $existing['status'] === 'READY'
-            && hash_equals((string) $existing['fingerprint'], $participantFingerprint)) {
+            && hash_equals((string) $existing['fingerprint'], $participantFingerprint) && !$forceRebuild) {
             return;
         }
         if ($existing !== null && $existing['used_at'] === null && $existing['status'] === 'READY') {
@@ -340,8 +540,8 @@ class PreparationService
             if ((int) $config['shuffle_questions'] === 1) {
                 usort($pool, fn(array $a, array $b): int =>
                     strcmp(
-                        hash('sha256', $participantFingerprint . '|Q|' . $type . '|' . $a['soal_id']),
-                        hash('sha256', $participantFingerprint . '|Q|' . $type . '|' . $b['soal_id'])
+                        hash('sha256', $selectionSeed . '|Q|' . $type . '|' . $a['soal_id']),
+                        hash('sha256', $selectionSeed . '|Q|' . $type . '|' . $b['soal_id'])
                     ));
             }
             $chosen = array_slice($pool, 0, $selection);
@@ -362,8 +562,8 @@ class PreparationService
                     if ((int) $config['shuffle_options'] === 1) {
                         usort($keys, fn(string $a, string $b): int =>
                             strcmp(
-                                hash('sha256', $participantFingerprint . '|O|' . $revisionId . '|' . $a),
-                                hash('sha256', $participantFingerprint . '|O|' . $revisionId . '|' . $b)
+                                hash('sha256', $selectionSeed . '|O|' . $revisionId . '|' . $a),
+                                hash('sha256', $selectionSeed . '|O|' . $revisionId . '|' . $b)
                             ));
                     }
                     $optionOrder = json_encode($keys, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -378,8 +578,8 @@ class PreparationService
                     if ((int) $config['shuffle_options'] === 1) {
                         usort($right, fn(string $a, string $b): int =>
                             strcmp(
-                                hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $a),
-                                hash('sha256', $participantFingerprint . '|M|' . $revisionId . '|' . $b)
+                                hash('sha256', $selectionSeed . '|M|' . $revisionId . '|' . $a),
+                                hash('sha256', $selectionSeed . '|M|' . $revisionId . '|' . $b)
                             ));
                     }
                     $leftAlias = [];
@@ -422,22 +622,46 @@ class PreparationService
         if ($sequence < 1) throw new RuntimeException('Assignment tidak mempunyai soal.');
 
         if ($revisionOrder) {
-            $media = $db->table('soal_revision_media AS srm')
+            $mediaRows = $db->table('soal_revision_media AS srm')
                 ->select('srm.soal_revision_id, srm.media_asset_id, ma.media_kind, ma.status')
                 ->join('media_assets AS ma', 'ma.id = srm.media_asset_id')
                 ->whereIn('srm.soal_revision_id', array_keys($revisionOrder))
-                ->orderBy('srm.sort_order', 'ASC')->get()->getResultArray();
-            $seen = [];
-            foreach ($media as $row) {
+                ->orderBy('srm.media_asset_id', 'ASC')->orderBy('srm.id', 'ASC')
+                ->get()->getResultArray();
+
+            $manifest = [];
+            foreach ($mediaRows as $row) {
+                if ($row['status'] !== 'ACTIVE') {
+                    throw new RuntimeException('Media assignment tidak aktif.');
+                }
                 $mediaId = (int) $row['media_asset_id'];
-                if (isset($seen[$mediaId])) continue;
-                if ($row['status'] !== 'ACTIVE') throw new RuntimeException('Media assignment tidak aktif.');
-                $seen[$mediaId] = true;
+                $prefetchOrder = (int) ($revisionOrder[(int) $row['soal_revision_id']] ?? 999999);
+                if (!isset($manifest[$mediaId])) {
+                    $manifest[$mediaId] = [
+                        'media_asset_id' => $mediaId,
+                        'is_critical' => $row['media_kind'] === 'IMAGE' ? 1 : 0,
+                        'prefetch_order' => $prefetchOrder,
+                    ];
+                    continue;
+                }
+                $manifest[$mediaId]['prefetch_order'] = min(
+                    $manifest[$mediaId]['prefetch_order'],
+                    $prefetchOrder
+                );
+                if ($row['media_kind'] === 'IMAGE') $manifest[$mediaId]['is_critical'] = 1;
+            }
+
+            $manifest = array_values($manifest);
+            usort($manifest, static fn(array $a, array $b): int =>
+                [$a['prefetch_order'], $a['media_asset_id']]
+                <=> [$b['prefetch_order'], $b['media_asset_id']]
+            );
+            foreach ($manifest as $media) {
                 $db->table('prepared_assignment_media')->insert([
                     'prepared_assignment_id' => $assignmentId,
-                    'media_asset_id' => $mediaId,
-                    'is_critical' => $row['media_kind'] === 'IMAGE' ? 1 : 0,
-                    'prefetch_order' => (int) ($revisionOrder[(int) $row['soal_revision_id']] ?? 999999),
+                    'media_asset_id' => $media['media_asset_id'],
+                    'is_critical' => $media['is_critical'],
+                    'prefetch_order' => $media['prefetch_order'],
                 ]);
             }
         }
@@ -510,10 +734,12 @@ class PreparationService
             $expected = hash('sha256', implode('|', [
                 $fingerprint,
                 $pkId,
+                (int) ($target['peserta_id'] ?? 0),
                 (string) ($target['target_mode'] ?? 'MAIN'),
                 (string) ($target['supersede_attempt_id'] ?? ''),
             ]));
-            if ($row['status'] === 'READY' && hash_equals((string) $row['fingerprint'], $expected)) {
+            if ($row['status'] === 'READY' && ($row['used_at'] !== null
+                || hash_equals((string) $row['fingerprint'], $expected))) {
                 $states[$pkId] = ['state' => 'READY', 'assignment' => $row];
             } elseif ($row['status'] === 'FAILED') {
                 $states[$pkId] = ['state' => 'FAILED', 'assignment' => $row];
@@ -524,6 +750,94 @@ class PreparationService
         return $states;
     }
 
+    private function invalidSusulanTargets($db, array $context): array
+    {
+        if (($context['jenis_jadwal'] ?? '') !== 'SUSULAN') return [];
+
+        $mainId = (int) ($context['parent_jadwal_id'] ?? 0);
+        $rows = $db->query(
+            "SELECT t.peserta_kegiatan_id, t.target_mode, t.supersede_attempt_id,
+                    pk.kegiatan_id, pk.status AS membership_status, pk.nomor_peserta,
+                    pk.nama_snapshot AS nama, pk.rombel_snapshot AS rombel,
+                    p.id AS participant_id, p.status AS participant_status,
+                    rb.id AS rombel_id, rb.tingkat,
+                    EXISTS (
+                        SELECT 1 FROM attempt active_attempt
+                        WHERE active_attempt.peserta_id = pk.peserta_id
+                          AND active_attempt.status = 'ACTIVE'
+                          AND active_attempt.jadwal_id <> t.jadwal_id
+                    ) AS has_active_elsewhere,
+                    EXISTS (
+                        SELECT 1 FROM attempt history_attempt
+                        WHERE history_attempt.root_jadwal_id = ?
+                          AND history_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+                    ) AS has_root_history,
+                    EXISTS (
+                        SELECT 1 FROM attempt replacement_attempt
+                        WHERE replacement_attempt.id = t.supersede_attempt_id
+                          AND replacement_attempt.root_jadwal_id = ?
+                          AND replacement_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+                          AND replacement_attempt.status = 'FINISHED'
+                          AND NOT EXISTS (
+                              SELECT 1 FROM attempt newer_attempt
+                              WHERE newer_attempt.root_jadwal_id = replacement_attempt.root_jadwal_id
+                                AND newer_attempt.peserta_kegiatan_id = replacement_attempt.peserta_kegiatan_id
+                                AND newer_attempt.id > replacement_attempt.id
+                          )
+                    ) AS replacement_is_latest_finished
+             FROM jadwal_peserta_target t
+             JOIN peserta_kegiatan pk ON pk.id = t.peserta_kegiatan_id
+             LEFT JOIN peserta p ON p.id = pk.peserta_id
+             LEFT JOIN rombel rb ON rb.id = p.rombel_id
+             WHERE t.jadwal_id = ? AND t.status = 'TARGETED'
+               AND NOT EXISTS (
+                    SELECT 1 FROM attempt own_attempt
+                    WHERE own_attempt.jadwal_id = t.jadwal_id
+                      AND own_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+               )
+             ORDER BY t.peserta_kegiatan_id ASC",
+            [$mainId, $mainId, (int) $context['id']]
+        )->getResultArray();
+
+        $invalid = [];
+        foreach ($rows as $row) {
+            $reason = null;
+            if ((int) $row['kegiatan_id'] !== (int) $context['kegiatan_id']) {
+                $reason = 'Membership peserta tidak lagi berada pada Kegiatan sumber.';
+            } elseif ($row['membership_status'] !== 'ACTIVE'
+                || $row['participant_id'] === null
+                || $row['participant_status'] !== 'ACTIVE') {
+                $reason = 'Peserta atau membership Kegiatan tidak aktif.';
+            } elseif ($row['rombel_id'] === null
+                || (int) $row['tingkat'] !== (int) $context['tingkat']) {
+                $reason = 'Tingkat peserta tidak lagi sesuai dengan tingkat Bank/Jadwal.';
+            } elseif ((int) $row['has_active_elsewhere'] === 1) {
+                $reason = 'Peserta sedang mempunyai Attempt ACTIVE pada Jadwal lain.';
+            } elseif ($row['target_mode'] === 'FIRST_ATTEMPT'
+                && (int) $row['has_root_history'] === 1) {
+                $reason = 'FIRST_ATTEMPT sudah mempunyai histori Attempt pada Jadwal utama.';
+            } elseif ($row['target_mode'] === 'REPLACEMENT'
+                && (int) $row['replacement_is_latest_finished'] !== 1) {
+                $reason = 'Attempt replacement bukan lagi Attempt FINISHED terbaru.';
+            } elseif (!in_array($row['target_mode'], ['FIRST_ATTEMPT', 'REPLACEMENT'], true)) {
+                $reason = 'Mode target Susulan tidak valid.';
+            }
+
+            if ($reason !== null) {
+                $invalid[] = [
+                    'peserta_kegiatan_id' => (int) $row['peserta_kegiatan_id'],
+                    'nomor_peserta' => (string) ($row['nomor_peserta'] ?? ''),
+                    'nama' => (string) ($row['nama'] ?? ''),
+                    'rombel' => (string) ($row['rombel'] ?? ''),
+                    'target_mode' => (string) $row['target_mode'],
+                    'reason' => $reason,
+                ];
+            }
+        }
+
+        return $invalid;
+    }
+
     private function targets($db, array $context): array
     {
         if ($context['jenis_jadwal'] === 'SUSULAN') {
@@ -531,8 +845,11 @@ class PreparationService
                 ->select('t.peserta_kegiatan_id, t.target_mode, t.supersede_attempt_id, pk.peserta_id')
                 ->join('peserta_kegiatan AS pk', 'pk.id = t.peserta_kegiatan_id')
                 ->join('peserta AS p', 'p.id = pk.peserta_id')
+                ->join('rombel AS rb', 'rb.id = p.rombel_id')
                 ->where('t.jadwal_id', (int) $context['id'])
+                ->where('pk.kegiatan_id', (int) $context['kegiatan_id'])
                 ->where('t.status', 'TARGETED')->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE')
+                ->where('rb.tingkat', (int) $context['tingkat'])
                 ->get()->getResultArray();
         } else {
             $rows = $db->table('peserta_kegiatan AS pk')
@@ -596,8 +913,19 @@ class PreparationService
             ->orderBy('question_type', 'ASC')->get()->getResultArray();
 
         return hash('sha256', json_encode([
-            'jadwal_id' => (int) $context['id'],
-            'bank_soal_id' => (int) $context['bank_soal_id'],
+            'jadwal' => [
+                'id' => (int) $context['id'],
+                'kegiatan_id' => (int) $context['kegiatan_id'],
+                'bank_soal_id' => (int) $context['bank_soal_id'],
+                'jenis_jadwal' => (string) $context['jenis_jadwal'],
+                'parent_jadwal_id' => $context['parent_jadwal_id'] === null ? null : (int) $context['parent_jadwal_id'],
+                'urutan_ujian' => (int) $context['urutan_ujian'],
+                'mulai_at' => (string) $context['mulai_at'],
+                'batas_mulai_at' => (string) $context['batas_mulai_at'],
+                'durasi_seconds' => (int) $context['durasi_seconds'],
+                'access_state' => (string) $context['access_state'],
+                'tampilkan_nilai_saat_selesai' => (int) $context['tampilkan_nilai_saat_selesai'],
+            ],
             'bank_version' => (int) $context['bank_version'],
             'bank_fingerprint' => (string) $context['bank_fingerprint'],
             'preparation_contract' => 'ACADEMIC_V2_MATCHING_OPAQUE_KEYS',

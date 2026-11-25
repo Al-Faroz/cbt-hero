@@ -8,7 +8,7 @@
     const uiBase = app.dataset.uiBase;
     const modal = bootstrap.Modal.getOrCreateInstance($('jadwalModal'));
     const operationModal = bootstrap.Modal.getOrCreateInstance($('jadwalOperationModal'));
-    const state = {page: 1, pages: 1, editing: null, options: {kegiatan: [], banks: []}, sequence: 0};
+    const state = {page: 1, pages: 1, editing: null, options: {kegiatan: [], banks: []}, sequence: 0, operationKey: null};
     let debounce;
 
     const feedback = (id, text, error = false) => {
@@ -17,8 +17,8 @@
         node.className = 'cbt-inline-feedback' + (text ? (error ? ' is-error' : ' is-info') : '');
     };
 
-    const api = async (url, method = 'GET', payload = null) => {
-        const headers = {Accept: 'application/json'};
+    const api = async (url, method = 'GET', payload = null, extraHeaders = {}) => {
+        const headers = {Accept: 'application/json', ...extraHeaders};
         if (method !== 'GET') headers['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content;
         if (payload !== null) headers['Content-Type'] = 'application/json';
         const response = await fetch(url, {
@@ -32,6 +32,9 @@
         }
         return result.data;
     };
+
+    const newOperationKey = () => 'add-time:' + (window.crypto?.randomUUID?.()
+        ?? (Date.now() + '-' + Math.random().toString(36).slice(2)));
 
     const cell = (value, className = '') => {
         const td = document.createElement('td');
@@ -238,6 +241,7 @@
     };
 
     const openOperation = (id, type, currentValue = '') => {
+        state.operationKey = type === 'ADD_TIME' ? newOperationKey() : null;
         $('jadwalOperationId').value = String(id);
         $('jadwalOperationType').value = type;
         $('jadwalOperationFields').replaceChildren();
@@ -267,6 +271,9 @@
             input.step = '1';
             input.value = '10';
             help.textContent = 'Hanya Attempt yang masih aktif pada Jadwal ini yang mendapat tambahan waktu.';
+        }
+        if (type === 'ADD_TIME') {
+            input.addEventListener('input', () => { state.operationKey = newOperationKey(); });
         }
         $('jadwalOperationFields').append(label, input, help);
         operationModal.show();
@@ -519,21 +526,28 @@
         const id = Number($('jadwalOperationId').value);
         const type = $('jadwalOperationType').value;
         const value = $('jadwalOperationValue').value;
+        let replayed = false;
         try {
             if (type === 'EXTEND') {
-                await api(base + '/' + id + '/extend-start-window', 'POST', {
+                const result = await api(base + '/' + id + '/extend-start-window', 'POST', {
                     batas_mulai_at: value,
                 });
+                replayed = Boolean(result.item?.replayed);
             } else {
-                await api(base + '/' + id + '/add-time', 'POST', {
+                const result = await api(base + '/' + id + '/add-time', 'POST', {
                     seconds: Math.round(Number(value) * 60),
                     scope: 'ALL_ACTIVE',
-                });
+                }, {'Idempotency-Key': state.operationKey || newOperationKey()});
+                state.operationKey = null;
+                replayed = Boolean(result.item?.replayed);
             }
             operationModal.hide();
             await load();
-            feedback('jadwalFeedback', type === 'EXTEND'
-                ? 'Batas Mulai berhasil diperpanjang.'
+            if (type === 'EXTEND') feedback('jadwalFeedback', replayed
+                ? 'Perpanjangan Batas Mulai ini sudah diterapkan; tidak diubah ulang.'
+                : 'Batas Mulai berhasil diperpanjang.');
+            else feedback('jadwalFeedback', replayed
+                ? 'Permintaan Tambah Waktu ini sudah pernah diproses; tambahan tidak diterapkan ulang.'
                 : 'Tambahan waktu berhasil diterapkan.');
         } catch (error) {
             feedback('jadwalOperationFeedback', error.message, true);

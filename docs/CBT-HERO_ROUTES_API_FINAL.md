@@ -1666,7 +1666,7 @@ TAHAN:
 POST /manager/api/jadwal/{jadwalId}/extend-start-window
 ```
 
-Hanya menambah/memperpanjang, tidak memundurkan aturan menjadi lebih sempit ketika sudah berjalan.
+Hanya menambah/memperpanjang, tidak memundurkan aturan menjadi lebih sempit ketika sudah berjalan. Retry dengan nilai batas yang sama mengembalikan sukses replay tanpa menulis ulang nilai atau membuat audit duplikat.
 
 ## 32.4 Tampilkan Nilai Saat Selesai
 
@@ -1699,6 +1699,10 @@ attempt_ids[]  // wajib bila scope IDS
 Tambah Waktu hanya memodifikasi Attempt `ACTIVE` pada Jadwal tersebut:
 `added_seconds` bertambah dan `deadline_at` maju sebesar jumlah detik yang sama.
 Attempt yang sudah selesai tidak diubah.
+
+Header `Idempotency-Key` wajib. Payload hash mengikat Jadwal, detik tambahan,
+scope, dan daftar Attempt. Retry dengan key/payload sama tidak mengulang perubahan;
+key yang sama dengan payload berbeda ditolak `409 IDEMPOTENCY_CONFLICT`.
 
 ---
 
@@ -1793,6 +1797,7 @@ force_rebuild=false
 Implementasi harus chunked/resumable bila target besar.
 
 Phase 5C akademik memproses maksimal 100 target per request. Response menyertakan
+Status Preparation Susulan juga menyertakan `invalid_target_count`; target yang tidak lagi eligible tidak dibuatkan assignment dan memblokir `can_start` sampai Operator membatalkan/memperbaikinya secara eksplisit.
 `processed_count` dan `has_more`; Manager UI meneruskan request berikutnya
 dengan Idempotency-Key baru sampai selesai. Retry setelah proses terputus aman
 karena assignment READY dengan fingerprint yang masih sesuai tidak dibuat ulang.
@@ -1806,8 +1811,9 @@ preflight.missing_number
 preflight.credential_not_ready
 ```
 
-`can_start=true` hanya bila seluruh assignment READY dan preflight identitas/login
-target juga lulus.
+`can_start=true` hanya bila seluruh assignment READY, tidak ada target Susulan
+invalid, dan preflight identitas/login target juga lulus. Target invalid tidak
+dibatalkan otomatis; Operator harus membatalkan/memperbaikinya melalui halaman Susulan.
 
 ## 34.2 Status
 
@@ -1823,6 +1829,8 @@ ready
 stale
 failed
 progress
+invalid_target_count
+invalid_targets[] // Susulan: peserta, mode target, alasan invalid
 last_error
 can_start
 ```
@@ -1844,7 +1852,10 @@ GET /manager/api/jadwal/{jadwalId}/prepared-assignments
 GET /manager/api/prepared-assignments/{assignmentId}
 ```
 
-Tidak memperlihatkan answer key kepada participant.
+Detail manager menampilkan item/revisi, konten stimulus/soal, urutan opsi,
+sisi/pasangan Menjodohkan, dan media manifest untuk troubleshooting. Endpoint ini
+hanya untuk Manager; API participant tidak menerima answer key atau pasangan
+acuan Menjodohkan.
 
 ---
 
