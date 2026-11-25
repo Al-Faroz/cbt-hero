@@ -32,7 +32,9 @@ class JadwalOperationalService
                 return $this->error(422, 'VALIDATION_FAILED', 'Batas Mulai hanya boleh diperpanjang.');
             }
             if ($newTimestamp === $oldTimestamp) {
-                $db->transCommit();
+                if ($db->transCommit() === false) {
+                    throw new RuntimeException('Commit replay perpanjangan Batas Mulai gagal.');
+                }
                 return ['ok' => true, 'status' => 200, 'item' => $old + ['replayed' => true]];
             }
             $db->table('jadwal')->where('id', $jadwalId)->update(['batas_mulai_at' => $newLimit]);
@@ -147,7 +149,9 @@ class JadwalOperationalService
                     return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah dipakai untuk operasi berbeda.');
                 }
                 if ($operation['status'] === 'COMPLETED') {
-                    $db->transCommit();
+                    if ($db->transCommit() === false) {
+                        throw new RuntimeException('Commit replay Tambah Waktu gagal.');
+                    }
                     return ['ok' => true, 'status' => 200, 'item' => [
                         'jadwal_id' => $jadwalId,
                         'seconds' => $seconds,
