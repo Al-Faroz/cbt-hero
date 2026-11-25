@@ -305,16 +305,31 @@ class PreparationService
 
         $items = $db->table('prepared_assignment_item AS pai')
             ->select('pai.id, pai.sequence_no, pai.soal_id, pai.soal_revision_id, pai.option_order_json, '
-                . 'pai.mapping_json, pai.metadata_json, sr.question_type, sr.max_point')
+                . 'pai.mapping_json, pai.metadata_json, sr.question_type, sr.question_html, sr.stimulus_html, sr.max_point')
             ->join('soal_revision AS sr', 'sr.id = pai.soal_revision_id', 'left')
             ->where('pai.prepared_assignment_id', $assignmentId)
             ->orderBy('pai.sequence_no', 'ASC')->get()->getResultArray();
 
-        $media = $db->table('prepared_assignment_media AS pam')
-            ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.status')
+        $mediaRows = $db->table('prepared_assignment_media AS pam')
+            ->select('pam.media_asset_id, pam.is_critical, pam.prefetch_order, ma.media_kind, ma.storage_type, ma.provider, ma.external_url, ma.status')
             ->join('media_assets AS ma', 'ma.id = pam.media_asset_id')
             ->where('pam.prepared_assignment_id', $assignmentId)
             ->orderBy('pam.prefetch_order', 'ASC')->get()->getResultArray();
+        $media = [];
+        foreach ($mediaRows as $row) {
+            $media[] = [
+                'media_asset_id' => (int) $row['media_asset_id'],
+                'media_kind' => (string) $row['media_kind'],
+                'storage_type' => (string) $row['storage_type'],
+                'provider' => $row['provider'],
+                'status' => (string) $row['status'],
+                'is_critical' => (bool) $row['is_critical'],
+                'prefetch_order' => (int) $row['prefetch_order'],
+                'url' => $row['storage_type'] === 'LOCAL'
+                    ? base_url('manager/api/question-media/' . (int) $row['media_asset_id'])
+                    : (string) ($row['external_url'] ?? ''),
+            ];
+        }
 
         return ['ok' => true, 'status' => 200, 'data' => [
             'assignment' => $assignment,
