@@ -186,3 +186,9 @@ Perbaikan:
 File: `assets/js/exam-submit.js`  
 Commit: `e89d6ab174adcf3474ca553efd97e842b8f21dda`  
 Acceptance E44 ditambahkan; belum diuji melalui fault injection.
+
+
+Routes/API contract juga disinkronkan: status participant sekarang mendokumentasikan `remaining_seconds` dan `pause_reason` untuk pause/resume server.
+
+Commit: `3e3b478545c18ee2605fa5d8fa00ee63ff94edf1`.
+
