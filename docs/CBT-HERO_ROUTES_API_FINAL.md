@@ -636,7 +636,7 @@ GET /api/attempt/{attemptId}/status
 
 Auth + ownership + client validation.
 
-Digunakan saat recovery/reload, bukan polling cepat.
+Digunakan saat recovery/reload, bukan polling cepat. Status polling workspace juga memakai response ini untuk mendeteksi pause/resume server dan status terminal. `pause_reason` berasal dari event pause yang masih terbuka; `remaining_seconds` dibekukan pada waktu mulai pause.
 
 Response minimum:
 
@@ -644,7 +644,9 @@ Response minimum:
 status
 start_at
 deadline_at
+remaining_seconds
 paused
+pause_reason
 client_generation
 server_sync_revision
 last_sync_at
