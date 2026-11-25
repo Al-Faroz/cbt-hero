@@ -72,6 +72,12 @@ $isResume = $confirmation['mode'] === 'RESUME';
                     </div>
                 <?php endif; ?>
 
+                <?php if (empty($exam['exam_browser_required'])): ?>
+                    <div class="alert alert-info small mb-0">
+                        Jika menggunakan browser biasa, layar penuh wajib diaktifkan sebelum mengerjakan soal. Jika keluar dari layar penuh, ujian akan dijeda sampai Anda kembali ke layar penuh.
+                    </div>
+                <?php endif; ?>
+
                 <div class="form-check">
                     <input class="form-check-input" id="examAgreement" type="checkbox">
                     <label class="form-check-label" for="examAgreement">
