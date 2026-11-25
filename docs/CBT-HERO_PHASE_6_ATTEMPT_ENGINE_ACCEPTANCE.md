@@ -114,6 +114,8 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E53 | Tab masuk Back-Forward Cache lalu dipulihkan dengan pageshow persisted. | Tab memeriksa lock terbaru dan mengaktifkan heartbeat kembali; tab lain tidak dapat membuka Attempt bersamaan. |
 | E54 | Resume operation lama di-replay setelah Attempt mengalami pause baru. | Server mengembalikan pause state terkini; client tetap terkunci dan tidak menampilkan resume sukses palsu. |
 | E55 | Bank memakai option_key numerik (misalnya "1", "2", "3"). | Runtime mempertahankan semua opsi dalam urutan Prepared Assignment; tidak ada opsi yang hilang karena key berubah menjadi integer saat decode JSON/PHP. |
+| E56 | Bank Matching memakai left_key/right_key numerik dan peserta menyimpan pasangan. | Sync, storage JSON, scoring, dan bootstrap alias mempertahankan key numerik; pasangan tidak hilang saat PHP mengubah key menjadi integer. |
+| E57 | PG Kompleks menerima payload selected yang berisi tipe non-string atau key melebihi 64 karakter. | Payload ditolak sebagai ANSWER_INVALID; nilai invalid tidak dibuang diam-diam menjadi jawaban parsial. |
 
 ## Catatan Exam Browser
 
