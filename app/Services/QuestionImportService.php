@@ -123,6 +123,9 @@ class QuestionImportService
                     $errors[] = 'Tipe belum aktif di Komposisi.';
                 } elseif ($typeOccurrences[$type] > (int) $configByType[$type]['question_count']) {
                     $errors[] = 'Jumlah soal melebihi jumlah pada Komposisi Bank.';
+                } elseif (preg_match('/^Excel .+ baris ([0-9]+)$/u', (string) ($row['source_ref'] ?? ''), $sourceMatch)
+                    && (int) $sourceMatch[1] > ((int) $configByType[$type]['question_count'] + 5)) {
+                    $errors[] = 'Isi berada di luar jumlah baris yang disediakan template sesuai Komposisi Bank.';
                 }
                 if (!$check['ok']) $errors[] = $check['message'];
                 if (($payload['question_type'] ?? '') === 'MATCHING' && ($payload['scoring_mode'] ?? '') !== $matchingMode)
