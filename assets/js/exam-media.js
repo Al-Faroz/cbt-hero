@@ -73,8 +73,16 @@
         const images = (manifest || []).filter(item =>
             item && item.kind === 'IMAGE' && item.critical && item.url
         );
-        const results = await Promise.allSettled(images.map(prepareOne));
-        const cachedCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
+        const results = new Array(images.length).fill(false);
+        let cursor = 0;
+        const workerCount = Math.min(4, images.length);
+        await Promise.all(Array.from({length: workerCount}, async () => {
+            while (cursor < images.length) {
+                const index = cursor++;
+                results[index] = await prepareOne(images[index]).catch(() => false);
+            }
+        }));
+        const cachedCount = results.filter(Boolean).length;
         if (options.emitReady !== false) {
             runtime.emit('cbt:client-event', {
                 event_type: 'PACKAGE_READY',
