@@ -153,3 +153,19 @@ Commit:
 - `83a92f71456f7494f9a6c0c4db4720482dd2e928`
 
 Belum diuji melalui browser; X/P acceptance tetap DEFERRED.
+
+
+## Temuan SUSULAN-CONCURRENCY-01 — target FIRST_ATTEMPT dapat race dengan START MAIN
+
+Pemeriksaan eligibility sebelumnya membaca riwayat Attempt tanpa mengunci row peserta. START Akademik mengunci row `peserta` lebih dahulu, lalu Jadwal dan membership. Tanpa lock yang searah, Susulan FIRST_ATTEMPT dapat dibuat bersamaan dengan START MAIN dan menyimpan target berdasarkan snapshot riwayat yang sudah kedaluwarsa.
+
+Perbaikan:
+- Create/Update Susulan membaca konteks awal, lalu mengunci row peserta target secara berurutan sebelum mengunci Jadwal.
+- Setelah Jadwal terkunci, membership `peserta_kegiatan` target juga dikunci sebelum validasi eligibility.
+- Urutan lock mengikuti pola START (peserta → Jadwal → membership), sehingga validasi riwayat/Attempt aktif terserialisasi dengan proses START.
+- Validasi target tetap dilakukan ulang di server setelah seluruh lock diperoleh.
+
+File: `app/Services/SusulanService.php`  
+Commit: `e050414177a8e066960ba634642831bbee04df7d`
+
+Belum diuji dengan dua transaksi START/CREATE paralel; concurrency acceptance tetap DEFERRED.
