@@ -270,3 +270,13 @@ Commit: `8aec7317e22596e4d53fbba390cd19802e28c78b`. Acceptance E50 ditambahkan; 
 
 
 Prefetch gambar critical kini dibatasi maksimal empat fetch paralel per participant; object URL lama tidak dicabut saat live revision agar gambar pada item yang masih tampil tidak rusak. Commits: `6759fddeaa3a50d7dee9a9921214dba61d6f8735`, `755f26309e75daf948db36090ed227ed6f65a44d`. Acceptance E51 ditambahkan; belum diuji pada beban banyak participant.
+
+
+### 5D-16 — tab lock localStorage check/write tidak atomik
+Dua tab yang terbuka hampir bersamaan dapat membaca lock kosong sebelum salah satu menulis; BroadcastChannel sebelumnya hanya menjawab PROBE dan tidak memproses ALIVE.
+
+Perbaikan: tab yang menerima ALIVE dari tab lain segera hard-lock, menghentikan heartbeat, dan melepas lock jika masih miliknya. Release dipasang pada beforeunload dan pagehide. Jika dua tab benar-benar race, keduanya dapat terkunci sementara; tidak ada dua workspace yang dibiarkan aktif.
+
+File: `assets/js/exam-tab-lock.js`  
+Commit: `4b8078152bf0d4186176d9a1491b727b0d571faf`.  
+Acceptance E52 ditambahkan; belum diuji dengan browser automation multi-tab.
