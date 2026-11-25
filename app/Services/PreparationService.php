@@ -18,8 +18,9 @@ class PreparationService
         if ($context === null) return $this->error(404, 'NOT_FOUND', 'Jadwal akademik tidak ditemukan.');
 
         $allTargets = $this->targets($db, $context);
-        $invalidTargetIds = $this->invalidSusulanTargetIds($db, $context);
-        $invalidTargetCount = count($invalidTargetIds);
+        $invalidTargets = $this->invalidSusulanTargets($db, $context);
+        $invalidTargetIds = array_column($invalidTargets, 'peserta_kegiatan_id');
+        $invalidTargetCount = count($invalidTargets);
         $targets = array_diff_key($allTargets, array_flip($invalidTargetIds));
         $fingerprint = $this->scheduleFingerprint($db, $context);
         $summary = $this->summarize($db, $context, $targets, $fingerprint);
@@ -39,6 +40,7 @@ class PreparationService
             'failed' => $summary['failed'],
             'missing' => $summary['missing'],
             'invalid_target_count' => $invalidTargetCount,
+            'invalid_targets' => $invalidTargets,
             'progress' => ($summary['total'] + $invalidTargetCount) > 0
                 ? (int) floor(($summary['ready'] / ($summary['total'] + $invalidTargetCount)) * 100)
                 : 0,
@@ -147,7 +149,8 @@ class PreparationService
             }
 
             $targets = $this->targets($db, $context);
-            $invalidTargetIds = $this->invalidSusulanTargetIds($db, $context);
+            $invalidTargets = $this->invalidSusulanTargets($db, $context);
+            $invalidTargetIds = array_column($invalidTargets, 'peserta_kegiatan_id');
             if ($scope === 'SELECTED' && array_intersect($selectedIds, $invalidTargetIds)) {
                 $db->transRollback();
                 return $this->error(409, 'INVALID_SUSULAN_TARGET', 'Sebagian target Susulan sudah tidak memenuhi syarat. Batalkan atau perbaiki target pada halaman Susulan.');
@@ -745,13 +748,41 @@ class PreparationService
         return $states;
     }
 
-    private function invalidSusulanTargetIds($db, array $context): array
+    private function invalidSusulanTargets($db, array $context): array
     {
         if (($context['jenis_jadwal'] ?? '') !== 'SUSULAN') return [];
 
         $mainId = (int) ($context['parent_jadwal_id'] ?? 0);
         $rows = $db->query(
-            "SELECT t.peserta_kegiatan_id
+            "SELECT t.peserta_kegiatan_id, t.target_mode, t.supersede_attempt_id,
+                    pk.kegiatan_id, pk.status AS membership_status, pk.nomor_peserta,
+                    pk.nama_snapshot AS nama, pk.rombel_snapshot AS rombel,
+                    p.id AS participant_id, p.status AS participant_status,
+                    rb.id AS rombel_id, rb.tingkat,
+                    EXISTS (
+                        SELECT 1 FROM attempt active_attempt
+                        WHERE active_attempt.peserta_id = pk.peserta_id
+                          AND active_attempt.status = 'ACTIVE'
+                          AND active_attempt.jadwal_id <> t.jadwal_id
+                    ) AS has_active_elsewhere,
+                    EXISTS (
+                        SELECT 1 FROM attempt history_attempt
+                        WHERE history_attempt.root_jadwal_id = ?
+                          AND history_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+                    ) AS has_root_history,
+                    EXISTS (
+                        SELECT 1 FROM attempt replacement_attempt
+                        WHERE replacement_attempt.id = t.supersede_attempt_id
+                          AND replacement_attempt.root_jadwal_id = ?
+                          AND replacement_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+                          AND replacement_attempt.status = 'FINISHED'
+                          AND NOT EXISTS (
+                              SELECT 1 FROM attempt newer_attempt
+                              WHERE newer_attempt.root_jadwal_id = replacement_attempt.root_jadwal_id
+                                AND newer_attempt.peserta_kegiatan_id = replacement_attempt.peserta_kegiatan_id
+                                AND newer_attempt.id > replacement_attempt.id
+                          )
+                    ) AS replacement_is_latest_finished
              FROM jadwal_peserta_target t
              JOIN peserta_kegiatan pk ON pk.id = t.peserta_kegiatan_id
              LEFT JOIN peserta p ON p.id = pk.peserta_id
@@ -762,58 +793,47 @@ class PreparationService
                     WHERE own_attempt.jadwal_id = t.jadwal_id
                       AND own_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
                )
-               AND (
-                    pk.kegiatan_id <> ?
-                    OR pk.status <> 'ACTIVE'
-                    OR p.id IS NULL
-                    OR p.status <> 'ACTIVE'
-                    OR rb.id IS NULL
-                    OR rb.tingkat <> ?
-                    OR EXISTS (
-                        SELECT 1 FROM attempt active_attempt
-                        WHERE active_attempt.peserta_id = pk.peserta_id
-                          AND active_attempt.status = 'ACTIVE'
-                    )
-                    OR (
-                        t.target_mode = 'FIRST_ATTEMPT'
-                        AND EXISTS (
-                            SELECT 1 FROM attempt history_attempt
-                            WHERE history_attempt.root_jadwal_id = ?
-                              AND history_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
-                        )
-                    )
-                    OR (
-                        t.target_mode = 'REPLACEMENT'
-                        AND NOT EXISTS (
-                            SELECT 1 FROM attempt replacement_attempt
-                            WHERE replacement_attempt.id = t.supersede_attempt_id
-                              AND replacement_attempt.root_jadwal_id = ?
-                              AND replacement_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
-                              AND replacement_attempt.status = 'FINISHED'
-                              AND NOT EXISTS (
-                                  SELECT 1 FROM attempt newer_attempt
-                                  WHERE newer_attempt.root_jadwal_id = replacement_attempt.root_jadwal_id
-                                    AND newer_attempt.peserta_kegiatan_id = replacement_attempt.peserta_kegiatan_id
-                                    AND newer_attempt.id > replacement_attempt.id
-                              )
-                        )
-                    )
-                    OR t.target_mode NOT IN ('FIRST_ATTEMPT', 'REPLACEMENT')
-               )
              ORDER BY t.peserta_kegiatan_id ASC",
-            [
-                (int) $context['id'],
-                (int) $context['kegiatan_id'],
-                (int) $context['tingkat'],
-                $mainId,
-                $mainId,
-            ]
+            [$mainId, $mainId, (int) $context['id']]
         )->getResultArray();
 
-        return array_values(array_unique(array_map(
-            static fn(array $row): int => (int) $row['peserta_kegiatan_id'],
-            $rows
-        )));
+        $invalid = [];
+        foreach ($rows as $row) {
+            $reason = null;
+            if ((int) $row['kegiatan_id'] !== (int) $context['kegiatan_id']) {
+                $reason = 'Membership peserta tidak lagi berada pada Kegiatan sumber.';
+            } elseif ($row['membership_status'] !== 'ACTIVE'
+                || $row['participant_id'] === null
+                || $row['participant_status'] !== 'ACTIVE') {
+                $reason = 'Peserta atau membership Kegiatan tidak aktif.';
+            } elseif ($row['rombel_id'] === null
+                || (int) $row['tingkat'] !== (int) $context['tingkat']) {
+                $reason = 'Tingkat peserta tidak lagi sesuai dengan tingkat Bank/Jadwal.';
+            } elseif ((int) $row['has_active_elsewhere'] === 1) {
+                $reason = 'Peserta sedang mempunyai Attempt ACTIVE pada Jadwal lain.';
+            } elseif ($row['target_mode'] === 'FIRST_ATTEMPT'
+                && (int) $row['has_root_history'] === 1) {
+                $reason = 'FIRST_ATTEMPT sudah mempunyai histori Attempt pada Jadwal utama.';
+            } elseif ($row['target_mode'] === 'REPLACEMENT'
+                && (int) $row['replacement_is_latest_finished'] !== 1) {
+                $reason = 'Attempt replacement bukan lagi Attempt FINISHED terbaru.';
+            } elseif (!in_array($row['target_mode'], ['FIRST_ATTEMPT', 'REPLACEMENT'], true)) {
+                $reason = 'Mode target Susulan tidak valid.';
+            }
+
+            if ($reason !== null) {
+                $invalid[] = [
+                    'peserta_kegiatan_id' => (int) $row['peserta_kegiatan_id'],
+                    'nomor_peserta' => (string) ($row['nomor_peserta'] ?? ''),
+                    'nama' => (string) ($row['nama'] ?? ''),
+                    'rombel' => (string) ($row['rombel'] ?? ''),
+                    'target_mode' => (string) $row['target_mode'],
+                    'reason' => $reason,
+                ];
+            }
+        }
+
+        return $invalid;
     }
 
     private function targets($db, array $context): array
