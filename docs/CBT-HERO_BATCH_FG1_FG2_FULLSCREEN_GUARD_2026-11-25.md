@@ -45,7 +45,7 @@ Tidak ada tabel baru pada batch ini. Implementasi memakai struktur yang sudah ad
 ## Pemeriksaan yang belum dilakukan
 - Belum menjalankan PHP lint, PHPUnit, browser test, database integration, maupun simulasi perangkat.
 - Belum acceptance fungsional. Tidak ada klaim PASS.
-- Monitoring operator untuk jumlah/riwayat event fullscreen belum diintegrasikan; itu masuk FG-3.
+- Monitoring operator sudah menampilkan jumlah Attempt dijeda, status jeda fullscreen pada baris peserta, event client, dan riwayat pause pada detail Attempt.
 - Pengujian terhadap Ujian Psikologi belum dilakukan; shared Attempt core akan dipakai saat Phase 10 diimplementasikan.
 
 ## Checklist review sebelum merge
