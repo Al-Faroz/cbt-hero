@@ -224,6 +224,7 @@ class PreparationService
         $expected = hash('sha256', implode('|', [
             $fingerprint,
             $pesertaKegiatanId,
+            (int) ($target['peserta_id'] ?? 0),
             (string) ($target['target_mode'] ?? 'MAIN'),
             (string) ($target['supersede_attempt_id'] ?? ''),
         ]));
@@ -295,6 +296,7 @@ class PreparationService
         $participantFingerprint = hash('sha256', implode('|', [
             $scheduleFingerprint,
             $pkId,
+            (int) ($target['peserta_id'] ?? 0),
             (string) ($target['target_mode'] ?? 'MAIN'),
             (string) ($target['supersede_attempt_id'] ?? ''),
         ]));
@@ -510,6 +512,7 @@ class PreparationService
             $expected = hash('sha256', implode('|', [
                 $fingerprint,
                 $pkId,
+                (int) ($target['peserta_id'] ?? 0),
                 (string) ($target['target_mode'] ?? 'MAIN'),
                 (string) ($target['supersede_attempt_id'] ?? ''),
             ]));
@@ -596,8 +599,19 @@ class PreparationService
             ->orderBy('question_type', 'ASC')->get()->getResultArray();
 
         return hash('sha256', json_encode([
-            'jadwal_id' => (int) $context['id'],
-            'bank_soal_id' => (int) $context['bank_soal_id'],
+            'jadwal' => [
+                'id' => (int) $context['id'],
+                'kegiatan_id' => (int) $context['kegiatan_id'],
+                'bank_soal_id' => (int) $context['bank_soal_id'],
+                'jenis_jadwal' => (string) $context['jenis_jadwal'],
+                'parent_jadwal_id' => $context['parent_jadwal_id'] === null ? null : (int) $context['parent_jadwal_id'],
+                'urutan_ujian' => (int) $context['urutan_ujian'],
+                'mulai_at' => (string) $context['mulai_at'],
+                'batas_mulai_at' => (string) $context['batas_mulai_at'],
+                'durasi_seconds' => (int) $context['durasi_seconds'],
+                'access_state' => (string) $context['access_state'],
+                'tampilkan_nilai_saat_selesai' => (int) $context['tampilkan_nilai_saat_selesai'],
+            ],
             'bank_version' => (int) $context['bank_version'],
             'bank_fingerprint' => (string) $context['bank_fingerprint'],
             'preparation_contract' => 'ACADEMIC_V2_MATCHING_OPAQUE_KEYS',
