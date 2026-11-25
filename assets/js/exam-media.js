@@ -36,10 +36,13 @@
         if (!blob && navigator.onLine) {
             const url = localUrl(media.url);
             if (url) {
+                const controller = new AbortController();
+                const timeout = window.setTimeout(() => controller.abort(), 8000);
                 try {
                     const response = await fetch(url, {
                         credentials: 'same-origin',
-                        headers: {'Accept': 'image/*'}
+                        headers: {'Accept': 'image/*'},
+                        signal: controller.signal
                     });
                     if (response.ok) {
                         const candidate = await response.blob();
@@ -53,7 +56,10 @@
                             });
                         }
                     }
-                } catch (_) {}
+                } catch (_) {
+                } finally {
+                    window.clearTimeout(timeout);
+                }
             }
         }
 
