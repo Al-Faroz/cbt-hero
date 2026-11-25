@@ -180,13 +180,6 @@ class AttemptFullscreenGuardService
                 return $this->error(423, 'ATTEMPT_NOT_RESUMABLE', 'Attempt belum dapat dilanjutkan.');
             }
 
-            $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
-                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
-            if (empty($attempt['pause_started_at']) || (string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
-                $db->transRollback();
-                return $this->error(409, 'FULLSCREEN_PAUSE_NOT_FOUND', 'Tidak ada jeda fullscreen yang perlu dipulihkan.');
-            }
-
             $operation = $ops->begin(
                 $db, $idempotencyKey, $participantId, 'FULLSCREEN_RESUME',
                 (int) $attempt['jadwal_id'], $hash
@@ -201,6 +194,13 @@ class AttemptFullscreenGuardService
                     'attempt_id' => $attemptId, 'paused' => false, 'resumed' => true,
                     'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
                 ]];
+            }
+
+            $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
+            if (empty($attempt['pause_started_at']) || (string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
+                $db->transRollback();
+                return $this->error(409, 'FULLSCREEN_PAUSE_NOT_FOUND', 'Tidak ada jeda fullscreen yang perlu dipulihkan.');
             }
 
             $now = $ownership->now();
