@@ -84,6 +84,8 @@ Tambah Waktu bekerja pada Attempt yang masih `ACTIVE`:
 | S20 | Tambah 10 menit ke semua Attempt ACTIVE. | `added_seconds += 600` dan `deadline_at += 600 detik`. |
 | S21 | Tambah waktu saat tidak ada Attempt ACTIVE. | Ditolak NO_ACTIVE_ATTEMPT. |
 | S22 | Cek Audit Log. | Create/update/cancel/akses/extend/result visibility/tambah waktu tercatat. |
+| S23 | Buka modal Tambah/Edit Susulan pada viewport 360–390px dan geser tabel kandidat peserta. | Horizontal scroll terjadi di wrapper tabel; halaman/modal tidak melebar ke samping dan checkbox tetap dapat disentuh. |
+| S24 | Buka modal Target Susulan pada viewport 360–390px; navigasikan wrapper dengan keyboard. | Tabel target dapat digeser horizontal secara lokal; wrapper dapat difokuskan dan halaman tidak mengalami horizontal overflow. |
 
 ## Status
 
