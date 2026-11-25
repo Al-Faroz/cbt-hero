@@ -174,3 +174,41 @@ Belum aman membuat migration/device endpoints pada batch ini sebelum:
 - [ ] Strategi transisi field `exam_browser_proof` ditetapkan agar kegiatan existing tidak terkunci oleh proof palsu dan browser desktop tetap berfungsi saat mode OFF.
 
 Status tetap **source audit parsial, belum tested**. Tidak ada migration, API Exambro, ataupun APK yang ditambahkan pada batch audit ini.
+
+
+## 10. Verifikasi repository tree dan schema SQL (lanjutan)
+
+Repository tree pada commit audit berhasil diperiksa secara recursive. Hasilnya:
+
+### 10.1 Migration inventory
+- `app/Database/Migrations/` hanya berisi `.gitkeep`; tidak ada migration aplikasi yang terdaftar pada folder tersebut.
+- Schema baseline dikelola melalui `docs/CBT-HERO_SCHEMA_v1.0.sql`.
+- Upgrade SQL terpisah tersedia untuk Academic Jadwal Order, Bank Composition, Matching Option Count, Phase 5B Jadwal Operations, Phase 6 Attempt Engine, Phase 7 Execution, dan Phase 9 Report/Live.
+- Karena itu, skema device Exambro nantinya harus disediakan sebagai upgrade SQL yang mengikuti pola dokumentasi/deployment database proyek, kecuali keputusan migrasi CI4 berubah. Jangan membuat migration PHP CI4 seolah-olah folder migration aplikasi sudah aktif.
+
+### 10.2 Isi schema baseline
+Schema SQL baseline sudah memuat:
+- `psych_instrument`, `psych_dimension`, `psych_item`, `psych_item_revision`, `psych_option`, `psych_scoring_matrix`, `psych_norm`, `psych_item_revision_media`;
+- `jadwal.psych_instrument_id` dengan foreign key;
+- `prepared_assignment_item.psych_item_id` dan `psych_item_revision_id` dengan foreign key;
+- `attempt` generik yang menunjuk `prepared_assignment_id`, `client_uuid`, dan `client_generation`;
+- `participant_operations`, `attempt_pause_event`, `attempt_client_event`, dan `attempt_response` generik melalui `prepared_assignment_item_id`;
+- `result_snapshot.result_type` serta `psych_dimension_result`.
+
+Tidak ada tabel `exambro_device` atau `exambro_challenge` pada baseline SQL yang diperiksa. Tidak ada kolom device/key binding pada tabel `attempt` baseline.
+
+### 10.3 Temuan tambahan pada finalize
+`AttemptFinalizeService` memanggil `AcademicScoringService::snapshot()` secara langsung, termasuk jalur `forceFinishLocked()`. Dengan demikian finalize saat ini masih akademik dan belum memilih scoring adapter berdasarkan `jadwal.psych_instrument_id`. Ini adalah gap runtime Psikologi yang harus ditutup sebelum klaim shared Attempt mendukung kedua domain.
+
+### 10.4 Constraint integritas prepared item
+DDL `prepared_assignment_item` menyediakan empat FK nullable untuk sumber Akademik/Psikologi, tetapi tidak terlihat CHECK constraint yang memastikan tepat satu pasangan sumber aktif. ERD menyatakan exactly one source pair. Implementasi Preparation harus menjamin aturan tersebut dalam service/transaksi; pertimbangkan DB constraint bila versi MySQL deployment mendukung dan kompatibel. Ini penting agar renderer/sync tidak menerima prepared item ambigu atau tanpa sumber.
+
+### 10.5 Implikasi device schema
+Device registration/challenge dapat ditambahkan tanpa mengganti tabel Attempt/response, tetapi perlu desain relasi yang tegas:
+- `exambro_device` menyimpan identitas device, public key, algoritma, status, key attestation state, versi APK, dan metadata registrasi.
+- `exambro_challenge` menyimpan hash nonce, purpose, binding, expiry, konsumsi, dan hasil verifikasi.
+- Attempt perlu binding eksplisit ke `device_id`/key registration atau tabel binding terpisah; jangan hanya menaruh device ID dalam `metadata_json`.
+- `attempt_client_event` dapat tetap dipakai untuk event lifecycle Attempt setelah metadata divalidasi; event enrollment yang tidak terkait Attempt memerlukan audit log device tersendiri atau relasi event device.
+- Unique/index/foreign-key dan transaction nonce-consumption harus dirancang bersama SQL upgrade, bukan ditambahkan parsial.
+
+Status migration inventory kini sudah diverifikasi dari tree; database runtime aktual milik pengguna tetap belum diinspeksi langsung. DDL baseline adalah kontrak repository, bukan bukti bahwa database lokal telah menerapkan seluruh upgrade.
