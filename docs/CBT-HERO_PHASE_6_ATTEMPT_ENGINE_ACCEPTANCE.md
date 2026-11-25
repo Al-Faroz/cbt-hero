@@ -103,6 +103,7 @@ ini ikut fingerprint Preparation sehingga assignment lama terdeteksi STALE.
 | E42 | Fullscreen Pause berhasil, lalu Manager sudah resume sebelum retry pause dengan key lama tiba. | Replay pause melaporkan state server terkini (paused=false); client tidak menampilkan tombol resume palsu dan mengunci ulang jika browser masih keluar fullscreen. |
 | E43 | Server menyatakan Attempt FINISHED/SUPERSEDED atau status API mengembalikan ATTEMPT_NOT_ACTIVE. | Timer berhenti, input tetap terkunci, dan workspace menampilkan status terminal tanpa mengirim TIMEOUT kedua. |
 | E44 | Timeout finalization gagal sementara ketika koneksi sudah online (misalnya 5xx setelah sync drain). | State TIMEOUT_PENDING tetap tersimpan dan client mencoba ulang finalisasi dengan exponential backoff; Idempotency-Key tetap sama sampai sukses. |
+| E45 | Server pause/resume sudah terdeteksi status polling, lalu browser refresh saat offline. | Cache memulihkan server_paused, pause_reason, dan remaining_seconds terakhir; timer/input tetap mengikuti status pause/resume terakhir yang diketahui. |
 
 ## Catatan Exam Browser
 
