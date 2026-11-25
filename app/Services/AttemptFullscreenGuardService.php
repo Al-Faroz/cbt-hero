@@ -26,13 +26,11 @@ class AttemptFullscreenGuardService
         if (($payload['fullscreen_active'] ?? true) !== false)
             return $this->error(422, 'FULLSCREEN_STATE_INVALID', 'Event pause harus melaporkan bahwa fullscreen telah keluar.');
 
-        $proof = trim(is_scalar($payload['exam_browser_proof'] ?? null) ? (string) $payload['exam_browser_proof'] : '');
         $hash = hash('sha256', json_encode([
             'attempt_id' => $attemptId,
             'client_uuid' => $clientUuid,
             'generation' => $generation,
             'reason' => 'FULLSCREEN_EXIT',
-            'proof_hash' => hash('sha256', $proof),
         ], JSON_UNESCAPED_SLASHES));
 
         $db = Database::connect();
@@ -62,11 +60,6 @@ class AttemptFullscreenGuardService
                 $db->transRollback();
                 return $this->error(409, 'EXAM_BROWSER_MODE', 'Kegiatan ini menggunakan Exam Browser wajib.');
             }
-            if ($proof !== '') {
-                $db->transRollback();
-                return $this->error(409, 'EXAM_BROWSER_CLIENT', 'Fullscreen Guard browser biasa tidak diterapkan pada client Exam Browser.');
-            }
-
             $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
                 ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
             if (!empty($attempt['pause_started_at'])
