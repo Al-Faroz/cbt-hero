@@ -92,34 +92,32 @@
         return cellNode;
     };
 
-    const addDropdownButton = (menu, label, handler, disabled = false, danger = false) => {
-        const item = document.createElement('li');
+    const addActionButton = (menu, label, handler, disabled = false, danger = false) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'dropdown-item' + (danger ? ' text-danger' : '');
+        button.className = 'btn btn-sm w-100 text-start '
+            + (danger ? 'btn-outline-danger' : 'btn-outline-secondary');
         button.textContent = label;
         button.disabled = disabled;
-        button.addEventListener('click', handler);
-        item.append(button);
-        menu.append(item);
+        button.addEventListener('click', event => {
+            menu.closest('details')?.removeAttribute('open');
+            handler(event);
+        });
+        menu.append(button);
     };
 
-    const addDropdownLink = (menu, label, href) => {
-        const item = document.createElement('li');
+    const addActionLink = (menu, label, href) => {
         const link = document.createElement('a');
-        link.className = 'dropdown-item';
+        link.className = 'btn btn-sm btn-outline-secondary w-100 text-start';
         link.href = href;
         link.textContent = label;
-        item.append(link);
-        menu.append(item);
+        menu.append(link);
     };
 
-    const addDropdownDivider = menu => {
-        const item = document.createElement('li');
-        const divider = document.createElement('hr');
-        divider.className = 'dropdown-divider';
-        item.append(divider);
-        menu.append(item);
+    const addActionDivider = menu => {
+        const divider = document.createElement('div');
+        divider.className = 'jadwal-action-divider';
+        menu.append(divider);
     };
 
     const windowLabel = value => ({
@@ -380,30 +378,25 @@
                     actionGroup.append(accessButton);
                 }
 
-                const dropdown = document.createElement('div');
-                dropdown.className = 'dropdown';
-                const dropdownToggle = document.createElement('button');
-                dropdownToggle.type = 'button';
-                dropdownToggle.className = 'btn btn-outline-secondary btn-sm dropdown-toggle';
-                dropdownToggle.id = 'jadwalActionMenu' + String(item.id);
-                dropdownToggle.setAttribute('data-bs-toggle', 'dropdown');
-                dropdownToggle.setAttribute('aria-expanded', 'false');
-                dropdownToggle.setAttribute('aria-label', 'Aksi Jadwal ' + String(item.id));
-                dropdownToggle.textContent = 'Aksi';
+                const actionDetails = document.createElement('details');
+                actionDetails.className = 'jadwal-action-details';
+                const actionSummary = document.createElement('summary');
+                actionSummary.className = 'btn btn-outline-secondary btn-sm';
+                actionSummary.textContent = 'Aksi';
+                actionSummary.setAttribute('aria-label', 'Buka aksi Jadwal ' + String(item.id));
 
-                const menu = document.createElement('ul');
-                menu.className = 'dropdown-menu dropdown-menu-end';
-                menu.setAttribute('aria-labelledby', dropdownToggle.id);
-                addDropdownLink(menu, 'Susulan', uiBase + '/' + item.id + '/susulan');
-                addDropdownButton(menu, 'Perpanjang Batas Mulai',
+                const menu = document.createElement('div');
+                menu.className = 'jadwal-action-menu';
+                addActionLink(menu, 'Jadwal Susulan', uiBase + '/' + item.id + '/susulan');
+                addActionButton(menu, 'Perpanjang Batas Mulai',
                     () => openOperation(item.id, 'EXTEND', item.batas_mulai_at));
-                addDropdownButton(menu, 'Tambah Waktu',
+                addActionButton(menu, 'Tambah Waktu',
                     () => openOperation(item.id, 'ADD_TIME'), Number(item.active_attempt_count) < 1);
 
                 if (item.first_attempt_started_at === null) {
-                    addDropdownDivider(menu);
+                    addActionDivider(menu);
                     const visible = Number(item.tampilkan_nilai_saat_selesai) === 1;
-                    addDropdownButton(menu, visible ? 'Nilai Selesai: ON' : 'Nilai Selesai: OFF',
+                    addActionButton(menu, visible ? 'Nilai Selesai: ON' : 'Nilai Selesai: OFF',
                         async () => {
                             try {
                                 await api(base + '/' + item.id + '/result-visibility', 'PATCH', {
@@ -417,9 +410,9 @@
                 }
 
                 if (item.structural_editable) {
-                    addDropdownDivider(menu);
-                    addDropdownButton(menu, 'Edit Jadwal', () => openEdit(item.id));
-                    addDropdownButton(menu, 'Hapus Jadwal', async () => {
+                    addActionDivider(menu);
+                    addActionButton(menu, 'Edit Jadwal', () => openEdit(item.id));
+                    addActionButton(menu, 'Hapus Jadwal', async () => {
                         if (!window.confirm('Hapus Jadwal untuk ' + (item.nama_mapel || item.nama_bank) + '?'))
                             return;
                         try {
@@ -432,12 +425,12 @@
                         }
                     }, false, true);
                 } else {
-                    addDropdownDivider(menu);
-                    addDropdownButton(menu, 'Struktur terkunci', () => {}, true);
+                    addActionDivider(menu);
+                    addActionButton(menu, 'Struktur terkunci', () => {}, true);
                 }
 
-                dropdown.append(dropdownToggle, menu);
-                actionGroup.append(dropdown);
+                actionDetails.append(actionSummary, menu);
+                actionGroup.append(actionDetails);
                 actions.append(actionGroup);
 
                 row.append(
