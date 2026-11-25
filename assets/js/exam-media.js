@@ -5,13 +5,7 @@
     const db = window.CbtExamDb;
     if (!runtime || !db) return;
 
-    const objectUrls = new Map();
-
-    const releaseObjectUrl = mediaId => {
-        const previous = objectUrls.get(Number(mediaId));
-        if (previous) URL.revokeObjectURL(previous);
-        objectUrls.delete(Number(mediaId));
-    };
+    const objectUrls = new Set();
 
     const localUrl = value => {
         try {
@@ -65,9 +59,8 @@
 
         if (!blob) return false;
         try {
-            releaseObjectUrl(mediaId);
             const objectUrl = URL.createObjectURL(blob);
-            objectUrls.set(mediaId, objectUrl);
+            objectUrls.add(objectUrl);
             const asset = runtime.mediaMap[String(mediaId)];
             if (asset) asset.url = objectUrl;
             return true;
@@ -92,7 +85,7 @@
     };
 
     window.addEventListener('beforeunload', () => {
-        for (const url of objectUrls.values()) URL.revokeObjectURL(url);
+        for (const url of objectUrls) URL.revokeObjectURL(url);
         objectUrls.clear();
     });
 
