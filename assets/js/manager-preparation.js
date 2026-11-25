@@ -190,17 +190,75 @@
                     preview.textContent = item.question_html || '';
                 }
                 content.append(preview);
-                if (item.mapping_json) {
+
+                if (Array.isArray(item.options) && item.options.length) {
                     const details = document.createElement('details');
+                    details.className = 'mt-2';
                     const summary = document.createElement('summary');
-                    summary.textContent = 'Mapping Menjodohkan';
-                    const pre = document.createElement('pre');
-                    pre.className = 'small text-wrap mt-2 mb-0';
-                    try { pre.textContent = JSON.stringify(JSON.parse(item.mapping_json), null, 2); }
-                    catch (_) { pre.textContent = String(item.mapping_json); }
-                    details.append(summary, pre);
+                    summary.textContent = 'Opsi jawaban (' + item.options.length + ')';
+                    const list = document.createElement('ol');
+                    list.className = 'small ps-4 mt-2 mb-0';
+                    for (const option of item.options) {
+                        const line = document.createElement('li');
+                        const key = document.createElement('strong');
+                        key.textContent = (option.option_key || '-') + '. ';
+                        line.append(key);
+                        if (window.CbtQuestionRenderer) {
+                            line.append(window.CbtQuestionRenderer.renderContent(option.content_html || '', mediaMap));
+                        } else {
+                            line.append(document.createTextNode(option.content_html || ''));
+                        }
+                        list.append(line);
+                    }
+                    details.append(summary, list);
                     content.append(details);
                 }
+
+                if ((item.matching_left || []).length || (item.matching_right || []).length) {
+                    const details = document.createElement('details');
+                    details.className = 'mt-2';
+                    const summary = document.createElement('summary');
+                    summary.textContent = 'Menjodohkan · ' + (item.matching_left || []).length
+                        + ' kiri / ' + (item.matching_right || []).length + ' kanan';
+                    const columns = document.createElement('div');
+                    columns.className = 'row g-2 mt-1';
+                    for (const [heading, entries] of [
+                        ['Sisi kiri', item.matching_left || []],
+                        ['Sisi kanan', item.matching_right || []],
+                    ]) {
+                        const column = document.createElement('div');
+                        column.className = 'col-12 col-md-6';
+                        const title = document.createElement('div');
+                        title.className = 'small fw-semibold mb-1';
+                        title.textContent = heading;
+                        const list = document.createElement('ol');
+                        list.className = 'small ps-4 mb-0';
+                        for (const entry of entries) {
+                            const line = document.createElement('li');
+                            const key = document.createElement('strong');
+                            key.textContent = (entry.key || '-') + '. ';
+                            line.append(key);
+                            if (window.CbtQuestionRenderer) {
+                                line.append(window.CbtQuestionRenderer.renderContent(entry.content_html || '', mediaMap));
+                            } else {
+                                line.append(document.createTextNode(entry.content_html || ''));
+                            }
+                            list.append(line);
+                        }
+                        column.append(title, list);
+                        columns.append(column);
+                    }
+                    details.append(summary, columns);
+                    if ((item.matching_pairs || []).length) {
+                        const pairInfo = document.createElement('div');
+                        pairInfo.className = 'small text-secondary mt-2';
+                        pairInfo.textContent = 'Pasangan acuan: ' + item.matching_pairs
+                            .map(pair => pair.left_key + ' → ' + pair.right_key).join(' · ');
+                        details.append(pairInfo);
+                    }
+                    content.append(details);
+                }
+
                 row.append(content);
                 itemBody.append(row);
             }
