@@ -121,6 +121,112 @@ class AttemptFullscreenGuardService
         }
     }
 
+    public function resume(
+        int $participantId,
+        int $attemptId,
+        array $payload,
+        string $clientUuid,
+        int $generation,
+        string $idempotencyKey
+    ): array {
+        $ops = new ParticipantOperationService();
+        $ownership = new AttemptOwnershipService();
+
+        if (!$ops->validKey($idempotencyKey))
+            return $this->error(422, 'IDEMPOTENCY_REQUIRED', 'Idempotency-Key wajib dan formatnya tidak valid.');
+        if (!$ownership->validClientUuid($clientUuid) || $generation < 1)
+            return $this->error(422, 'CLIENT_ID_INVALID', 'Identitas client tidak valid.');
+        if (($payload['fullscreen_active'] ?? false) !== true)
+            return $this->error(423, 'FULLSCREEN_REQUIRED', 'Aktifkan layar penuh sebelum melanjutkan ujian.');
+
+        $hash = hash('sha256', json_encode([
+            'attempt_id' => $attemptId,
+            'client_uuid' => $clientUuid,
+            'generation' => $generation,
+            'reason' => 'FULLSCREEN_RESTORE',
+        ], JSON_UNESCAPED_SLASHES));
+        $db = Database::connect();
+        $db->transBegin();
+
+        try {
+            $db->query('SELECT id FROM peserta WHERE id = ? FOR UPDATE', [$participantId])->getRowArray();
+            $attempt = $ownership->owned($db, $participantId, $attemptId, true);
+            if ($attempt === null) {
+                $db->transRollback();
+                return $this->error(404, 'NOT_FOUND', 'Attempt tidak ditemukan.');
+            }
+            $clientError = $ownership->validateClient($attempt, $clientUuid, $generation);
+            if ($clientError !== null) {
+                $db->transRollback();
+                return $this->error($clientError['status'], $clientError['code'], $clientError['message']);
+            }
+            if ($attempt['status'] !== 'ACTIVE' || $attempt['access_state'] !== 'BUKA') {
+                $db->transRollback();
+                return $this->error(423, 'ATTEMPT_NOT_RESUMABLE', 'Attempt belum dapat dilanjutkan.');
+            }
+
+            $openPause = $db->table('attempt_pause_event')->where('attempt_id', $attemptId)
+                ->where('ended_at', null)->orderBy('id', 'DESC')->get()->getRowArray();
+            if (empty($attempt['pause_started_at']) || (string) ($openPause['reason'] ?? '') !== 'FULLSCREEN_EXIT') {
+                $db->transRollback();
+                return $this->error(409, 'FULLSCREEN_PAUSE_NOT_FOUND', 'Tidak ada jeda fullscreen yang perlu dipulihkan.');
+            }
+
+            $operation = $ops->begin(
+                $db, $idempotencyKey, $participantId, 'FULLSCREEN_RESUME',
+                (int) $attempt['jadwal_id'], $hash
+            );
+            if (!($operation['ok'] ?? false)) {
+                $db->transRollback();
+                return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah digunakan untuk permintaan berbeda.');
+            }
+            if (!empty($operation['existing']['attempt_id'])) {
+                $db->transCommit();
+                return ['ok' => true, 'status' => 200, 'data' => [
+                    'attempt_id' => $attemptId, 'paused' => false, 'resumed' => true,
+                    'deadline_at' => $ownership->iso((string) $attempt['deadline_at']),
+                ]];
+            }
+
+            $now = $ownership->now();
+            $pauseStart = new \DateTimeImmutable((string) $attempt['pause_started_at'], $ownership->timezone());
+            $pauseSeconds = max(0, $now->getTimestamp() - $pauseStart->getTimestamp());
+            $deadline = (new \DateTimeImmutable((string) $attempt['deadline_at'], $ownership->timezone()))
+                ->modify('+' . $pauseSeconds . ' seconds');
+            $db->table('attempt')->where('id', $attemptId)->update([
+                'pause_started_at' => null,
+                'paused_seconds' => (int) $attempt['paused_seconds'] + $pauseSeconds,
+                'deadline_at' => $deadline->format('Y-m-d H:i:s'),
+                'last_activity_at' => $now->format('Y-m-d H:i:s'),
+            ]);
+            $db->table('attempt_pause_event')->where('id', (int) $openPause['id'])->update([
+                'ended_at' => $now->format('Y-m-d H:i:s'),
+                'paused_seconds' => $pauseSeconds,
+            ]);
+            $db->table('attempt_client_event')->insert([
+                'attempt_id' => $attemptId,
+                'client_generation' => $generation,
+                'event_type' => 'FULLSCREEN_RESTORED',
+                'metadata_json' => json_encode(['source' => 'BROWSER_FULLSCREEN_API']),
+            ]);
+            $ops->complete($db, $idempotencyKey, $attemptId);
+            if ($db->transStatus() === false || $db->transCommit() === false)
+                throw new RuntimeException('Commit Fullscreen Resume gagal.');
+
+            return ['ok' => true, 'status' => 200, 'data' => [
+                'attempt_id' => $attemptId,
+                'paused' => false,
+                'resumed' => true,
+                'deadline_at' => $ownership->iso($deadline->format('Y-m-d H:i:s')),
+                'message' => 'Layar penuh aktif. Ujian dilanjutkan.',
+            ]];
+        } catch (Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Fullscreen Guard resume gagal: {message}', ['message' => $e->getMessage()]);
+            return $this->error(409, 'FULLSCREEN_RESUME_FAILED', 'Ujian belum dapat dilanjutkan. Hubungi pengawas.');
+        }
+    }
+
     private function error(int $status, string $code, string $message): array
     {
         return compact('status', 'code', 'message') + ['ok' => false];
