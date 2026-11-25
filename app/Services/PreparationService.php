@@ -125,7 +125,9 @@ class PreparationService
                     return $this->error(409, 'IDEMPOTENCY_CONFLICT', 'Idempotency-Key sudah dipakai untuk request yang berbeda.');
                 }
                 if ($operation['status'] === 'COMPLETED') {
-                    $db->transCommit();
+                    if ($db->transCommit() === false) {
+                        throw new RuntimeException('Commit replay Preparation gagal.');
+                    }
                     $status = $this->status($jadwalId);
                     if (!($status['ok'] ?? false)) return $status;
                     $status['data']['processed_count'] = 0;
