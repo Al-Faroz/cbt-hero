@@ -309,7 +309,7 @@ class QuestionDocumentService
             $values[$row][$col] = $text;
         }
 
-        foreach ($includeDrawings ? $this->xlsxDrawingTokens($zip, $path, $source, $imageImport) : [] as $item) {
+        foreach (($includeDrawings ? $this->xlsxDrawingTokens($zip, $path, $source, $imageImport) : []) as $item) {
             $row = $item['row']; $col = $item['col'];
             $current = trim((string) ($values[$row][$col] ?? ''));
             $values[$row][$col] = $current === '' ? $item['token'] : $current . "\n" . $item['token'];
