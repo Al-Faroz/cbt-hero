@@ -360,8 +360,11 @@ class PreparationService
             $revisionId = (int) ($item['soal_revision_id'] ?? 0);
             $options = $optionsByRevision[$revisionId] ?? [];
             $optionOrder = json_decode((string) ($item['option_order_json'] ?? ''), true);
-            if (!is_array($optionOrder)) $optionOrder = array_keys($options);
+            $optionOrder = is_array($optionOrder)
+                ? array_values(array_map('strval', array_filter($optionOrder, 'is_scalar')))
+                : array_map('strval', array_keys($options));
             foreach (array_keys($options) as $key) {
+                $key = (string) $key;
                 if (!in_array($key, $optionOrder, true)) $optionOrder[] = $key;
             }
             $item['options'] = [];
