@@ -350,3 +350,28 @@ Commit:
 - Acceptance: `076b564bbb708d94fb9aed99cf57f027e1052fb9`
 
 Seluruh acceptance tetap DEFERRED sampai tahap uji integrasi Master Ujian Akademis.
+
+
+## Temuan OP-ADD-TIME-IDEMPOTENCY-01 — retry Tambah Waktu dapat menggandakan tambahan
+
+Sebelumnya endpoint Tambah Waktu tidak memakai Idempotency-Key. Jika server sudah commit tetapi respons hilang, Operator mengulang submit dan deadline Attempt dapat bertambah dua kali.
+
+Perbaikan:
+- Endpoint mewajibkan Idempotency-Key dengan format yang tervalidasi.
+- Payload hash mengikat Jadwal, detik tambahan, scope, dan daftar Attempt yang dinormalisasi.
+- Operasi memakai `jadwal_operations` dengan action `ADD_TIME_JADWAL`, root Jadwal, result Jadwal, dan status COMPLETED dalam transaksi yang sama dengan perubahan Attempt.
+- Retry dengan key/payload sama mengembalikan replay tanpa menambah deadline lagi; key sama dengan payload berbeda ditolak IDEMPOTENCY_CONFLICT.
+- UI menyimpan key selama submit yang sama dan menggantinya bila nilai input berubah.
+
+File:
+- `app/Services/JadwalOperationalService.php`
+- `app/Controllers/Api/Manager/Schedule/JadwalController.php`
+- `assets/js/manager-jadwal.js`
+
+Commits:
+- `10b10b1d28cc9e240cccf112a656fc3fc4640424`
+- `7d45cbf17bfbb911373d7b7049cca2d4ae17d163`
+- `01dce93f4372419cc2869d0a5af70f77924b54e4`
+- `66e2c74772e4b1590e6552790488feee20be2482`
+
+Acceptance S25–S26 ditambahkan. Belum diuji dengan retry API/DB; tetap DEFERRED.
