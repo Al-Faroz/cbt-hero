@@ -62,8 +62,8 @@
                         kind: asset.kind,
                         provider: asset.provider,
                         url: asset.url,
-                        critical: false,
-                        prefetch_order: 999999
+                        critical: Boolean(asset.critical),
+                        prefetch_order: Number(asset.prefetch_order || 999999)
                     });
                 }
 
@@ -83,6 +83,10 @@
         });
 
         if (changed) {
+            const revisionMedia = changes.flatMap(change =>
+                Array.isArray(change.media_manifest) ? change.media_manifest : []
+            );
+            await window.CbtExamMedia?.prepare(revisionMedia);
             runtime.setSyncState('Pembaruan soal diterapkan', 'synced');
             runtime.emit('cbt:revision-applied', {changes});
             if (rerender) window.CbtExamRenderer?.renderIndex(runtime.currentIndex || 0);
