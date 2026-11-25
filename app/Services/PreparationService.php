@@ -618,7 +618,9 @@ class PreparationService
                AND (
                     pk.kegiatan_id <> ?
                     OR pk.status <> 'ACTIVE'
+                    OR p.id IS NULL
                     OR p.status <> 'ACTIVE'
+                    OR rb.id IS NULL
                     OR rb.tingkat <> ?
                     OR EXISTS (
                         SELECT 1 FROM attempt active_attempt
