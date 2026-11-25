@@ -119,9 +119,54 @@
             persistedState.deadline_at = data.deadline_at || persistedState.deadline_at || null;
             persistedState.updated_at = Date.now();
             await db.runtime_state.put(persistedState);
-            if (String(data.status || '') !== 'ACTIVE') {
+
+            const attemptStatus = String(data.status || 'ACTIVE');
+            const serverPaused = Boolean(data.paused);
+            if (runtime.bootstrap?.attempt) {
+                runtime.bootstrap.attempt.status = attemptStatus;
+                runtime.bootstrap.attempt.paused = serverPaused;
+                runtime.bootstrap.attempt.pause_reason = data.pause_reason || null;
+            }
+
+            const overlay = document.getElementById('examLockOverlay');
+            const title = document.getElementById('examLockTitle');
+            const message = document.getElementById('examLockMessage');
+            const resumeButton = document.getElementById('examFullscreenResumeButton');
+            const exitLink = document.getElementById('examLockExitLink');
+
+            if (attemptStatus !== 'ACTIVE') {
+                runtime.paused = false;
+                runtime.pauseReason = null;
                 runtime.lockInputs('Ujian sudah selesai');
-                runtime.emit('cbt:attempt-status-changed', {status: data.status});
+                if (overlay) overlay.hidden = true;
+                runtime.emit('cbt:attempt-status-changed', {status: attemptStatus});
+            } else if (serverPaused) {
+                const reason = String(data.pause_reason || runtime.pauseReason || 'OPERATOR');
+                runtime.pauseReason = reason === 'FULLSCREEN_EXIT' ? 'FULLSCREEN_EXIT' : 'OPERATOR';
+                runtime.paused = true;
+                runtime.lockInputs(runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Ujian dijeda · layar penuh diperlukan'
+                    : 'Ujian dijeda oleh pengawas');
+                if (overlay) overlay.hidden = false;
+                if (title) title.textContent = 'Ujian dijeda';
+                if (message) message.textContent = runtime.pauseReason === 'FULLSCREEN_EXIT'
+                    ? 'Attempt dijeda karena keluar dari layar penuh. Kembali ke layar penuh untuk melanjutkan ujian.'
+                    : 'Pengawas sedang menjeda ujian. Tunggu sampai pengawas melanjutkan sesi.';
+                if (resumeButton) {
+                    resumeButton.hidden = runtime.pauseReason !== 'FULLSCREEN_EXIT';
+                    resumeButton.disabled = false;
+                }
+                if (exitLink) exitLink.hidden = true;
+            } else if (runtime.pauseReason === 'OPERATOR' || runtime.pauseReason === 'FULLSCREEN_EXIT') {
+                runtime.paused = false;
+                runtime.pauseReason = null;
+                runtime.unlockInputs();
+                if (overlay) overlay.hidden = true;
+                if (resumeButton) resumeButton.hidden = true;
+                if (exitLink) exitLink.hidden = false;
+                if (data.deadline_at) runtime.emit('cbt:deadline-updated', {deadline_at: data.deadline_at});
+                runtime.emit('cbt:server-resumed');
+                runtime.emit('cbt:sync-needed');
             }
         } catch (_) {
         } finally {
