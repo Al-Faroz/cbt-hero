@@ -86,7 +86,7 @@
             const revisionMedia = changes.flatMap(change =>
                 Array.isArray(change.media_manifest) ? change.media_manifest : []
             );
-            await window.CbtExamMedia?.prepare(revisionMedia);
+            await window.CbtExamMedia?.prepare(revisionMedia, {emitReady: false});
             runtime.setSyncState('Pembaruan soal diterapkan', 'synced');
             runtime.emit('cbt:revision-applied', {changes});
             if (rerender) window.CbtExamRenderer?.renderIndex(runtime.currentIndex || 0);
