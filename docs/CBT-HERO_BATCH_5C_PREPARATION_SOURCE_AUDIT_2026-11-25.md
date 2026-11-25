@@ -125,3 +125,31 @@ File: `app/Services/PreparationService.php`
 Commit: `2098e5c4f831f89c90f4b342dc04362267a63a55`
 
 Belum diuji dengan DB fixture/Attempt aktual.
+
+
+## Temuan PREP-DETAIL-01 — API detail ada, tetapi operator belum mempunyai UI inspeksi assignment
+
+Sebelumnya API `prepared-assignments` dan `prepared-assignments/{id}` tersedia, tetapi modal Preparation hanya menampilkan ringkasan progress. Acceptance P21 meminta operator dapat memeriksa item, revisi, dan media.
+
+Perbaikan:
+- Daftar Prepared Assignment kini mendukung pagination 25/50/100 dan pencarian nomor peserta/nama/rombel.
+- Detail assignment menyertakan item, question/revision ID, konten soal/stimulus, metadata, mapping Menjodohkan, serta manifest media dengan URL preview manager.
+- UI modal Preparation menampilkan daftar assignment dan panel detail yang merender konten/media; answer key tidak ditambahkan ke payload detail.
+- Shared Question Renderer dan KaTeX dimuat pada halaman Jadwal untuk preview konten.
+
+File:
+- `app/Services/PreparationService.php`
+- `app/Controllers/Api/Manager/Schedule/PreparationController.php`
+- `app/Views/manager/schedule/_preparation_modal.php`
+- `app/Views/manager/schedule/jadwal.php`
+- `assets/js/manager-preparation.js`
+
+Commit:
+- `3e58dadbff381049893376ba3f90cd6c2f5c881f`
+- `2977a9c98a1059ad95c3bf74ba2c82fffbc5b3f0`
+- `3529f84ac286cc82286a6856f4a1d079579897a1`
+- `0ee6757c770d094e5a6fadff3aec02561c450b83`
+- `a3769a3046bb815834b6a7444f2481edd969e85e`
+- `83a92f71456f7494f9a6c0c4db4720482dd2e928`
+
+Belum diuji melalui browser; X/P acceptance tetap DEFERRED.
