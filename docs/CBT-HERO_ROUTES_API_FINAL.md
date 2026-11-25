@@ -1666,7 +1666,7 @@ TAHAN:
 POST /manager/api/jadwal/{jadwalId}/extend-start-window
 ```
 
-Hanya menambah/memperpanjang, tidak memundurkan aturan menjadi lebih sempit ketika sudah berjalan.
+Hanya menambah/memperpanjang, tidak memundurkan aturan menjadi lebih sempit ketika sudah berjalan. Retry dengan nilai batas yang sama mengembalikan sukses replay tanpa menulis ulang nilai atau membuat audit duplikat.
 
 ## 32.4 Tampilkan Nilai Saat Selesai
 
