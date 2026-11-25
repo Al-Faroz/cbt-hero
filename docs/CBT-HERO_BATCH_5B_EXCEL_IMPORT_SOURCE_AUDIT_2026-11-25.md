@@ -121,3 +121,20 @@ Acceptance X01–X21 tetap DEFERRED.
 Pembersihan media lokal sekarang hanya menerima path yang cocok dengan nama file acak yang dibuat aplikasi pada folder `question-media/` (40 karakter heksadesimal dengan ekstensi JPG/PNG/WebP). Ini mencegah nilai `file_path` yang rusak/diubah di database dipakai untuk menghapus file di luar folder media yang dikelola.
 
 Commit: `26cd4f14eee7595f240e62914d3b6733f75eb974`
+
+
+### EXCEL-DRAWING-01 — anchor gambar Excel yang tidak didukung tidak boleh diabaikan
+
+Parser sebelumnya hanya membaca `oneCellAnchor` dan `twoCellAnchor`, tetapi beberapa bentuk drawing/relasi gambar yang tidak dikenali dapat dilewati tanpa error. Hal ini berisiko membuat gambar pada workbook hilang dari staging tanpa pemberitahuan.
+
+Perbaikan:
+- Relasi drawing atau file drawing yang hilang sekarang ditolak.
+- Picture tanpa anchor/koordinat/blip yang lengkap ditolak.
+- Relasi media gambar yang tidak menunjuk ke file `xl/media/` ditolak.
+- Anchor gambar di luar batas area template tetap ditolak.
+- Jumlah picture yang diproses harus sama dengan jumlah picture pada drawing; tipe anchor gambar lain tidak lagi diabaikan diam-diam.
+
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `8d8c4ea38145c96673d1419b4755c418ea85f014`
+
+Acceptance X20/X21 masih DEFERRED sampai fixture XLSX nyata diuji.
