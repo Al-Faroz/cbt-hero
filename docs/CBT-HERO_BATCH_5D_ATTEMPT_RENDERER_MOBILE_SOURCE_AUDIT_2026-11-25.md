@@ -280,3 +280,6 @@ Perbaikan: tab yang menerima ALIVE dari tab lain segera hard-lock, menghentikan 
 File: `assets/js/exam-tab-lock.js`  
 Commit: `4b8078152bf0d4186176d9a1491b727b0d571faf`.  
 Acceptance E52 ditambahkan; belum diuji dengan browser automation multi-tab.
+
+
+Tab lock juga menangani Back-Forward Cache: pagehide melepas heartbeat/lock tanpa menutup channel; pageshow persisted memeriksa lock terbaru lalu menyalakan heartbeat kembali. Commit: `1d393eacdcdb91f3728d65b39f429ae0e08bb972`. Acceptance E53 ditambahkan; belum diuji pada browser mobile/BFCache.
