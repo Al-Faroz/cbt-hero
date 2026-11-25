@@ -58,17 +58,24 @@
         $('prepProgressBar').style.width = progress + '%';
         $('prepProgressBar').textContent = progress + '%';
 
-        $('prepStatusText').textContent = data.can_start
-            ? 'Prepared Assignment seluruh target sudah siap dan pemeriksaan peserta lulus.'
-            : (data.assignments_ready
-                ? 'Prepared Assignment sudah lengkap, tetapi masih ada pemeriksaan peserta yang perlu diselesaikan sebelum START.'
-                : 'Preparation belum lengkap. Peserta belum boleh START bila assignment-nya belum READY.');
+        const invalidTargets = Number(data.invalid_target_count ?? 0);
+        $('prepStatusText').textContent = invalidTargets > 0
+            ? invalidTargets + ' target Susulan tidak lagi memenuhi syarat. Batalkan/perbaiki target tersebut pada halaman Susulan sebelum Jadwal dapat START.'
+            : (data.can_start
+                ? 'Prepared Assignment seluruh target sudah siap dan pemeriksaan peserta lulus.'
+                : (data.assignments_ready
+                    ? 'Prepared Assignment sudah lengkap, tetapi masih ada pemeriksaan peserta yang perlu diselesaikan sebelum START.'
+                    : 'Preparation belum lengkap. Peserta belum boleh START bila assignment-nya belum READY.'));
 
         const preflight = data.preflight ?? {};
-        $('prepPreflightText').textContent = preflight.message ?? '-';
-        $('prepPreflightText').className = 'small ' + (preflight.pass ? 'text-success' : 'text-warning');
+        $('prepPreflightText').textContent = [
+            preflight.message ?? '-',
+            invalidTargets > 0 ? invalidTargets + ' target Susulan invalid; target ini tidak dibuatkan assignment.' : '',
+        ].filter(Boolean).join(' ');
+        $('prepPreflightText').className = 'small ' + (preflight.pass && invalidTargets === 0 ? 'text-success' : 'text-warning');
 
-        $('prepRun').disabled = state.running || Number(data.total_target ?? 0) < 1 || Boolean(data.assignments_ready);
+        const pendingWork = Number(data.missing ?? 0) + Number(data.stale ?? 0) + Number(data.failed ?? 0);
+        $('prepRun').disabled = state.running || Number(data.total_target ?? 0) < 1 || pendingWork < 1;
         $('prepRebuild').disabled = state.running
             || (Number(data.stale ?? 0) + Number(data.failed ?? 0)) < 1;
     };
