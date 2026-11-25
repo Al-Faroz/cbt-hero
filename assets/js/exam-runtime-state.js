@@ -24,6 +24,7 @@
         inputLocked: false,
         tabBlocked: false,
         paused: false,
+        pauseReason: null,
 
         clientHeaders() {
             return {
