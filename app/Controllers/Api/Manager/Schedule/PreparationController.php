@@ -41,7 +41,7 @@ class PreparationController extends BaseController
 
     public function assignments(string $jadwalId)
     {
-        return $this->respondData((new PreparationService())->assignments((int) $jadwalId));
+        return $this->respondData((new PreparationService())->assignments((int) $jadwalId, $this->request->getGet()));
     }
 
     public function detail(string $assignmentId)
