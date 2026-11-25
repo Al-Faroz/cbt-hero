@@ -632,6 +632,11 @@ class PreparationService
              LEFT JOIN peserta p ON p.id = pk.peserta_id
              LEFT JOIN rombel rb ON rb.id = p.rombel_id
              WHERE t.jadwal_id = ? AND t.status = 'TARGETED'
+               AND NOT EXISTS (
+                    SELECT 1 FROM attempt own_attempt
+                    WHERE own_attempt.jadwal_id = t.jadwal_id
+                      AND own_attempt.peserta_kegiatan_id = t.peserta_kegiatan_id
+               )
                AND (
                     pk.kegiatan_id <> ?
                     OR pk.status <> 'ACTIVE'
