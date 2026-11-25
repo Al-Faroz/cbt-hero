@@ -294,9 +294,15 @@ class QuestionDocumentService
             if ($xp->query('./*[local-name()="f"]', $cell)->length)
                 throw new RuntimeException('Rumus/formula Excel tidak boleh dipakai pada template soal.');
             $row = (int) $match[2] - 1; $col = $this->excelColumnIndex($match[1]) - 1;
-            if ($row < 0 || $row > 260 || $col < 0 || $col > 60) continue;
             $text = trim($this->xlsxCellValue($xp, $cell, $shared));
             if (mb_strlen($text) > 20000) throw new RuntimeException('Sel Excel terlalu panjang.');
+            if ($row < 0 || $col < 0) continue;
+            if ($row > 260 || $col > 60) {
+                if ($text !== '') {
+                    throw new RuntimeException('Isi sel berada di luar area template Excel yang didukung.');
+                }
+                continue;
+            }
             $values[$row][$col] = $text;
         }
 
