@@ -103,3 +103,14 @@ Commit: `824ec46cad8c97634a56d64f6b5fd1cc06bb66e0`
 - Media ownership per import job: belum tersedia; cleanup otomatis untuk FIX/EXCLUDE/job retention ditahan.
 - Commit idempotency key: format diperiksa, key belum dipersistenkan.
 - X01–X21 tetap DEFERRED; tidak ada PHP lint, PHPUnit, fixture XLSX, atau browser test yang diklaim PASS.
+
+
+### EXCEL-MODE-01 — marker mode Menjodohkan tidak boleh fallback diam-diam
+
+Parser sebelumnya mengubah semua nilai marker selain `ALL_OR_NOTHING` menjadi `PARTIAL`. Marker rusak/tidak dikenal dapat lolos jika Komposisi Bank kebetulan menggunakan PARTIAL.
+
+Perbaikan: marker sekarang wajib tepat `PARTIAL` atau `ALL_OR_NOTHING`; nilai lain ditolak saat parsing.  
+File: `app/Services/QuestionDocumentService.php`  
+Commit: `08c31ed2f9f5755b77d0b6e56f97cd427e8d49ec`
+
+Acceptance X01–X21 tetap DEFERRED.
