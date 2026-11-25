@@ -35,13 +35,14 @@
         const attemptId = runtime.attemptId;
         await db.transaction(
             'rw',
-            db.attempt_meta, db.question_cache, db.answer_store, db.sync_queue, db.media_manifest, db.runtime_state,
+            db.attempt_meta, db.question_cache, db.answer_store, db.sync_queue, db.media_manifest, db.media_cache, db.runtime_state,
             async () => {
                 await db.attempt_meta.delete(attemptId);
                 await db.question_cache.where('attempt_id').equals(attemptId).delete();
                 await db.answer_store.where('attempt_id').equals(attemptId).delete();
                 await db.sync_queue.where('attempt_id').equals(attemptId).delete();
                 await db.media_manifest.where('attempt_id').equals(attemptId).delete();
+                await db.media_cache.where('attempt_id').equals(attemptId).delete();
                 await db.runtime_state.delete(attemptId);
             }
         );
