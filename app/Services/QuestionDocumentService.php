@@ -177,7 +177,14 @@ class QuestionDocumentService
             $meaningful = $question !== '' || $answer !== '' || $tolerance !== '';
             if (!$meaningful) return null;
             $modeText = mb_strtoupper($this->control($value($row, 2)), 'UTF-8');
-            $shortMode = in_array($modeText, ['ANGKA', 'NUMERIC', 'N'], true) ? 'NUMERIC' : 'TEXT';
+            $modeMap = [
+                'TEKS' => 'TEXT', 'TEXT' => 'TEXT', 'T' => 'TEXT',
+                'ANGKA' => 'NUMERIC', 'NUMERIC' => 'NUMERIC', 'N' => 'NUMERIC',
+            ];
+            if (!isset($modeMap[$modeText])) {
+                throw new RuntimeException('Mode Isian Singkat harus TEKS atau ANGKA.');
+            }
+            $shortMode = $modeMap[$modeText];
             $maxPoint = $this->control($value($row, 5));
             $data = ['question_type' => 'ISIAN_SINGKAT', 'question_text' => $question,
                 'short_answer_mode' => $shortMode, 'max_point' => $maxPoint === '' ? '1' : $maxPoint];
@@ -203,14 +210,25 @@ class QuestionDocumentService
 
     private function excelLetters(string $value, int $optionCount): array
     {
-        if ($value === '') return [];
+        if (trim($value) === '') return [];
         $tokens = preg_split('/[^A-Za-z]+/u', mb_strtoupper($value, 'UTF-8')) ?: [];
+        $tokens = array_values(array_filter($tokens, static fn(string $token): bool => $token !== ''));
         $result = [];
+
         foreach ($tokens as $token) {
-            if (strlen($token) !== 1) continue;
+            if (strlen($token) !== 1) {
+                throw new RuntimeException('Pilihan Benar harus berupa huruf yang dipisahkan koma, misalnya A,C.');
+            }
             $index = ord($token) - 65;
-            if ($index >= 0 && $index < $optionCount) $result[$token] = $token;
+            if ($index < 0 || $index >= $optionCount) {
+                throw new RuntimeException('Pilihan Benar berisi huruf di luar jumlah opsi pada Komposisi Bank.');
+            }
+            if (isset($result[$token])) {
+                throw new RuntimeException('Huruf pada Pilihan Benar tidak boleh berulang.');
+            }
+            $result[$token] = $token;
         }
+
         return array_values($result);
     }
 
@@ -334,6 +352,18 @@ class QuestionDocumentService
                 $rowNode = $drawingXp->query('./*[local-name()="row"]', $from)->item(0);
                 $blip = $drawingXp->query('.//*[local-name()="blip"]', $anchor)->item(0);
                 if (!$blip instanceof DOMElement || $colNode === null || $rowNode === null) continue;
+
+                $rowValue = trim((string) $rowNode->textContent);
+                $colValue = trim((string) $colNode->textContent);
+                if (!preg_match('/^[0-9]+$/D', $rowValue) || !preg_match('/^[0-9]+$/D', $colValue)) {
+                    throw new RuntimeException('Posisi gambar Excel tidak valid.');
+                }
+                $rowIndex = (int) $rowValue;
+                $colIndex = (int) $colValue;
+                if ($rowIndex > 260 || $colIndex > 60) {
+                    throw new RuntimeException('Posisi gambar berada di luar area template Excel yang didukung.');
+                }
+
                 $relId = $blip->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
                 $mediaPath = $drawingRels[$relId]['target'] ?? '';
                 if ($mediaPath === '' || !str_starts_with($mediaPath, 'xl/media/')) continue;
@@ -345,8 +375,8 @@ class QuestionDocumentService
                     $cache[$mediaPath] = $imageImport($bytes);
                 }
                 $result[] = [
-                    'row' => (int) $rowNode->textContent,
-                    'col' => (int) $colNode->textContent,
+                    'row' => $rowIndex,
+                    'col' => $colIndex,
                     'token' => '[[media:' . $cache[$mediaPath] . ']]',
                 ];
             }
