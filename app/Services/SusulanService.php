@@ -81,8 +81,10 @@ class SusulanService
 
         $builder = $db->table('peserta_kegiatan AS pk')
             ->join('peserta AS p', 'p.id = pk.peserta_id')
+            ->join('rombel AS rb', 'rb.id = p.rombel_id')
             ->join('ruang AS r', 'r.id = pk.ruang_id', 'left')
             ->where('pk.kegiatan_id', (int) $main['kegiatan_id'])
+            ->where('rb.tingkat', (int) $main['tingkat'])
             ->where('pk.status', 'ACTIVE')->where('p.status', 'ACTIVE');
         $total = (int) $builder->countAllResults(false);
         if ($q !== '') {
@@ -100,6 +102,17 @@ class SusulanService
         $ids = array_map(static fn(array $item): int => (int) $item['peserta_kegiatan_id'], $items);
         $attemptMap = $this->latestAttempts($db, $mainId, $ids);
         $pendingMap = $this->pendingTargets($db, $mainId, $ids, $ignoreSusulanId > 0 ? $ignoreSusulanId : null);
+        $activeMap = [];
+        $participantIds = array_values(array_unique(array_map('intval', array_column($items, 'peserta_id'))));
+        if ($participantIds) {
+            $activeRows = $db->table('attempt')->select('id, peserta_id, jadwal_id')
+                ->where('status', 'ACTIVE')->whereIn('peserta_id', $participantIds)
+                ->orderBy('id', 'DESC')->get()->getResultArray();
+            foreach ($activeRows as $activeRow) {
+                $participantId = (int) $activeRow['peserta_id'];
+                if (!isset($activeMap[$participantId])) $activeMap[$participantId] = $activeRow;
+            }
+        }
 
         foreach ($items as &$item) {
             $pkId = (int) $item['peserta_kegiatan_id'];
@@ -110,6 +123,8 @@ class SusulanService
             $item['supersede_attempt_id'] = null;
             if ($pending !== null) {
                 $item['reason'] = 'Sudah dipilih pada Susulan #' . $pending['jadwal_id'] . ' yang belum dimulai.';
+            } elseif (isset($activeMap[(int) $item['peserta_id']])) {
+                $item['reason'] = 'Peserta masih mempunyai Attempt aktif pada Jadwal #' . (int) $activeMap[(int) $item['peserta_id']]['jadwal_id'] . '.';
             } elseif ($attempt === null) {
                 $item['eligible'] = true;
                 $item['target_mode'] = 'FIRST_ATTEMPT';
@@ -376,19 +391,32 @@ class SusulanService
     private function validateTargets($db, array $main, array $targets, ?int $ignoreSusulanId = null): array
     {
         $ids = array_column($targets, 'peserta_kegiatan_id');
-        $members = $db->table('peserta_kegiatan AS pk')->select('pk.id, pk.peserta_id, pk.status, p.status AS peserta_status')
+        $members = $db->table('peserta_kegiatan AS pk')->select('pk.id, pk.peserta_id, pk.status, p.status AS peserta_status, rb.tingkat')
             ->join('peserta AS p', 'p.id = pk.peserta_id')
+            ->join('rombel AS rb', 'rb.id = p.rombel_id')
             ->where('pk.kegiatan_id', (int) $main['kegiatan_id'])->whereIn('pk.id', $ids)
             ->get()->getResultArray();
         $memberMap = array_column($members, null, 'id');
         $latest = $this->latestAttempts($db, (int) $main['id'], $ids);
         $pending = $this->pendingTargets($db, (int) $main['id'], $ids, $ignoreSusulanId);
+        $participantIds = array_values(array_unique(array_map('intval', array_column($members, 'peserta_id'))));
+        $activeMap = [];
+        if ($participantIds) {
+            $activeRows = $db->table('attempt')->select('id, peserta_id')
+                ->where('status', 'ACTIVE')->whereIn('peserta_id', $participantIds)
+                ->get()->getResultArray();
+            foreach ($activeRows as $activeRow) $activeMap[(int) $activeRow['peserta_id']] = $activeRow;
+        }
 
         foreach ($targets as $target) {
             $pkId = (int) $target['peserta_kegiatan_id'];
             $member = $memberMap[$pkId] ?? null;
             if ($member === null || $member['status'] !== 'ACTIVE' || $member['peserta_status'] !== 'ACTIVE')
                 return $this->error(422, 'VALIDATION_FAILED', 'Peserta target tidak aktif pada Kegiatan ini.');
+            if ((int) $member['tingkat'] !== (int) $main['tingkat'])
+                return $this->error(422, 'VALIDATION_FAILED', 'Peserta target tidak sesuai tingkat Bank/Jadwal utama.');
+            if (isset($activeMap[(int) $member['peserta_id']]))
+                return $this->error(409, 'ACTIVE_ATTEMPT_EXISTS', 'Peserta masih mempunyai Attempt aktif pada Jadwal lain.');
             if (isset($pending[$pkId]))
                 return $this->error(409, 'TARGET_ALREADY_PENDING', 'Peserta sudah mempunyai target Susulan lain yang belum dimulai.');
 
