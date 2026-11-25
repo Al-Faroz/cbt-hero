@@ -69,24 +69,6 @@
             return;
         }
 
-        const fullscreenGuard = !examBrowserRequired && proof === '';
-        if (fullscreenGuard && !document.fullscreenElement) {
-            if (!document.documentElement.requestFullscreen) {
-                message('Browser ini tidak mendukung layar penuh. Gunakan Exambro atau browser yang mendukung fullscreen.', true);
-                return;
-            }
-            try {
-                await document.documentElement.requestFullscreen();
-            } catch (_) {
-                message('Izinkan mode layar penuh sebelum memulai atau melanjutkan ujian.', true);
-                return;
-            }
-            if (!document.fullscreenElement) {
-                message('Mode layar penuh belum aktif. Ujian belum dapat dibuka.', true);
-                return;
-            }
-        }
-
         button.disabled = true;
         message(mode === 'RESUME' ? 'Memeriksa akses ujian...' : 'Menyiapkan Attempt...');
 
