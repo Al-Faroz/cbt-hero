@@ -63,7 +63,10 @@ class JadwalController extends BaseController
     public function addTime(string $id)
     {
         return $this->respond((new JadwalOperationalService())->addTime(
-            (int) $id, $this->payload(), $this->actor()
+            (int) $id,
+            $this->payload(),
+            trim((string) $this->request->getHeaderLine('Idempotency-Key')),
+            $this->actor()
         ));
     }
 
