@@ -113,6 +113,16 @@ class QuestionDocumentService
             // in columns that represent actual content fields (never numbering/keys/points).
             $optionCount = (int) $match[2];
             $mode = trim((string) $match[3]);
+            $maxOptions = match ($type) {
+                'PG' => 6,
+                'PG_KOMPLEKS', 'PG_BERTINGKAT' => 8,
+                'MATCHING' => 12,
+                default => 0,
+            };
+            if (($maxOptions === 0 && $optionCount !== 0)
+                || ($maxOptions > 0 && ($optionCount < 2 || $optionCount > $maxOptions))) {
+                throw new RuntimeException('Jumlah pilihan/pasangan pada marker sheet tidak valid.');
+            }
             $allowedImageColumns = match ($type) {
                 'PG', 'PG_KOMPLEKS' => range(1, $optionCount + 1),
                 'PG_BERTINGKAT' => array_merge([1], range(2, $optionCount * 2, 2)),
