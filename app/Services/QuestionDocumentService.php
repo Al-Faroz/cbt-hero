@@ -299,13 +299,27 @@ class QuestionDocumentService
         if ($source === false) throw new RuntimeException('Workbook Excel tidak ditemukan.');
         $xp = new DOMXPath($this->xml($source));
         $rels = $this->officeRelationships($zip, 'xl/workbook.xml');
-        $result = [];
+        $result = []; $seenNames = [];
         foreach ($xp->query('//*[local-name()="sheets"]/*[local-name()="sheet"]') as $sheet) {
             if (!$sheet instanceof DOMElement) continue;
+            $name = trim($sheet->getAttribute('name'));
             $id = $sheet->getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
             $path = $rels[$id]['target'] ?? '';
-            if ($path === '' || !str_starts_with($path, 'xl/worksheets/')) continue;
-            $result[] = ['name' => $sheet->getAttribute('name'), 'path' => $path];
+            if ($name === '' || $id === '' || $path === '') {
+                throw new RuntimeException('Identitas atau relasi sheet Excel tidak valid.');
+            }
+            $nameKey = mb_strtolower($name, 'UTF-8');
+            if (isset($seenNames[$nameKey])) {
+                throw new RuntimeException('Nama sheet Excel tidak boleh duplikat.');
+            }
+            $seenNames[$nameKey] = true;
+            if (!str_starts_with($path, 'xl/worksheets/')) {
+                throw new RuntimeException('Jenis sheet Excel selain worksheet biasa tidak didukung.');
+            }
+            if ($zip->locateName($path) === false) {
+                throw new RuntimeException('File worksheet Excel tidak ditemukan.');
+            }
+            $result[] = ['name' => $name, 'path' => $path];
         }
         if (!$result) throw new RuntimeException('Sheet Excel tidak ditemukan.');
         return $result;
