@@ -171,3 +171,18 @@ File: `assets/js/exam-sync.js`
 Commits: `0f6b9d182b8225021507254f8ac8dec31924b484`, `626e829f942dd7210a684e438f4258ceb50434a1`.
 
 Acceptance E43 ditambahkan; belum diuji dengan Manager force-finish/status polling.
+
+
+### 5D-11 — TIMEOUT_PENDING tidak retry jika server gagal saat client sudah online
+Timeout offline disimpan sebagai `TIMEOUT_PENDING` dan dicoba ulang saat event online/bootstrap. Namun jika finalisasi sudah dicoba online lalu gagal sementara (misalnya 5xx), tidak ada event baru yang menjamin retry; peserta dapat tertahan dalam state pending.
+
+Perbaikan:
+- Drain yang belum selesai menjadwalkan retry timeout finalization.
+- Error finalization timeout menjadwalkan exponential backoff + jitter hingga 30 detik.
+- Idempotency-Key `finish_key` dipertahankan pada semua retry.
+- Event online mempercepat retry dengan membatalkan timer backoff yang sedang menunggu.
+- Sukses finalisasi membersihkan timer retry dan cache lokal.
+
+File: `assets/js/exam-submit.js`  
+Commit: `e89d6ab174adcf3474ca553efd97e842b8f21dda`  
+Acceptance E44 ditambahkan; belum diuji melalui fault injection.
