@@ -114,3 +114,10 @@ File: `app/Services/QuestionDocumentService.php`
 Commit: `08c31ed2f9f5755b77d0b6e56f97cd427e8d49ec`
 
 Acceptance X01–X21 tetap DEFERRED.
+
+
+### EXCEL-MEDIA-05 — pembatasan path file saat cleanup
+
+Pembersihan media lokal sekarang hanya menerima path yang cocok dengan nama file acak yang dibuat aplikasi pada folder `question-media/` (40 karakter heksadesimal dengan ekstensi JPG/PNG/WebP). Ini mencegah nilai `file_path` yang rusak/diubah di database dipakai untuk menghapus file di luar folder media yang dikelola.
+
+Commit: `26cd4f14eee7595f240e62914d3b6733f75eb974`
