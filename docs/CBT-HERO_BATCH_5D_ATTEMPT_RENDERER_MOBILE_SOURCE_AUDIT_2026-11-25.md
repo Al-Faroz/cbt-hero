@@ -160,3 +160,14 @@ Commits:
 - `b4b8104a0e12a511be87f2c60fd60083ef66610e`
 
 Acceptance E42 ditambahkan; belum diuji dengan concurrency/retry fixture.
+
+
+### 5D-10 — timer tetap berjalan setelah status terminal dari server
+Status non-ACTIVE sebelumnya hanya mengunci input. Countdown lokal masih dapat mencapai nol dan mengirim TIMEOUT kedua setelah Manager mengakhiri Attempt.
+
+Perbaikan: status FINISHED/SUPERSEDED maupun error ATTEMPT_NOT_ACTIVE/NOT_FOUND mengunci timer dengan pause reason terminal. Client mismatch pada Attempt yang masih ACTIVE tetap tidak menghentikan waktu authority.
+
+File: `assets/js/exam-sync.js`  
+Commits: `0f6b9d182b8225021507254f8ac8dec31924b484`, `626e829f942dd7210a684e438f4258ceb50434a1`.
+
+Acceptance E43 ditambahkan; belum diuji dengan Manager force-finish/status polling.
